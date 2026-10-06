@@ -7,7 +7,10 @@ mra_gen.py - write the core's MRA files from MAME's T-Unit driver source
 
 One MRA per MAME set: parents in mra/, clones in
 mra/_alternatives/_<Game>/. Each MRA carries
-  - the game id (rom index 1) that selects the board configuration,
+  - the game id (rom index 1) that selects the board configuration, and
+    after it the set's secrets table (codes and read patches for the OSD
+    Secrets page, tools/tunit_secrets.py), which needs --zips: it is found
+    in the set's own program ROM,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
   - MAME's DIP switches for the set (OSD), button names, NVRAM (16 KB).
@@ -36,6 +39,7 @@ from xml.sax.saxutils import escape
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mame_src
 import tunit_layout as L
+import tunit_secrets
 
 RBF = 'Arcade-Midway-T-Unit'
 MAME_VERSION = '0289'
@@ -214,7 +218,16 @@ def main():
         out.append('\t</romstruct>')
 
         out.append('\t<rom index="1">')
-        out.append('\t\t<part>%02X</part>' % gid)
+        if zips:
+            prog = mame_src.build_region(g.romset.regions['maincpu'], zips)
+            table, notes = tunit_secrets.build(gid, prog)
+            out.append('\t\t<!-- game id and secrets table (rtl/tunit_secrets.sv): %s -->'
+                       % escape('; '.join(notes)))
+            out.append('\t\t<part>')
+            out += tunit_secrets.part_hex(table)
+            out.append('\t\t</part>')
+        else:
+            out.append('\t\t<part>%02X</part>' % gid)
         out.append('\t</rom>')
 
         for idx in (0, 3):
