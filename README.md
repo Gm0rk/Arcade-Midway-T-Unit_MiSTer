@@ -38,6 +38,8 @@ Verified on hardware: `[░░░░░░░░░░░░░░░░░░�
 - DIP switches in the OSD, taken from MAME
 - Up to four players (NBA Jam, NBA Jam TE) or three (Judge Dredd)
 - Pause (button or OSD), service mode switch; Service Credit and Tilt in the OSD
+- Secrets page in the OSD: hidden menus, screens and debug features of every
+  game (see below)
 
 ## Controls
 
@@ -49,6 +51,29 @@ Verified on hardware: `[░░░░░░░░░░░░░░░░░░�
 
 Every game also has Start, Coin, Test (service mode) and Pause. Service
 Credit and Tilt are OSD items on the Controls page.
+
+## Secrets
+
+The OSD's Secrets page opens the hidden menus and screens the programmers
+left in the games. The menus are opened by codes entered on the controls,
+which the core enters for you: pick the item, and the OSD closes and the
+code plays (a few seconds; the controls are ignored meanwhile). The games
+only accept them in the attract mode, so use them with no game running.
+Both Mortal Kombat games drop a half-entered code when the attract mode moves
+to its next screen; the core then enters the EJB code again (three tries at
+most). The options take effect at once and stay set until switched off.
+
+| Game | OSD item | What it does |
+|---|---|---|
+| Mortal Kombat | EJB Menu | The programmers' menu ("Mortal Kombat EJB Menu"): diagnostics, coin bookkeeping, game audits, a hidden Hello page, initials entry and every character's ending |
+| | EJB Menu (Copyright Screen) | The same menu, after a hidden copyright screen ("This is Mortal Kombat") |
+| Mortal Kombat II | EJB Menu | MK2's EJB menu, with the same pages. Revisions L1.1 and L1.4 have the menu and its code but never check for the code; the core connects it while the code plays |
+| | Security Screen | Each attract cycle starts with a hidden screen, "This version passed the security test", after a few seconds of black |
+| | Hitboxes | A debug feature left in the game: the hit box of every attack is drawn in green during fights |
+| | Pong at Battle 250 | Every two-player battle counts as battle 250: the VS screen shows "Kombat Zone: Back in Time", and after the first round both players face a game of Pong (rev L2.0 and later) |
+| NBA Jam / NBA Jam TE | Secret Menu | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on the older NBA Jam revisions) |
+| Judge Dredd | Secret Audits | Six hidden audit pages; any button turns the page |
+| | Secret Audits + Credits | Turns through the audits and holds both Start buttons at the end, which shows the staff credits |
 
 ## ROMs
 
