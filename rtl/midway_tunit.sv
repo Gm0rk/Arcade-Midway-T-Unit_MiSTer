@@ -19,7 +19,8 @@
 //    0x1F800000-0x1FFFFFFF  program ROM mirror (MK)
 //    0xFF800000-0xFFFFFFFF  program ROM, 1 MB (SDRAM, through a cache)
 //  plus each game's protection (MAME midtunit_m.cpp init_*), which takes
-//  priority over the map above where they overlap.
+//  priority over the map above where they overlap, and the OSD's read
+//  patches (secrets), which take priority over everything for CPU reads.
 //
 //  Control register: bit 5 selects whether CPU VRAM accesses reach the pixel
 //  bytes (1) or the palette bytes (0); bit 7 banks the top 4 MB of the
@@ -64,6 +65,11 @@ module midway_tunit
 
 	// inputs (active low as the CPU reads them): IN0, IN1, IN2, DSW
 	input      [63:0] in_ports,
+
+	// read patches (tunit_secrets.sv): 8 word addresses and values, enables
+	input     [223:0] pt_addr,
+	input     [127:0] pt_data,
+	input       [7:0] pt_en,
 
 	// sound board
 	output reg        snd_wr,        // one pulse per write of the sound data word
@@ -118,7 +124,8 @@ module midway_tunit
 	output            vid_hb,
 	output            vid_vb,
 
-	// debug (simulation only; left unconnected in the core)
+	// debug: simulation logs; in the core dbg_rd and dbg_wa also tell the
+	// secrets module when the CPU reaches a hidden menu (the rest unconnected)
 	output     [31:0] dbg_pc,
 	output            dbg_retire,
 	output            dbg_blit_busy,
@@ -207,6 +214,7 @@ wire        mem_rd, mem_wr, mem_srt;
 wire [15:0] mem_wdata;
 reg  [15:0] mem_rdata;
 reg         mem_ack;
+wire [15:0] cpu_rdata;           // mem_rdata, or a read patch's value
 
 wire        cpu_hs, cpu_vs, cpu_hb, cpu_vb, disp_en;
 wire  [9:0] hcount, vcount, heblnk, hsblnk, cpu_vsblnk;
@@ -232,7 +240,7 @@ tms34010 cpu
 	.mem_wr     (mem_wr),
 	.mem_srt    (mem_srt),
 	.mem_wdata  (mem_wdata),
-	.mem_rdata  (mem_rdata),
+	.mem_rdata  (cpu_rdata),
 	.mem_ack    (mem_ack),
 
 	.int1       (dma_irq),
@@ -270,7 +278,7 @@ assign dbg_wr    = cpu_ce & mem_ack & mem_wr;
 assign dbg_rd    = cpu_ce & mem_ack & mem_rd;
 assign dbg_wa    = mem_addr;
 assign dbg_wdata = mem_wdata;
-assign dbg_rdata = mem_rdata;
+assign dbg_rdata = cpu_rdata;
 
 //----------------------------------------------------------------------------
 // CPU bus, registered on the board side
@@ -305,6 +313,31 @@ end
 //----------------------------------------------------------------------------
 
 wire [27:0] wa = b_addr;
+
+//----------------------------------------------------------------------------
+// Read patches (OSD secrets, tunit_secrets.sv)
+//
+// A CPU read of a word in the patch table returns the table's value instead
+// of memory: program ROM words (instruction fetches included) and RAM
+// variables alike; writes are untouched. The compare runs on the registered
+// address every clock, so its result is ready on the same edge as the bus
+// state machine's acknowledge for that address (which is decoded from the
+// same copy), and stays valid for as long as the CPU holds the request.
+//----------------------------------------------------------------------------
+
+reg         pt_hit;
+reg  [15:0] pt_q;
+integer     pt_i;
+always @(posedge clk) begin
+	pt_hit <= 1'b0;
+	for (pt_i = 0; pt_i < 8; pt_i = pt_i + 1)
+		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28]) begin
+			pt_hit <= 1'b1;
+			pt_q   <= pt_data[16 * pt_i +: 16];
+		end
+end
+
+assign cpu_rdata = pt_hit ? pt_q : mem_rdata;
 
 localparam P_NONE = 3'd0, P_MK = 3'd1, P_NBAJAM = 3'd2, P_NBAJAMTE = 3'd3,
            P_JDREDD = 3'd4, P_MK2 = 3'd5;
