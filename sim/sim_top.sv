@@ -1,8 +1,9 @@
 //============================================================================
 //  Full-board simulation top (Verilator)
 //
-//  The T-Unit board, the ADPCM sound board and the real SDRAM controller
-//  with a chip model, as Arcade-Midway-T-Unit.sv wires them; the DDR3 port,
+//  The T-Unit board, the ADPCM sound board, the secrets module (code player
+//  and read patches) and the real SDRAM controller with a chip model, as
+//  Arcade-Midway-T-Unit.sv wires them; the DDR3 port,
 //  ROM loading (straight into the SDRAM model), inputs, frames and audio
 //  are handled by the C++ harness (sim/sim_main.cpp). The SDRAM write
 //  channel arbiter is the top level's.
@@ -28,6 +29,15 @@ module sim_top
 	input             snd_off,       // hold the sound board in reset (faster video-only runs)
 
 	input      [63:0] in_ports,
+
+	// secrets: the ROM index 1 table (written by the harness during reset)
+	// and the OSD items (R[15:14] triggers, O[18:16] options)
+	input             info_start,
+	input             info_wr,
+	input       [8:0] info_addr,
+	input      [15:0] info_data,
+	input       [1:0] osd_trig,
+	input       [2:0] osd_opt,
 
 	// DDR3 (C++ model)
 	input             ddr_busy,
@@ -91,6 +101,45 @@ assign audio = dcs ? dcs_audio : adpcm_audio;
 assign dbg_snd_wr   = snd_wr;
 assign dbg_snd_data = snd_data;
 
+// secrets, as the top level: frames counted at the start of each running
+// vertical blank; a playing code replaces IN0 and holds its start buttons
+wire        code_on;
+wire [15:0] code_in0;
+wire  [1:0] code_start;
+wire [223:0] pt_addr;
+wire [127:0] pt_data;
+wire   [7:0] pt_en;
+reg         vb_d;
+always @(posedge clk) vb_d <= vid_vb;
+
+tunit_secrets secrets
+(
+	.clk        (clk),
+	.reset      (reset),
+	.dl_start   (info_start),
+	.dl_wr      (info_wr),
+	.dl_addr    (info_addr),
+	.dl_data    (info_data),
+	.trig       (osd_trig),
+	.opt        (osd_opt),
+	.frame      (vid_vb & ~vb_d & ~pause),
+	.cpu_rd     (dbg_rd),
+	.cpu_wa     (dbg_wa),
+	.code_on    (code_on),
+	.code_in0   (code_in0),
+	.code_start (code_start),
+	.pt_addr    (pt_addr),
+	.pt_data    (pt_data),
+	.pt_en      (pt_en)
+);
+
+wire [63:0] ports = {in_ports[63:22],
+                     in_ports[21] & ~(code_on & code_start[1]),
+                     in_ports[20:19],
+                     in_ports[18] & ~(code_on & code_start[0]),
+                     in_ports[17:16],
+                     code_on ? ~code_in0 : in_ports[15:0]};
+
 midway_tunit board
 (
 	.clk            (clk),
@@ -105,7 +154,11 @@ midway_tunit board
 
 	.ram_clr_req    (ram_clr_req),
 
-	.in_ports       (in_ports),
+	.in_ports       (ports),
+
+	.pt_addr        (pt_addr),
+	.pt_data        (pt_data),
+	.pt_en          (pt_en),
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
