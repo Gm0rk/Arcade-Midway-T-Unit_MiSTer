@@ -6,6 +6,7 @@
 //            [--press "400:0:4:5;..."] [--dsw 0xFE7D] [--trace pc.bin:A:B]
 //            [--wav out.wav] [--ddr-lat 24] [--ramclear] [--nosound]
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
+//            [--info mk_rom1.bin] [--osd "500:0:1;..."]
 //
 //  --game      mk, mkturbo, mk2, nbajam, nbajamte, jdreddp (the top level's
 //              game table: protection, sound RAM window)
@@ -40,6 +41,12 @@
 //  --nosound   hold the sound board in reset: the T-Unit's ADPCM games
 //              never read it back (MAME fakes its status), so the video is
 //              the same and the simulation runs faster
+//  --info      the ROM index 1 stream (game id and secrets table, written by
+//              tools/mra_check.py --out), loaded into the secrets module
+//              during reset
+//  --osd       frame:item:length, ';' separated: OSD Secrets page items,
+//              timed like --press; item 0 and 1 are the triggers R[14] and
+//              R[15] (code 1 and 2), 2-4 the options O[16]-O[18]
 //
 //  The DDR3 port is a model of MiSTer's DDRAM interface: reads return
 //  their burst after a fixed latency, writes are accepted one beat per
@@ -224,6 +231,7 @@ struct Press { int frame, port, bit, len; };
 int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
+	std::string info, osds;
 	int frames = 100, dsw = -1;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
 	Ddr ddr;
@@ -247,6 +255,8 @@ int main(int argc, char **argv) {
 		else if (a == "--ddr-lat") ddr.lat = atoi(next().c_str());
 		else if (a == "--ramclear") ramclear = true;
 		else if (a == "--nosound") nosound = true;
+		else if (a == "--info") info = next();
+		else if (a == "--osd") osds = next();
 	}
 
 	top = new Vsim_top;
@@ -288,6 +298,19 @@ int main(int argc, char **argv) {
 		p = e + 1;
 	}
 
+	std::vector<Press> osd;                  // port unused; bit = item
+	for (size_t p = 0; p < osds.size();) {
+		size_t e = osds.find(';', p);
+		std::string item = osds.substr(p, e == std::string::npos ? std::string::npos : e - p);
+		Press pr;
+		pr.port = 0;
+		if (sscanf(item.c_str(), "%d:%d:%d", &pr.frame, &pr.bit, &pr.len) == 3) osd.push_back(pr);
+		if (e == std::string::npos) break;
+		p = e + 1;
+	}
+	std::vector<uint8_t> info_d;
+	if (!info.empty()) info_d = load(info.c_str());
+
 	Frames fr;
 	fr.dir = out;
 	if (snap.rfind("every:", 0) == 0) fr.every = atoi(snap.c_str() + 6);
@@ -318,6 +341,8 @@ int main(int argc, char **argv) {
 	}
 
 	top->in_ports = ((uint64_t)dsw << 48) | 0xFFFFFFFFFFFFull;
+	top->info_start = 0; top->info_wr = 0; top->info_addr = 0; top->info_data = 0;
+	top->osd_trig = 0; top->osd_opt = 0;
 	top->pause = 0;
 	top->ram_clr_req = 0;
 	top->snd_off = nosound;
@@ -347,6 +372,17 @@ int main(int argc, char **argv) {
 			if (ramclear) top->ram_clr_req = 1;
 		}
 
+		// the secrets table, one word per clock during reset (as the ROM
+		// index 1 download: a start pulse, then the words)
+		top->info_start = (cyc == 100);
+		top->info_wr = 0;
+		if (cyc >= 200 && (cyc - 200) * 2 + 1 < info_d.size() && (cyc - 200) < 512) {
+			size_t i = (cyc - 200) * 2;
+			top->info_wr = 1;
+			top->info_addr = (uint32_t)(cyc - 200);
+			top->info_data = info_d[i] | (info_d[i + 1] << 8);
+		}
+
 		// inputs: MAME's ports take a value frames.lua sets at its frame
 		// notification N at the next notification, N + 1, which comes when
 		// the 34010 has run (N + 1) frames of machine cycles (MAME starts the
@@ -363,6 +399,12 @@ int main(int argc, char **argv) {
 					if (in_frame > p.frame && in_frame <= p.frame + p.len)
 						in &= ~(1ull << (p.port * 16 + p.bit));
 				top->in_ports = in;
+				uint32_t items = 0;
+				for (auto &o : osd)
+					if (in_frame > o.frame && in_frame <= o.frame + o.len)
+						items |= 1u << o.bit;
+				top->osd_trig = items & 3;
+				top->osd_opt  = (items >> 2) & 7;
 			}
 		}
 
