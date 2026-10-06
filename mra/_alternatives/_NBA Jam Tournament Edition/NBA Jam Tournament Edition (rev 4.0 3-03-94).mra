@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam Tournament Edition (rev 4.0 3/03/94)</name>
-	<mratimestamp>20261005</mratimestamp>
+	<mratimestamp>20261006</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajamte4</setname>
 	<year>1994</year>
@@ -28,7 +28,15 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<part>04</part>
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF962290 (11 presses) -->
+		<part>
+		04 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
+		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 00 40 00 03 00 00 00 03 00 40 00 03 00 00 00 03 00
+		00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 20 03 00 00 00 03 00
+		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
+		00 40 03 00 00 00 03 80
+		</part>
 	</rom>
 	<rom index="0" zip="nbajamte4.zip|nbajamte.zip" md5="d47e4374341c3e4d3f1ecf1ede611160" type="merged">
 		<!-- program ROM -->
