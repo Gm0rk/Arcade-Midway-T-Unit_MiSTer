@@ -17,7 +17,8 @@ region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
 
 With --out, the loaded streams are written as <set>_rom0.bin / _rom3.bin
-for the simulator.
+for the simulator, and the game id / secrets table as <set>_rom1.bin
+(sim_tunit --info).
 
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 """
@@ -163,6 +164,13 @@ def main():
         streams, msgs = {}, []
         for rom in root.findall('rom'):
             idx = int(rom.get('index'))
+            if idx == 1:
+                data = load_rom(rom, zips)[0]
+                streams[1] = data
+                if a.out:
+                    os.makedirs(a.out, exist_ok=True)
+                    open(os.path.join(a.out, '%s_rom1.bin' % setname), 'wb').write(data)
+                continue
             if idx not in (0, 3):
                 continue
             data, md5 = load_rom(rom, zips)
@@ -176,8 +184,9 @@ def main():
             msgs += region_checks(setname, streams, a.regions)
         status = 'OK' if not msgs else 'FAIL'
         bad += bool(msgs)
-        print('%-12s %-4s rom0 %8X rom3 %8X  %s' % (setname, status, len(streams.get(0, b'')),
-                                                    len(streams.get(3, b'')), '; '.join(msgs)))
+        print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
+                                                             len(streams.get(3, b'')), len(streams.get(1, b'')),
+                                                             '; '.join(msgs)))
     sys.exit(1 if bad else 0)
 
 
