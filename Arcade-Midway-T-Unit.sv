@@ -68,6 +68,18 @@ localparam CONF_STR = {
 	"P2O[9],Service Mode,Off,On;",
 	"P2T[12],Service Credit;",
 	"P2T[13],Tilt;",
+	"h2P3,Secrets;",
+	"P3-;",
+	"h3P3R[14],EJB Menu;",
+	"h4P3R[15],EJB Menu (Copyright Screen);",
+	"h5P3O[16],Security Screen,Off,On;",
+	"h5P3O[17],Hitboxes,Off,On;",
+	"h5P3O[18],Pong at Battle 250,Off,On;",
+	"h6P3R[14],Secret Menu;",
+	"h7P3R[14],Secret Audits;",
+	"h7P3R[15],Secret Audits + Credits;",
+	"P3-;",
+	"P3-,Codes work in attract mode;",
 	"-;",
 	"DIP;",
 	"-;",
@@ -78,6 +90,10 @@ localparam CONF_STR = {
 	"jn,A,B,X,Y,L,R,Start,Select,,;",
 	"V,v",`BUILD_DATE
 };
+
+// OSD menu mask bits (assigned in "Game configuration"): which secrets the
+// loaded game has
+wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd;
 
 wire        forced_scandoubler;
 wire        direct_video;
@@ -109,7 +125,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({14'd0, ~status[101], 1'b0}),
+	.status_menumask     ({8'd0, menu_jd, menu_nba, menu_mk2, menu_mk, menu_ejb, menu_secrets, ~status[101], 1'b0}),
 
 	.joystick_0          (joy0),
 	.joystick_1          (joy1),
@@ -238,8 +254,20 @@ always @(posedge clk_sys) begin
 	endcase
 end
 
+// OSD Secrets page items for the loaded game (status_menumask bits 2-7)
+assign menu_secrets = (game_id <= G_JDREDDP);
+assign menu_ejb     = (game_id == G_MK) || (game_id == G_MKTURBO) || (game_id == G_MK2);
+assign menu_mk      = (game_id == G_MK) || (game_id == G_MKTURBO);
+assign menu_mk2     = (game_id == G_MK2);
+assign menu_nba     = (game_id == G_NBAJAM) || (game_id == G_NBAJAMTE);
+assign menu_jd      = (game_id == G_JDREDDP);
+
 //////////////////////////////////////////////////////////////////
-// Downloads: ROMs (index 0 and 3), game id (1), NVRAM (2), DIP switches (254)
+// Downloads: ROMs (index 0 and 3), game id and secrets table (1), NVRAM (2),
+// DIP switches (254)
+//
+// Index 1 is the per-set table of rtl/tunit_secrets.sv; its first word is
+// the game id.
 //
 // SDRAM layout (byte addresses):
 //   0x0000000  program ROM, 1 MB          } index 0, as the MRA sends it
@@ -340,6 +368,12 @@ reg  [3:0] tilt_cnt = 4'd0;                 // slam tilt held while non-zero
 wire       svc_sw  = |svc_cnt;
 wire       tilt_sw = |tilt_cnt;
 
+// secrets code player (OSD Secrets page): while it plays a code it replaces
+// IN0 and holds the start buttons it needs
+wire        code_on;
+wire [15:0] code_in0;
+wire  [1:0] code_start;
+
 // active-high port images, inverted at the end
 reg  [15:0] in0, in1, in2;
 always @(*) begin
@@ -390,6 +424,12 @@ always @(*) begin
 			in2[3:0]   = udlr(joy2);  in2[4]  = joy2[5];  in2[5]  = joy2[6];  in2[6]  = joy2[4];  in2[7]  = joy2[7];
 		end
 	endcase
+
+	if (code_on) begin
+		in0    = code_in0;
+		in1[2] = in1[2] | code_start[0];
+		in1[5] = in1[5] | code_start[1];
+	end
 end
 
 wire [63:0] in_ports = {dsw[15:0], ~in2, ~in1, ~in0};
@@ -463,6 +503,53 @@ always @(posedge clk_sys) begin
 	end
 end
 
+//////////////////////////////////////////////////////////////////
+// OSD secrets (Secrets page)
+//
+// R[14] / R[15] play the loaded set's code 1 / code 2 (hidden menus, entered
+// on the controls during the attract mode); O[18:16] switch its read
+// patches (MK2: security screen, hitboxes, Pong at battle 250). The codes
+// and patch addresses come with the MRA (ROM index 1), found per revision
+// by tools/tunit_secrets.py. Frames are counted while the game runs, so
+// with "Pause when OSD is open" a code starts when the OSD closes.
+//////////////////////////////////////////////////////////////////
+
+wire [223:0] pt_addr;
+wire [127:0] pt_data;
+wire   [7:0] pt_en;
+wire         cpu_rd;             // the board's completed CPU reads (a code's success)
+wire  [27:0] cpu_wa;
+
+reg  secrets_dl_d = 1'b0;
+wire secrets_dl   = ioctl_download && ioctl_index == 16'd1;
+always @(posedge clk_sys) secrets_dl_d <= secrets_dl;
+
+tunit_secrets secrets
+(
+	.clk        (clk_sys),
+	.reset      (reset),
+
+	.dl_start   (secrets_dl & ~secrets_dl_d),
+	.dl_wr      (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr[26:10] == 17'd0),
+	.dl_addr    (ioctl_addr[9:1]),
+	.dl_data    (ioctl_dout),
+
+	.trig       (status[15:14]),
+	.opt        (status[18:16]),
+	.frame      (osd_frame),
+
+	.cpu_rd     (cpu_rd),
+	.cpu_wa     (cpu_wa),
+
+	.code_on    (code_on),
+	.code_in0   (code_in0),
+	.code_start (code_start),
+
+	.pt_addr    (pt_addr),
+	.pt_data    (pt_data),
+	.pt_en      (pt_en)
+);
+
 midway_tunit board
 (
 	.clk            (clk_sys),
@@ -478,6 +565,10 @@ midway_tunit board
 	.ram_clr_req    (ram_clr_req),
 
 	.in_ports       (in_ports),
+
+	.pt_addr        (pt_addr),
+	.pt_data        (pt_data),
+	.pt_en          (pt_en),
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
@@ -529,8 +620,8 @@ midway_tunit board
 	.dbg_retire     (),
 	.dbg_blit_busy  (),
 	.dbg_wr         (),
-	.dbg_rd         (),
-	.dbg_wa         (),
+	.dbg_rd         (cpu_rd),
+	.dbg_wa         (cpu_wa),
 	.dbg_wdata      (),
 	.dbg_rdata      ()
 );
