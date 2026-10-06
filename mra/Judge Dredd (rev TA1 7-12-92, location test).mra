@@ -1,0 +1,74 @@
+<misterromdescription>
+	<name>Judge Dredd (rev TA1 7/12/92, location test)</name>
+	<mratimestamp>20261005</mratimestamp>
+	<mameversion>0289</mameversion>
+	<setname>jdreddp</setname>
+	<year>1993</year>
+	<manufacturer>Midway</manufacturer>
+	<category>Platform / Shooter Scrolling</category>
+	<rbf>Arcade-Midway-T-Unit</rbf>
+	<remark>3 players</remark>
+	<switches default="FF,5C">
+		<dip bits="0" name="Test Switch" ids="Off,On" values="1,0"/>
+		<dip bits="5" name="Blood" ids="Off,On"/>
+		<dip bits="6" name="Validator" ids="Installed,None"/>
+		<dip bits="7" name="Freeze" ids="Off,On" values="1,0"/>
+		<dip bits="8,9" name="Coin Counters" ids="1 Counter - Totalizing,2 Counters - 1 count/coin,1 Counter - 1 count/coin" values="2,1,0"/>
+		<dip bits="10,11" name="Country" ids="USA,French,German" values="3,2,1"/>
+		<dip bits="12,14" name="Coinage" ids="1,2,3,4,ECA,Free Play" values="7,3,5,1,6,0"/>
+		<dip bits="15" name="Coinage Source" ids="Dipswitch,CMOS" values="1,0"/>
+	</switches>
+	<buttons names="Kick,Jump,Punch,Crouch,-,-,Start,Coin,Test,Pause" default="X,B,A,Y,-,-,Start,Select,-,-"/>
+	<romstruct>
+rom index 0 (SDRAM 0x000000):
+0x000000 program ROM (1 MB, 16-bit little endian)
+0x100000 graphics ROM (8 MB of MAME "video", 32-bit interleaved)
+rom index 3 (SDRAM 0xD00000):
+0x000000 sound CPU ROM (MAME region 0x10000-0x4FFFF)
+0x040000 OKI M6295 samples (1 MB)
+	</romstruct>
+	<rom index="1">
+		<part>05</part>
+	</rom>
+	<rom index="0" zip="jdreddp.zip" md5="2fa8c588d27e34c0c354c2aa2142f872" type="merged">
+		<!-- program ROM -->
+		<interleave output="16">
+			<part crc="7e5c8d5a" name="t1_judge_dredd_game_rom_uj12.uj12" map="01"/>
+			<part crc="a16b8a4a" name="t1_judge_dredd_game_rom_ug12.ug12" map="10"/>
+		</interleave>
+		<!-- graphics -->
+		<interleave output="32">
+			<part crc="468484d7" name="t1_judge_dredd_game_rom_ug14.ug14" map="0001"/>
+			<part crc="fe6ec0ec" name="t1_judge_dredd_game_rom_uj14.uj14" map="0010"/>
+			<part crc="e076c08e" name="t1_judge_dredd_game_rom_ug19.ug19" map="0100"/>
+			<part crc="bd8cffe0" name="t1_judge_dredd_game_rom_uj19.uj19" map="1000"/>
+		</interleave>
+		<interleave output="32">
+			<part crc="1d7f12b6" name="t1_judge_dredd_game_rom_ug16.ug16" map="0001"/>
+			<part crc="31d4a71b" name="t1_judge_dredd_game_rom_uj16.uj16" map="0010"/>
+			<part crc="7b8c370a" name="t1_judge_dredd_game_rom_ug20.ug20" map="0100"/>
+			<part crc="8fc7bfb9" name="t1_judge_dredd_game_rom_uj20.uj20" map="1000"/>
+		</interleave>
+		<interleave output="32">
+			<part crc="b6d83d74" name="t1_judge_dredd_game_rom_ug17.ug17" map="0001"/>
+			<part crc="ddc76f0b" name="t1_judge_dredd_game_rom_uj17.uj17" map="0010"/>
+			<part crc="6705d5b3" name="t1_judge_dredd_game_rom_ug22.ug22" map="0100"/>
+			<part crc="7438295e" name="t1_judge_dredd_game_rom_uj22.uj22" map="1000"/>
+		</interleave>
+		<interleave output="32">
+			<part crc="c8a45e01" name="t1_judge_dredd_game_rom_ug18.ug18" map="0001"/>
+			<part crc="3e16e7a9" name="t1_judge_dredd_game_rom_uj18.uj18" map="0010"/>
+			<part crc="0c9edbc4" name="t1_judge_dredd_game_rom_ug23.ug23" map="0100"/>
+			<part crc="86ea157d" name="t1_judge_dredd_game_rom_uj23.uj23" map="1000"/>
+		</interleave>
+	</rom>
+	<rom index="3" zip="jdreddp.zip" md5="c7a92d2bf191bcb4d7f8986fbd145240" type="merged">
+		<!-- sound CPU -->
+		<part crc="6154d108" name="t1_judge_dredd_sound_rom_u3.u3"/>
+		<part crc="6154d108" name="t1_judge_dredd_sound_rom_u3.u3"/>
+		<!-- OKI samples -->
+		<part crc="ef32f202" name="t1_judge_dredd_sound_rom_u12.u12"/>
+		<part crc="3dc70473" name="t1_judge_dredd_sound_rom_u13.u13"/>
+	</rom>
+	<nvram index="2" size="16384"/>
+</misterromdescription>
