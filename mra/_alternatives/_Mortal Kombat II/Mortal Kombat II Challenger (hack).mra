@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II Challenger (hack)</name>
-	<mratimestamp>20261005</mratimestamp>
+	<mratimestamp>20261006</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2chal</setname>
 	<year>1993</year>
@@ -31,7 +31,18 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<part>02</part>
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA1D4E0 (27 presses), menu FFA1D3A0; security screen branches FFA1DA90 FFA1DAC0; hitbox flag 01061FB0; battle counter 01061B40 -->
+		<part>
+		02 00 01 00 A9 1D FA 1F 00 03 AC 1D FA 1F 00 03 FB 61 10 20 01 00 B4 61 10 30 FA 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 3A 1D FA 0F 00 00 00 00
+		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
+		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
+		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
+		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00
+		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
+		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
+		00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 80
+		</part>
 	</rom>
 	<rom index="0" zip="mk2chal.zip|mk2.zip" md5="e4bade4c1711fc27ab3218c43330b382" type="merged">
 		<!-- program ROM -->
