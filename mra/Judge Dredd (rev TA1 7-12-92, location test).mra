@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Judge Dredd (rev TA1 7/12/92, location test)</name>
-	<mratimestamp>20261005</mratimestamp>
+	<mratimestamp>20261006</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>jdreddp</setname>
 	<year>1993</year>
@@ -28,7 +28,15 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<part>05</part>
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret audits code 9862, C832 with 0802 held -->
+		<part>
+		05 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 2C 00 00 00 00 00 00 00 00 00
+		02 08 0A 00 62 98 0A 00 02 08 05 00 32 C8 0A 00 02 08 19 00 00 00 02 80 02 08 0A 00 62 98 0A 00
+		02 08 05 00 32 C8 0A 00 02 08 19 00 00 00 28 00 40 00 08 00 00 00 20 00 40 00 08 00 00 00 20 00
+		40 00 08 00 00 00 20 00 40 00 08 00 00 00 20 00 40 00 08 00 00 00 20 00 40 00 08 00 00 00 20 00
+		00 00 3C 03 00 00 02 80
+		</part>
 	</rom>
 	<rom index="0" zip="jdreddp.zip" md5="2fa8c588d27e34c0c354c2aa2142f872" type="merged">
 		<!-- program ROM -->
