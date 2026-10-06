@@ -17,7 +17,7 @@ RTL = ../rtl
 SRC = altsyncram.v \
       $(RTL)/tms34010/tms34010_pkg.sv $(RTL)/tms34010/tms34010_muldiv.sv \
       $(RTL)/tms34010/tms34010_gfx.sv $(RTL)/tms34010/tms34010.sv \
-      $(RTL)/tunit_dma.sv $(RTL)/tunit_vram.sv $(RTL)/tunit_video.sv $(RTL)/midway_tunit.sv \
+      $(RTL)/tunit_dma.sv $(RTL)/tunit_vram.sv $(RTL)/tunit_video.sv $(RTL)/midway_tunit.sv $(RTL)/tunit_secrets.sv \
       $(RTL)/sound/williams_adpcm.sv $(RTL)/mc6809/mc6809is.v \
       $(RTL)/dcs/dcs_mem.sv $(RTL)/dcs/adsp2105.sv $(RTL)/sound/tunit_dcs.sv \
       $(wildcard $(RTL)/jt51/*.v) $(filter-out $(RTL)/jt6295/jt12_%,$(wildcard $(RTL)/jt6295/*.v)) \
