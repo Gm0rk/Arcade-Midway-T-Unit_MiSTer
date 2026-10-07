@@ -72,6 +72,13 @@ module sim_top
 	output            dbg_blit_busy,
 	output            dbg_snd_wr,
 	output     [15:0] dbg_snd_data,
+	output            dbg_dcs_we,      // DCS: a sample drained into the output FIFO
+	output     [15:0] dbg_dcs_smp,
+	output            dbg_dcs_slot,    // DCS: DAC slot pulse into the DSP
+	output            dbg_dcs_ce,      // DCS: DSP clock enable
+	output            dbg_dcs_valid,   // DCS: DSP retired an instruction
+	output     [13:0] dbg_dcs_pc,
+	output     [15:0] dbg_dcs_slotctr,
 	output            dbg_wr,
 	output            dbg_rd,
 	output     [27:0] dbg_wa,
@@ -100,6 +107,13 @@ assign audio = dcs ? dcs_audio : adpcm_audio;
 
 assign dbg_snd_wr   = snd_wr;
 assign dbg_snd_data = snd_data;
+assign dbg_dcs_we   = dcs_board.dac_we;
+assign dbg_dcs_smp  = dcs_board.dac_sample;
+assign dbg_dcs_slot = dcs_board.dac_slot;
+assign dbg_dcs_ce   = dcs_board.dcs_ce;
+assign dbg_dcs_valid = dcs_board.dsp.o_valid;
+assign dbg_dcs_pc   = dcs_board.dsp.o_ppc;
+assign dbg_dcs_slotctr = dcs_board.dsp.dac_slot_ctr;
 
 // secrets, as the top level: frames counted at the start of each running
 // vertical blank; a playing code replaces IN0 and holds its start buttons

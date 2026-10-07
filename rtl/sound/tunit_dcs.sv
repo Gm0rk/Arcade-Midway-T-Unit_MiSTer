@@ -23,11 +23,12 @@
 //
 //  Clocking. Everything runs on the 96 MHz clk. The DSP's logic advances
 //  only on core_ce (35.75 MHz on average, KI's rate for 10 MIPS), and only
-//  on every second clock: inputs that it samples on every clock (DAC slots,
-//  mailbox strobes, the ROM ready, the resets) are lined up with those
-//  same clocks here. Every register inside adsp2105 therefore changes at
-//  most once every two clocks, and the SDC declares its internal paths as
-//  two-cycle paths (KI runs the same logic at 50 MHz).
+//  on every second clock. The strobes it takes on core_ce edges (DAC slots,
+//  host command writes and response reads) are held until a cycle with
+//  core_ce; the inputs it samples on every clock (the ROM ready, the resets)
+//  are lined up with the same cycles. Every register inside adsp2105
+//  therefore changes at most once every two clocks, and the SDC declares its
+//  internal paths as two-cycle paths (KI runs the same logic at 50 MHz).
 //
 //  Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 //  (contains code adapted from ki_dcs_audio.sv, GPL-3.0-only)
@@ -97,6 +98,21 @@ always @(posedge clk) begin
 	end
 end
 
+// The DSP counts DAC slots (its autobuffer half-period) and takes host
+// response reads only on core_ce edges: adsp2105 samples dac_ce_in and
+// host_resp_rd inside its core_ce block, whatever its header says. A strobe
+// that falls in a ph = 1 cycle without core_ce would be lost, and about a
+// third of the DAC slots were: the DSP drained a buffer half every 390 slots
+// instead of 240, the output FIFO ran dry and Mortal Kombat II's sound played
+// slow and broken up. Both strobes are therefore held until the next cycle
+// with core_ce. The output FIFO below still pops on every real slot.
+reg  slot_pend = 1'b0;
+wire dsp_slot  = slot_pend & dcs_ce;
+always @(posedge clk) begin
+	if (dac_slot)      slot_pend <= 1'b1;
+	else if (dsp_slot) slot_pend <= 1'b0;
+end
+
 //----------------------------------------------------------------------------
 // Host mailboxes
 //
@@ -109,11 +125,10 @@ reg         host_rst_n = 1'b1;       // reset line from the last write
 reg         host_rst   = 1'b0;       // to the DSP, changes before ph = 1 cycles
 reg         cmd_pend   = 1'b0;
 reg  [15:0] cmd_lat;
-reg         rd_pend    = 1'b0;
-reg         resp_rd    = 1'b0;       // high only in ph = 1 cycles
+reg         rd_pend    = 1'b0;       // a host data read the DSP has not taken yet
+wire        resp_rd    = rd_pend & dcs_ce;
 
 always @(posedge clk) begin
-	resp_rd <= 1'b0;
 	if (reset) begin
 		host_rst_n <= 1'b1;
 		cmd_pend   <= 1'b0;
@@ -130,10 +145,8 @@ always @(posedge clk) begin
 
 		if (data_rd)
 			rd_pend <= 1'b1;
-		else if (rd_pend && !ph) begin
-			rd_pend <= 1'b0;
-			resp_rd <= 1'b1;                  // high through the next ph = 1 cycle
-		end
+		else if (resp_rd)
+			rd_pend <= 1'b0;                  // taken by the DSP on this edge
 	end
 	if (!ph) host_rst <= ~host_rst_n | reset;
 end
@@ -165,7 +178,7 @@ adsp2105 #(.ROM_GAP_FF(0)) dsp
 	.rom_ddr_addr        (ext_addr),
 	.rom_ddr_rdy         (ext_rdy),
 	.rom_ddr_q           (ext_q),
-	.dac_ce_in           (dac_slot),
+	.dac_ce_in           (dsp_slot),
 	.o_ppc               (),
 	.o_valid             (),
 	.o_unimpl            (),

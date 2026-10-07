@@ -44,6 +44,11 @@
 //  --info      the ROM index 1 stream (game id and secrets table, written by
 //              tools/mra_check.py --out), loaded into the secrets module
 //              during reset
+//  --dcslog    write every sample the DCS DSP drains into its output FIFO,
+//              with the clock count (DSP real-time margin, stale buffers),
+//              and to <file>.slots one record per DAC slot: clock, DSP
+//              enable, the DSP's slot counter, instructions retired since
+//              the last slot, PC (drain period, how busy the DSP is)
 //  --osd       frame:item:length, ';' separated: OSD Secrets page items,
 //              timed like --press; item 0 and 1 are the triggers R[14] and
 //              R[15] (code 1 and 2), 2-4 the options O[16]-O[18]
@@ -231,7 +236,7 @@ struct Press { int frame, port, bit, len; };
 int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
-	std::string info, osds;
+	std::string info, osds, dcslog;
 	int frames = 100, dsw = -1;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
 	Ddr ddr;
@@ -257,6 +262,7 @@ int main(int argc, char **argv) {
 		else if (a == "--nosound") nosound = true;
 		else if (a == "--info") info = next();
 		else if (a == "--osd") osds = next();
+		else if (a == "--dcslog") dcslog = next();
 	}
 
 	top = new Vsim_top;
@@ -359,6 +365,9 @@ int main(int argc, char **argv) {
 	uint64_t retired = 0;
 	double charged = 0;
 	FILE *lagf = lagpath.empty() ? nullptr : fopen(lagpath.c_str(), "w");
+	// --dcslog: every sample the DSP drains into the DCS output FIFO, as
+	// (clock count, sample) pairs (64-bit, 16-bit, little endian)
+	FILE *dcsf = dcslog.empty() ? nullptr : fopen(dcslog.c_str(), "wb");
 	int lag_max = 0;                         // 34010 machine cycles of retired instructions
 	int last_report = -1;
 	while (fr.frame <= frames) {
@@ -455,6 +464,29 @@ int main(int argc, char **argv) {
 				fprintf(wf, "%d %d %07X %04X R\n", fr.frame, fr.y, wa, top->dbg_rdata);
 		}
 		if (++wav_div == 2000) { wav_div = 0; w.put((int16_t)top->audio); }
+		if (dcsf && top->dbg_dcs_we) {
+			uint64_t c = cyc; int16_t v = (int16_t)top->dbg_dcs_smp;
+			fwrite(&c, 8, 1, dcsf); fwrite(&v, 2, 1, dcsf);
+		}
+		// DSP diagnostics (DCS log file + ".slots"): per DAC slot pulse, the
+		// clock, whether the DSP's enable was up, its slot counter, the
+		// instructions retired since the last slot and the last PC
+		static FILE *slotf = nullptr;
+		static uint32_t dsp_instr = 0;
+		static bool slot_d = false;
+		if (dcsf && !slotf) slotf = fopen((dcslog + ".slots").c_str(), "wb");
+		if (slotf) {
+			if (top->dbg_dcs_valid && top->dbg_dcs_ce) dsp_instr++;
+			bool sl = top->dbg_dcs_slot;
+			if (sl && !slot_d) {
+				uint64_t c = cyc;
+				uint16_t ce = top->dbg_dcs_ce, ctr = top->dbg_dcs_slotctr, pc = top->dbg_dcs_pc;
+				fwrite(&c, 8, 1, slotf); fwrite(&ce, 2, 1, slotf); fwrite(&ctr, 2, 1, slotf);
+				fwrite(&dsp_instr, 4, 1, slotf); fwrite(&pc, 2, 1, slotf);
+				dsp_instr = 0;
+			}
+			slot_d = sl;
+		}
 		if (debtlog) {
 			// the 34010's cycle debt (rtl/tms34010): below zero the CPU is behind
 			// MAME's instruction timing (memory slower than the cycle counts)
@@ -475,6 +507,7 @@ int main(int argc, char **argv) {
 		}
 	}
 	w.close();
+	if (dcsf) fclose(dcsf);
 	if (tf) fclose(tf);
 	if (wf) fclose(wf);
 	top->final();
