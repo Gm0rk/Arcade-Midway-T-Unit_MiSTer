@@ -16,6 +16,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/dcs/adsp2105.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/tunit_dcs.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/crt_adjust/crt_adjust.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/crt_adjust/crt_vsize.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/video/sync_center.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/video/tunit_crt.sv
 set_global_assignment -name QIP_FILE rtl/pll.qip

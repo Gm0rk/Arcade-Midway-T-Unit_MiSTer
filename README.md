@@ -4,6 +4,18 @@ An FPGA implementation of the Midway T-Unit arcade board (1993-1994), the
 TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
 Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 
+## Contents
+
+- [Hardware](#hardware)
+- [Games](#games)
+- [Features](#features)
+- [CRT V-Size (experimental)](#crt-v-size-experimental)
+- [Controls](#controls)
+- [Secrets](#secrets)
+- [ROMs](#roms)
+- [Credits and references](#credits-and-references)
+- [License](#license)
+
 ## Hardware
 
 | | |
@@ -32,7 +44,8 @@ Verified on hardware: `[░░░░░░░░░░░░░░░░░░�
 ## Features
 
 - Analog sync centred on a standard 15 kHz screen; CRT Adjust (H-Size,
-  H-Position, V-Shift) and CRT Auto-Width for analog CRT output
+  H-Position, V-Shift), CRT V-Size (experimental) and CRT Auto-Width for
+  analog CRT output
 - CMOS saved as NVRAM: settings, audits and high scores survive power-off
   (OSD "Save Settings")
 - DIP switches in the OSD, taken from MAME
@@ -40,6 +53,23 @@ Verified on hardware: `[░░░░░░░░░░░░░░░░░░�
 - Pause (button or OSD), service mode switch; Service Credit and Tilt in the OSD
 - Secrets page in the OSD: hidden menus, screens and debug features of every
   game (see below)
+
+## CRT V-Size (experimental)
+
+With CRT Adjust on, CRT V-Size makes the picture taller (+) or shorter (-),
+3 lines per step, up to 21 lines; V-Shift then recentres it. A change is
+applied one line per frame. It works in one of two modes (CRT V-Size Mode):
+
+| Mode | How | For |
+|---|---|---|
+| PVM | The frame is retimed: fewer, longer lines make the picture taller, more, shorter lines make it shorter. Every picture line is shown once, nothing is blended. The line rate moves by about 0.4 % per line | Broadcast and studio monitors (PVM/BVM and the like) that follow a wide range of line rates |
+| Cabinet | The timing stays exactly the board's; each picture line's light is spread over the screen's fixed lines, as a monitor's own V-Size control would. The picture is very slightly softer vertically | Arcade monitors and TVs that do not follow line-rate changes |
+
+In PVM mode the frame has few spare lines at the larger + settings, so V-Shift
+has little room there; at the larger - settings the lines get short enough that
+the picture moves a little to the left (H-Position brings it back). Like the
+rest of CRT Adjust, CRT V-Size also changes the HDMI picture; leave CRT Adjust
+off for an untouched HDMI image.
 
 ## Controls
 
@@ -94,7 +124,8 @@ found by CRC) in `games/mame`; the Mortal Kombat T-Unit sets use `mk.zip`
 - mc6809 core: Greg Miller (synchronous version by Sorgelig)
 - jt51 (YM2151) and jt6295 (OKI M6295): Jose Tejada (jotego)
 - SDRAM controller and MiSTer framework: Sorgelig and the MiSTer-devel team
-- CRT Adjust: Umberto Parisi (rmonic79), with Andrea Bogazzi (@asturur)
+- CRT Adjust and CRT V-Size: Umberto Parisi (rmonic79); CRT Adjust with
+  Andrea Bogazzi (@asturur)
 - [Template_MiSTer](https://github.com/MiSTer-devel/Template_MiSTer),
   [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
 

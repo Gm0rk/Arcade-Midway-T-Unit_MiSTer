@@ -10,6 +10,17 @@
 //     picture at the broadcast position. Always used for the analog sync,
 //     with or without CRT Adjust; HDMI sees the same picture as before
 //     (only the sync moves).
+//   - CRT V-Size (rmonic79's crt_vsize, experimental) ahead of CRT Adjust:
+//     the picture taller or shorter, 3 lines per OSD step (-7..+7), in one
+//     of two modes. PVM retimes the frame (more or fewer, shorter or longer
+//     lines; HSync moves about 0.4 % per line, for monitors with a wide
+//     H-lock); Cabinet keeps the native timing and spreads each line's light
+//     over the fixed scanlines (gamma-correct two-line blend). At 0 it passes
+//     the stream through: the picture is the same as without it, two dots
+//     later. What the two modules need from each other on this raster (the
+//     line's VBlank at HSync, no lines past the board's frame, V-Shift on
+//     PVM's longer or shorter frames) is done between them, here; crt_vsize
+//     is used as published.
 //   - CRT Adjust (rmonic79's crt_adjust, content-shift mode) fed with the
 //     centred sync, so H-Position and V-Shift 0 are the centre of the screen.
 //   - CRT Auto-Width: picks the H-Size that makes the picture 48.75 us wide
@@ -19,7 +30,7 @@
 //     table moves the content back by -m x H / (base + H) dots.
 //   - the OSD/HDMI window (DE) while CRT Adjust is on.
 //
-//  Carried over unchanged from the Y Unit core (itself ported from
+//  All but CRT V-Size carried over from the Y Unit core (itself ported from
 //  Arcade-ITech8 following its notes "CRT Adjust and Auto-Width: Porting
 //  Handoff"). The T-Unit runs the Y Unit's raster: one dot rate, 8 MHz, on
 //  the 96 MHz clk, so the constants are ITech8's 8 MHz set:
@@ -44,6 +55,8 @@ module tunit_crt
 	input       [4:0] hsize_osd,     // H-Size, 5-bit two's complement
 	input       [6:0] hpos_osd,      // H-Position: 0..48 = 0..+48, 49..96 = -48..-1
 	input       [4:0] vshift_osd,    // V-Shift, 5-bit two's complement
+	input       [3:0] vsize_osd,     // V-Size: 0..7 = 0..+7, 8..14 = -7..-1 (+ = taller)
+	input             vsmode_osd,    // V-Size mode: 0 PVM, 1 Cabinet
 
 	// board video (RGB after overlays), active-high sync and blanking
 	input       [7:0] r_in,
@@ -85,12 +98,23 @@ reg               autofill;
 reg  signed [4:0] hsize_s;
 reg         [6:0] hpos_d;
 reg  signed [5:0] vshift_s;
+reg  signed [5:0] vsize_s;           // crt_vsize's convention: lines added to the frame, + = shorter
+reg               vsmode;
+
+// V-Size: the OSD lists 15 values, 0..+7 then -7..-1, so entries 8..14 are
+// -7..-1 (entry - 15), not the 4-bit two's complement -8..-2. One step is 3
+// lines; the sign is turned round so that the OSD's + means taller.
+wire signed [4:0] vsz_step = (vsize_osd <= 4'd7) ? $signed({1'b0, vsize_osd})
+                                                 : $signed({1'b0, vsize_osd}) - 5'sd15;
+
 always @(posedge clk) if (ce_pix) begin
 	crt_on   <= crt_en & ~scandoubler;
 	autofill <= autow;
 	hsize_s  <= $signed(hsize_osd);
 	hpos_d   <= hpos_osd;
 	vshift_s <= $signed({vshift_osd[4], vshift_osd});
+	vsize_s  <= -($signed({vsz_step[4], vsz_step}) * 6'sd3);
+	vsmode   <= vsmode_osd;
 end
 
 // H-Position: 0..48 right, 49..96 = -48..-1 left
@@ -211,9 +235,135 @@ always @(posedge clk) begin
 end
 
 //----------------------------------------------------------------------------
-// CRT Adjust, fed with the centred sync. Its line buffer samples VBlank at
-// HSync, which now comes before the board's own line starts, so VBlank comes
-// from sync_center (vb_out) to keep the first picture line.
+// CRT V-Size, first stage of the chain (native stream -> crt_vsize ->
+// crt_adjust), fed with the centred sync. It measures everything itself
+// (frame, lines, dot period 12 clocks, sync widths, the DE window) and stays
+// a pass-through until two frames measure the same. Its ring holds 46 lines
+// of 416 dots: the 400-dot T-Unit picture (it keeps LINE_PX - 1 dots of a
+// line) and +-21 lines. It runs on the 96 MHz clock, 12 clocks per dot (its
+// Cabinet pipeline needs 8).
+//----------------------------------------------------------------------------
+
+wire [7:0] vz_r, vz_g, vz_b;
+wire       vz_hs, vz_vs, vz_de, vz_vb, vz_ce;
+
+crt_vsize #(
+	.RING_LINES (46),
+	.LINE_PX    (416)
+) crt_vsize (
+	.clk        (clk),
+	.pxl_cen    (ce_pix),
+	.active     (crt_on),
+	.tube_mode  (vsmode),
+	.vsize      (vsize_s),
+	.r_in       (r_in),
+	.g_in       (g_in),
+	.b_in       (b_in),
+	.hs_in      (c_hs),
+	.vs_in      (c_vs),
+	.de_in      (~(hb_in | vb_in)),
+	.vb_in      (c_vb),              // the true VBlank, aligned to the centred HSync
+	.r_out      (vz_r),
+	.g_out      (vz_g),
+	.b_out      (vz_b),
+	.hs_out     (vz_hs),
+	.vs_out     (vz_vs),
+	.de_out     (vz_de),
+	.vb_out     (vz_vb),
+	.ce_out     (vz_ce)
+);
+
+//----------------------------------------------------------------------------
+// Between CRT V-Size and CRT Adjust (both modules as published; what they
+// need from each other on this raster is done here):
+//
+//  1. CRT Adjust samples VBlank at the dot where HSync rises and takes it as
+//     the VBlank of the line starting there. In PVM mode CRT V-Size decides a
+//     line's VBlank two clocks after its HSync, so CRT Adjust got the line
+//     before's: the top picture line went missing and a black line came under
+//     the picture. The stream, except VBlank, is held back one dot, so VBlank
+//     (a whole-line signal) is the new line's in every mode.
+//  2. PVM with a shorter picture makes more lines than the board's frame has,
+//     and CRT V-Size's extra lines at the end show the next frame's first
+//     lines, which on this raster are picture from 12 extra lines (the T-Unit
+//     picture starts 11 lines after the centred VSync). Lines past the
+//     board's frame length are blank.
+//  3. V-Shift is done here, on the frame length measured from this stream:
+//     CRT Adjust's own V-Shift takes -n as a delay of VTOTAL - n lines, right
+//     only for a 289-line frame, and PVM frames are 268 to 310 lines.
+//
+//  With V-Size at 0 (or Cabinet mode) every frame is the board's 289 lines,
+//  and the result is CRT Adjust's own, one dot later.
+//----------------------------------------------------------------------------
+
+// 1. one dot behind (a register on CRT V-Size's dot enable, sampled by CRT
+//    Adjust on the next one)
+reg  [7:0] d_r = 8'd0, d_g = 8'd0, d_b = 8'd0;
+reg        d_hs = 1'b0, d_vs = 1'b0, d_de = 1'b0;
+always @(posedge clk) if (vz_ce) begin
+	d_r  <= vz_r;
+	d_g  <= vz_g;
+	d_b  <= vz_b;
+	d_hs <= vz_hs;
+	d_vs <= vz_vs;
+	d_de <= vz_de;
+end
+
+// board frame length in lines (centred sync), counted at each line start
+reg        n_hs = 1'b0, n_vs = 1'b0;
+reg  [9:0] n_cnt = 10'd0, n_lines = 10'd289;
+always @(posedge clk) if (ce_pix) begin
+	n_hs <= c_hs;
+	if (c_hs & ~n_hs) begin
+		n_vs <= c_vs;
+		if (c_vs & ~n_vs) begin
+			if (n_cnt > 10'd99) n_lines <= n_cnt;
+			n_cnt <= 10'd1;
+		end
+		else if (~&n_cnt)
+			n_cnt <= n_cnt + 10'd1;
+	end
+end
+
+// line index and frame length of the stream CRT Adjust sees: the index is
+// the new line's on the dot its HSync rises, like VBlank
+localparam integer VS_MAX = 320;             // longest frame: 289 + 21 lines
+reg        o_hs = 1'b0, o_vs = 1'b0;
+reg  [9:0] o_ln = 10'd0, o_cnt = 10'd0, o_lines = 10'd289;
+wire       o_rise = vz_ce & d_hs & ~o_hs;
+wire       o_new  = d_vs & ~o_vs;            // this line starts a frame
+wire [9:0] ln_now = ~o_rise ? o_ln : o_new ? 10'd0 : (~&o_ln ? o_ln + 10'd1 : o_ln);
+always @(posedge clk) if (vz_ce) begin
+	o_hs <= d_hs;
+	if (o_rise) begin
+		o_vs <= d_vs;
+		o_ln <= ln_now;
+		if (o_new) begin
+			if (o_cnt > 10'd99 && o_cnt <= 10'(VS_MAX)) o_lines <= o_cnt;
+			o_cnt <= 10'd1;
+		end
+		else if (~&o_cnt)
+			o_cnt <= o_cnt + 10'd1;
+	end
+end
+
+// 2. lines past the board's frame (PVM only: Cabinet keeps the frame)
+wire past = ~vsmode & (ln_now >= n_lines);
+
+// 3. V-Shift: VSync n lines later, or for -n, (frame length - n) lines later
+reg  [VS_MAX-1:0] vs_sr = {VS_MAX{1'b0}};
+reg  [8:0] vs_tap = 9'd0;
+always @(posedge clk) begin
+	vs_tap <= (vshift_s[5] ? o_lines[8:0] : 9'd0) + {{3{vshift_s[5]}}, vshift_s};
+	if (o_rise) vs_sr <= {vs_sr[VS_MAX-2:0], d_vs};
+end
+wire vs_sh = (vs_tap == 9'd0) ? d_vs : vs_sr[vs_tap - 9'd1];
+
+//----------------------------------------------------------------------------
+// CRT Adjust, fed from the stream above (V-Shift 0: done above). Its line
+// buffer samples VBlank at HSync, which comes before the board's own line
+// starts, so that VBlank is sync_center's (vb_out), passed on by CRT V-Size,
+// to keep the first picture line.
 //----------------------------------------------------------------------------
 
 wire       str_hb, str_vb;
@@ -225,19 +375,19 @@ crt_adjust #(
 	.HPOS_MODE (1)                   // content shift: the T-Unit picture is wide
 ) crt_adjust (
 	.clk        (clk),
-	.pxl_cen    (ce_pix),
+	.pxl_cen    (vz_ce),
 	.pxl2_cen   (rd_ce),
 	.active     (crt_on),
 	.hsize      (h_eff[4:0]),        // not used inside (the read rate comes from rd_ce)
 	.hoffset    (hpos_off),
-	.voffset    (vshift_s),
-	.r_in       (r_in),
-	.g_in       (g_in),
-	.b_in       (b_in),
-	.hs_in      (c_hs),
-	.vs_in      (c_vs),
-	.hb_in      (hb_in | vb_in),
-	.vb_in      (c_vb),
+	.voffset    (6'sd0),
+	.r_in       (d_r),
+	.g_in       (d_g),
+	.b_in       (d_b),
+	.hs_in      (d_hs),
+	.vs_in      (vs_sh),
+	.hb_in      (~d_de | past),
+	.vb_in      (vz_vb | past),
 	.r_out      (str_r),
 	.g_out      (str_g),
 	.b_out      (str_b),

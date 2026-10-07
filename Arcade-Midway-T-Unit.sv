@@ -2,7 +2,8 @@
 //  Williams/Midway T-Unit for MiSTer
 //
 //  Top level (emu): HPS interface, ROM loading, memories, per-game
-//  configuration and inputs, video output with CRT Adjust, audio.
+//  configuration and inputs, video output with CRT Adjust and CRT V-Size,
+//  audio.
 //
 //  Clocks: everything runs from one 96 MHz clock (clk_sys). The 34010, the
 //  pixel clock (8 MHz), the sound CPU (2 MHz E clock), the YM2151 and the
@@ -63,6 +64,8 @@ localparam CONF_STR = {
 	"H1P1O[100:96],CRT H-Size,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"H1P1O[85:79],CRT H-Position,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,+16,+17,+18,+19,+20,+21,+22,+23,+24,+25,+26,+27,+28,+29,+30,+31,+32,+33,+34,+35,+36,+37,+38,+39,+40,+41,+42,+43,+44,+45,+46,+47,+48,-48,-47,-46,-45,-44,-43,-42,-41,-40,-39,-38,-37,-36,-35,-34,-33,-32,-31,-30,-29,-28,-27,-26,-25,-24,-23,-22,-21,-20,-19,-18,-17,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"H1P1O[78:74],CRT V-Shift,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
+	"H1P1O[107:104],CRT V-Size,0,+1,+2,+3,+4,+5,+6,+7,-7,-6,-5,-4,-3,-2,-1;",
+	"H1P1O[108],CRT V-Size Mode,PVM,Cabinet;",
 	"P2,Controls;",
 	"P2-;",
 	"P2O[9],Service Mode,Off,On;",
@@ -785,7 +788,7 @@ sdram sdram
 // Video
 //////////////////////////////////////////////////////////////////
 
-// ---- analog CRT stage: centred sync, CRT Adjust, Auto-Width (rtl/video/tunit_crt.sv) ----
+// ---- analog CRT stage: centred sync, CRT V-Size, CRT Adjust, Auto-Width (rtl/video/tunit_crt.sv) ----
 //
 // The analog sync is always the centred one (picture in the middle of a
 // standard 15 kHz line and frame); HDMI sees the same picture either way.
@@ -810,6 +813,8 @@ tunit_crt tunit_crt
 	.hsize_osd   (status[100:96]),
 	.hpos_osd    (status[85:79]),
 	.vshift_osd  (status[78:74]),
+	.vsize_osd   (status[107:104]),
+	.vsmode_osd  (status[108]),
 
 	.r_in        (core_r),
 	.g_in        (core_g),
