@@ -54,6 +54,12 @@ set_global_assignment -name SEED 1
 # (output_files/*.sta.rpt); tools/timing_paths.tcl lists more
 set_global_assignment -name TIMEQUEST_DO_REPORT_TIMING ON
 
+# hps_io's confstr_rom fills its ROM with one loop step per CONF_STR byte;
+# the OSD string is over 6 KB (Finishing Moves page, OSD messages), past
+# Quartus' default limit of 5000 steps for constant loops (Error 10106).
+# Main_MiSTer reads at most 10 KB of it.
+set_global_assignment -name VERILOG_CONSTANT_LOOP_LIMIT 10240
+
 # after a successful build: output_files/Arcade-Midway-T-Unit.rbf ->
 # releases/Arcade-Midway-T-Unit_YYYYMMDD.rbf (release.tcl)
 set_global_assignment -name POST_FLOW_SCRIPT_FILE "quartus_sh:release.tcl"
