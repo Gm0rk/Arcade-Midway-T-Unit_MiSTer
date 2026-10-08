@@ -38,6 +38,12 @@ TE 4.0, Judge Dredd TA1, MK 5.0):
                  REACHED THE OUTER LIMITS OF THE TOURNAMENT..." and a game
                  of Pong (FF818EB0); the battle counter (0x01061B40) is
                  patched to read 250.
+                 Noob Saibot: after each round of a two-player battle the
+                 round's winner fights Noob Saibot ("INCREDIBLE WINNING
+                 STREAK!!") when that player's win streak is 50 (FFA188F0;
+                 L3.0 and later, the hacks compare with 6). The long JRNE
+                 that leaves when it is not gets displacement 0, so it goes
+                 on into the fight either way.
   NBA Jam, TE    Secret Midway menu: in the attract mode both players hold
                  Up + all three buttons, then exactly 52 frames later Down
                  (FF9995B0); the design team screen follows, and while it is
@@ -64,9 +70,11 @@ STEP_BASE = 0x20                 # first code step (word index)
 TABLE_WORDS = 512
 N_PATCH = 8
 
-# OSD options (O[16], O[17], O[18]); 4 / 5: while code 1 / code 2 plays
+# OSD options (O[16], O[17], O[18]; O[19] is option 6); 4 / 5: while code 1 /
+# code 2 plays
 OPT_SECURITY, OPT_HITBOX, OPT_PONG = 1, 2, 3
 OPT_CODE1, OPT_CODE2 = 4, 5
+OPT_NOOB = 6
 
 LAST, START1, START2 = 0x8000, 0x0100, 0x0200
 
@@ -241,6 +249,17 @@ def mk2_codes(p, notes):
             notes.append('battle 250 check not found')
     else:
         notes.append('battle counter not found')
+
+    # Noob Saibot: CALLA (players) / CMPI 2h,A0 / JRNE (long) / MOVE @p1,A1 /
+    # MOVE @winner,A0 / CMPI 1h,A0 / JREQ / MOVE @p2,A1 / CMPI 50,A1 / JRNE
+    # (long): the last JRNE's displacement word becomes 0
+    h = p.find([0x0D5F, X, X, 0x0B40, 0xFFFD, 0xCB00, X, 0x05A1, X, X, 0x05A0, X, X,
+                0x0B40, 0xFFFE, 0xCA03, 0x05A1, X, X, 0x0B41, X, 0xCB00, X])
+    if len(h) == 1:
+        patches.append((bit_address(h[0] + 22) >> 4, OPT_NOOB, 0x0000))
+        notes.append('Noob Saibot check %08X (%d wins)' % (bit_address(h[0]), ~p.w[h[0] + 20] & 0xFFFF))
+    else:
+        notes.append('Noob Saibot check not found')
     return [code1], patches
 
 
