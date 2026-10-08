@@ -78,6 +78,7 @@ localparam CONF_STR = {
 	"h5P3O[16],Security Screen,Off,On;",
 	"h5P3O[17],Hitboxes,Off,On;",
 	"h5P3O[18],Pong at Battle 250,Off,On;",
+	"h5P3O[19],Noob Saibot Fight,Off,On;",
 	"h6P3R[14],Secret Menu;",
 	"h7P3R[14],Secret Audits;",
 	"h7P3R[15],Secret Audits + Credits;",
@@ -510,8 +511,9 @@ end
 // OSD secrets (Secrets page)
 //
 // R[14] / R[15] play the loaded set's code 1 / code 2 (hidden menus, entered
-// on the controls during the attract mode); O[18:16] switch its read
-// patches (MK2: security screen, hitboxes, Pong at battle 250). The codes
+// on the controls during the attract mode); O[19:16] switch its read
+// patches (MK2: security screen, hitboxes, Pong at battle 250, Noob Saibot
+// fight). The codes
 // and patch addresses come with the MRA (ROM index 1), found per revision
 // by tools/tunit_secrets.py. Frames are counted while the game runs, so
 // with "Pause when OSD is open" a code starts when the OSD closes.
@@ -538,7 +540,7 @@ tunit_secrets secrets
 	.dl_data    (ioctl_dout),
 
 	.trig       (status[15:14]),
-	.opt        (status[18:16]),
+	.opt        (status[19:16]),
 	.frame      (osd_frame),
 
 	.cpu_rd     (cpu_rd),
