@@ -14,9 +14,10 @@
 //
 //  - Read patches. Up to eight 16-bit words of the CPU's address space read
 //    as a fixed value while their OSD option is on: a program ROM word (MK2:
-//    the two branches that skip the security screen become NOPs) or a RAM
-//    variable (MK2: the hitbox debug flag, the battle counter that brings up
-//    the hidden Pong game at battle 250). A patch can also be tied to a code
+//    the two branches that skip the security screen become NOPs, the branch
+//    that skips the Noob Saibot fight unless the round's winner has 50 wins
+//    in a row goes nowhere) or a RAM variable (MK2: the hitbox debug flag,
+//    the battle counter that brings up the hidden Pong game at battle 250). A patch can also be tied to a code
 //    and apply only while that code plays (MK2 L1.1 and L1.4 have the EJB
 //    code's handler but never call it: while the code plays, the Block
 //    buttons' switch handlers point at it). The board compares every CPU
@@ -28,8 +29,9 @@
 //    0x002-0x019  read patches, 8 x 3 words:
 //                   address[15:0], {option[3:0], address[27:16]}, value
 //                 address is the CPU word address (bit address >> 4);
-//                 option 1-3 selects the OSD option, 4 / 5 applies the
-//                 patch while code 1 / code 2 plays, 0 is an unused entry
+//                 option 1-3 and 6 select OSD option 1-4 (O[16]-O[19]),
+//                 4 / 5 applies the patch while code 1 / code 2 plays, 0 is
+//                 an unused entry
 //    0x01A, 0x01B first step (word index) of code 1 and code 2, 0 = none
 //    0x01C-0x01F  success address of code 1, code 2 (word address, 2 words
 //                 each, 0 = none): the first word of the menu the code opens.
@@ -60,7 +62,7 @@ module tunit_secrets
 
 	// OSD
 	input       [1:0] trig,          // rising edge starts code 1 / code 2
-	input       [2:0] opt,           // options 1-3 (read patches)
+	input       [3:0] opt,           // OSD options 1-4 (read patches; option 4 is table option 6)
 	input             frame,         // one pulse per frame while the game runs
 
 	// CPU reads (the board's dbg_rd, dbg_wa): success of a code
@@ -144,6 +146,7 @@ generate
 			pt_en[g] <= (p_opt[g] == 4'd1 && opt[0]) ||
 			            (p_opt[g] == 4'd2 && opt[1]) ||
 			            (p_opt[g] == 4'd3 && opt[2]) ||
+			            (p_opt[g] == 4'd6 && opt[3]) ||
 			            (p_opt[g] == 4'd4 && code_on && !cur) ||
 			            (p_opt[g] == 4'd5 && code_on && cur);
 	end
