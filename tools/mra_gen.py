@@ -9,8 +9,10 @@ One MRA per MAME set: parents in mra/, clones in
 mra/_alternatives/_<Game>/. Each MRA carries
   - the game id (rom index 1) that selects the board configuration, and
     after it the set's secrets table (codes and read patches for the OSD
-    Secrets page, tools/tunit_secrets.py), which needs --zips: it is found
-    in the set's own program ROM,
+    Secrets page, tools/tunit_secrets.py) and, for MK and MK2 at byte
+    0x400, the fight variables the finishing-move player follows
+    (tools/tunit_fmoves.py); both need --zips: they are found in the set's
+    own program ROM,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
   - MAME's DIP switches for the set (OSD), button names, NVRAM (16 KB).
@@ -40,6 +42,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mame_src
 import tunit_layout as L
 import tunit_secrets
+import tunit_fmoves
 
 RBF = 'Arcade-Midway-T-Unit'
 MAME_VERSION = '0289'
@@ -226,6 +229,17 @@ def main():
             out.append('\t\t<part>')
             out += tunit_secrets.part_hex(table)
             out.append('\t\t</part>')
+            fm, fm_notes = tunit_fmoves.build(gid, prog, g.name)
+            if fm:
+                # at byte 0x400 (word 0x200), after the secrets table's room
+                out.append('\t\t<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): %s -->'
+                           % escape('; '.join(fm_notes)))
+                out.append('\t\t<part repeat="%d">00</part>' % (tunit_fmoves.CFG_BASE * 2 - len(table)))
+                out.append('\t\t<part>')
+                out += tunit_secrets.part_hex(fm)
+                out.append('\t\t</part>')
+            elif fm_notes:
+                out.append('\t\t<!-- finishing moves: %s -->' % escape('; '.join(fm_notes)))
         else:
             out.append('\t\t<part>%02X</part>' % gid)
         out.append('\t</rom>')
