@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II (rev L1.1)</name>
-	<mratimestamp>20261006</mratimestamp>
+	<mratimestamp>20261007</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2r11</setname>
 	<year>1993</year>
@@ -31,7 +31,7 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFE0CC50 (27 presses), menu FFE0C580; EJB code handler not called: Block handlers pointed at it while the code plays; security screen branches FFE0D230 FFE0D260; hitbox flag 01062000; battle 250 check not found -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFE0CC50 (27 presses), menu FFE0C580; EJB code handler not called: Block handlers pointed at it while the code plays; security screen branches FFE0D230 FFE0D260; hitbox flag 01062000; battle 250 check not found; Noob Saibot check not found -->
 		<part>
 		02 00 01 00 1A 87 FC 4F 40 C1 1B 87 FC 4F E0 FF 32 87 FC 4F 60 C1 33 87 FC 4F E0 FF 23 0D FE 1F
 		00 03 26 0D FE 1F 00 03 00 62 10 20 01 00 00 00 00 00 00 00 20 00 00 00 58 0C FE 0F 00 00 00 00
