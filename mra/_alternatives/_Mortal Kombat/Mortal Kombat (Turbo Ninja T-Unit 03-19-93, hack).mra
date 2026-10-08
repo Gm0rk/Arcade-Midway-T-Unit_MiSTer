@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat (Turbo Ninja T-Unit 03/19/93, hack)</name>
-	<mratimestamp>20261006</mratimestamp>
+	<mratimestamp>20261008</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mktturbo</setname>
 	<year>1992</year>
@@ -48,6 +48,13 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 30 00 02 00 10 00 F0 00 00 00 02 80
+		</part>
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 010519E0, P1 character 01051290, object pointer 01051230, stage 01051820, finish flag 01051880 -->
+		<part repeat="524">00</part>
+		<part>
+		01 00 00 00 9E 51 10 00 29 51 10 00 57 51 10 00 30 51 10 00 5E 51 10 00 23 51 10 00 51 51 10 00
+		27 51 10 00 55 51 10 00 82 51 10 00 88 51 10 00 90 42 DF FF 90 42 DF FF 70 54 CE FF 09 0E 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 		</part>
 	</rom>
 	<rom index="0" zip="mktturbo.zip|mk.zip" md5="34c10c90b3178d74736bd3114b02fc70" type="merged">
