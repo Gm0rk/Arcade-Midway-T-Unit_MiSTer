@@ -79,6 +79,8 @@ localparam CONF_STR = {
 	"h5P3O[17],Hitboxes,Off,On;",
 	"h5P3O[18],Pong at Battle 250,Off,On;",
 	"h5P3O[19],Noob Saibot Fight,Off,On;",
+	"h5P3O[20],Jade Fight,Off,On;",
+	"h5P3O[21],Smoke Fight,Off,On;",
 	"h6P3R[14],Secret Menu;",
 	"h7P3R[14],Secret Audits;",
 	"h7P3R[15],Secret Audits + Credits;",
@@ -319,14 +321,19 @@ always @(posedge clk_sys) begin
 end
 
 // NVRAM (CMOS, 16 KB): loaded through port B of the CMOS RAM, cleared when a
-// new ROM set arrives so a game never sees another game's settings
+// new ROM set arrives so a game never sees another game's settings, saved
+// when the OSD opens after the game has changed it
 reg  [12:0] cmos_clr_addr;
 reg         cmos_clr;
-reg         cmos_dirty;
+reg         cmos_dirty = 1'b0;
+reg         nv_req = 1'b0;          // save request to the HPS (ioctl_upload_req)
+reg         nv_up_d = 1'b0;
+reg         osd_d = 1'b0;
 wire [15:0] nv_dout;
 wire        cmos_write;
 
 wire        nv_dl = ioctl_download && ioctl_index == 16'd2;
+wire        nv_up = ioctl_upload && ioctl_index == 16'd2;
 
 always @(posedge clk_sys) begin
 	if (rom_download && !rom_was_dl) begin
@@ -338,12 +345,24 @@ always @(posedge clk_sys) begin
 		if (cmos_clr_addr == 13'h1FFF) cmos_clr <= 1'b0;
 	end
 
-	// ask the HPS to save once the game has changed its CMOS
+	// the game has changed its CMOS since the last save; the save starting
+	// clears it (a write during the save marks it again)
+	nv_up_d <= nv_up;
 	if (cmos_write) cmos_dirty <= 1'b1;
-	else if (ioctl_upload && ioctl_index == 16'd2) cmos_dirty <= 1'b0;
+	else if (nv_up & ~nv_up_d) cmos_dirty <= 1'b0;
+
+	// Save request: raised as the OSD opens, if the CMOS has changed, and
+	// held until it closes. Main_MiSTer looks for a request (and saves,
+	// showing "Saving...") every time it draws the OSD's main menu: when it
+	// opens and again after every option change. A request that followed
+	// cmos_dirty would make it save again after a change whenever the game
+	// had written its CMOS in between; this one rises once per opening.
+	osd_d <= OSD_STATUS;
+	if (OSD_STATUS & ~osd_d) nv_req <= cmos_dirty;
+	else if (~OSD_STATUS)    nv_req <= 1'b0;
 end
 
-assign ioctl_upload_req = cmos_dirty;
+assign ioctl_upload_req = nv_req;
 assign ioctl_din        = nv_dout;
 
 wire [12:0] nv_addr = cmos_clr ? cmos_clr_addr : ioctl_addr[13:1];
@@ -511,9 +530,9 @@ end
 // OSD secrets (Secrets page)
 //
 // R[14] / R[15] play the loaded set's code 1 / code 2 (hidden menus, entered
-// on the controls during the attract mode); O[19:16] switch its read
-// patches (MK2: security screen, hitboxes, Pong at battle 250, Noob Saibot
-// fight). The codes
+// on the controls during the attract mode); O[21:16] switch its read
+// patches (MK2: security screen, hitboxes, Pong at battle 250, Noob Saibot,
+// Jade and Smoke fights). The codes
 // and patch addresses come with the MRA (ROM index 1), found per revision
 // by tools/tunit_secrets.py. Frames are counted while the game runs, so
 // with "Pause when OSD is open" a code starts when the OSD closes.
@@ -540,7 +559,7 @@ tunit_secrets secrets
 	.dl_data    (ioctl_dout),
 
 	.trig       (status[15:14]),
-	.opt        (status[19:16]),
+	.opt        (status[21:16]),
 	.frame      (osd_frame),
 
 	.cpu_rd     (cpu_rd),
