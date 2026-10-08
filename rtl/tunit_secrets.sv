@@ -47,6 +47,9 @@
 //  Words not sent read as 0 (the table is cleared when a download starts),
 //  so an MRA without this table (game id only) has no secrets.
 //
+//  When a code with a success address ends, code_ok or code_fail says
+//  whether its menu opened (the top level shows an OSD message).
+//
 //  Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 //============================================================================
 
@@ -75,6 +78,8 @@ module tunit_secrets
 	output reg        code_on,
 	output reg [15:0] code_in0,
 	output reg  [1:0] code_start,
+	output reg        code_ok,       // one clock: a code with a success address opened its menu
+	output reg        code_fail,     // one clock: a code did not, after its last try
 
 	// read patches for the board: 8 entries
 	output    [223:0] pt_addr,       // 8 x 28-bit word addresses
@@ -193,7 +198,9 @@ wire        go1 = trig[0] & ~trig_d[0] & (c_first[0] != 9'd0);
 wire        go2 = trig[1] & ~trig_d[1] & (c_first[1] != 9'd0);
 
 always @(posedge clk) begin
-	trig_d <= trig;
+	trig_d    <= trig;
+	code_ok   <= 1'b0;
+	code_fail <= 1'b0;
 
 	if (reset) begin
 		st         <= S_IDLE;
@@ -245,6 +252,8 @@ always @(posedge clk) begin
 							st         <= S_GAP;
 						end
 						else if (last) begin       // code finished: hand IN0 back
+							code_ok    <= done_wa != 28'd0 && seen;
+							code_fail  <= done_wa != 28'd0 && !seen;
 							code_on    <= 1'b0;
 							code_in0   <= 16'h0000;
 							code_start <= 2'b00;
