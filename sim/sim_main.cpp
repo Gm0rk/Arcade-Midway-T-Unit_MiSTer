@@ -51,7 +51,7 @@
 //              the last slot, PC (drain period, how busy the DSP is)
 //  --osd       frame:item:length, ';' separated: OSD Secrets page items,
 //              timed like --press; item 0 and 1 are the triggers R[14] and
-//              R[15] (code 1 and 2), 2-4 the options O[16]-O[18]
+//              R[15] (code 1 and 2), 2-5 the options O[16]-O[19]
 //
 //  The DDR3 port is a model of MiSTer's DDRAM interface: reads return
 //  their burst after a fixed latency, writes are accepted one beat per
@@ -413,7 +413,7 @@ int main(int argc, char **argv) {
 					if (in_frame > o.frame && in_frame <= o.frame + o.len)
 						items |= 1u << o.bit;
 				top->osd_trig = items & 3;
-				top->osd_opt  = (items >> 2) & 7;
+				top->osd_opt  = (items >> 2) & 15;
 			}
 		}
 
