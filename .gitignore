@@ -42,9 +42,5 @@ __pycache__/
 sim/obj*/
 sim/out/
 sim/dma_test/obj_dir/
-<<<<<<< Updated upstream
-COMMIT.md
-=======
->>>>>>> Stashed changes
 sim/crt_test/obj_dir/
 sim/crt_test/out/
