@@ -101,6 +101,7 @@ most). The options take effect at once and stay set until switched off.
 | | Security Screen | Each attract cycle starts with a hidden screen, "This version passed the security test", after a few seconds of black |
 | | Hitboxes | A debug feature left in the game: the hit box of every attack is drawn in green during fights |
 | | Pong at Battle 250 | Every two-player battle counts as battle 250: the VS screen shows "Kombat Zone: Back in Time", and after the first round both players face a game of Pong (rev L2.0 and later) |
+| | Noob Saibot Fight | The fight the game keeps for a player with 50 wins in a row: in a two-player battle, the winner of the first round goes on to fight Noob Saibot ("Incredible winning streak!!"). The game then carries on as after a real streak (rev L3.0 and later) |
 | NBA Jam / NBA Jam TE | Secret Menu | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on the older NBA Jam revisions) |
 | Judge Dredd | Secret Audits | Six hidden audit pages; any button turns the page |
 | | Secret Audits + Credits | Turns through the audits and holds both Start buttons at the end, which shows the staff credits |
