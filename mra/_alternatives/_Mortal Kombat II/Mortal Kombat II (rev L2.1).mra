@@ -31,10 +31,10 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA0EA10 (27 presses), menu FFA0E8D0; security screen branches FFA0EFC0 FFA0EFF0; hitbox flag 01061FA0; battle counter 01061B40; Noob Saibot check not found -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA0EA10 (27 presses), menu FFA0E8D0; security screen branches FFA0EFC0 FFA0EFF0; hitbox flag 01061FA0; battle counter 01061B40; Noob Saibot check not found; Jade check FFA0AFC0 (battle 10); Smoke check FFA0B5A0 (stage 7) -->
 		<part>
-		02 00 01 00 FC 0E FA 1F 00 03 FF 0E FA 1F 00 03 FA 61 10 20 01 00 B4 61 10 30 FA 00 00 00 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 8D 0E FA 0F 00 00 00 00
+		02 00 01 00 FC 0E FA 1F 00 03 FF 0E FA 1F 00 03 FA 61 10 20 01 00 B4 61 10 30 FA 00 01 0B FA 7F
+		00 03 37 0B FA 7F 06 C0 6E 0B FA 8F 12 C0 00 00 00 00 00 00 20 00 00 00 8D 0E FA 0F 00 00 00 00
 		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
