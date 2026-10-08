@@ -50,6 +50,7 @@ assign BUTTONS   = 0;
 //////////////////////////////////////////////////////////////////
 
 `include "build_id.v"
+`include "rtl/tunit_fmoves_osd.svh"
 localparam CONF_STR = {
 	"A.MIDWAYT;;",
 	"-;",
@@ -86,6 +87,7 @@ localparam CONF_STR = {
 	"h7P3R[15],Secret Audits + Credits;",
 	"P3-;",
 	"P3-,Codes work in attract mode;",
+	`FMOVES_OSD,
 	"-;",
 	"DIP;",
 	"-;",
@@ -94,12 +96,16 @@ localparam CONF_STR = {
 	"R[0],Reset;",
 	"J1,B1,B2,B3,B4,B5,B6,Start,Coin,Test,Pause;",
 	"jn,A,B,X,Y,L,R,Start,Select,,;",
+	`CORE_INFO,
 	"V,v",`BUILD_DATE
 };
 
 // OSD menu mask bits (assigned in "Game configuration"): which secrets the
-// loaded game has
+// loaded game has; bits 8-11 the Finishing Moves page's fighter
 wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd;
+wire  [3:0] fm_line;
+wire        info_req;
+wire  [7:0] info;
 
 wire        forced_scandoubler;
 wire        direct_video;
@@ -131,7 +137,9 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({8'd0, menu_jd, menu_nba, menu_mk2, menu_mk, menu_ejb, menu_secrets, ~status[101], 1'b0}),
+	.status_menumask     ({4'd0, fm_line, menu_jd, menu_nba, menu_mk2, menu_mk, menu_ejb, menu_secrets, ~status[101], 1'b0}),
+	.info_req            (info_req),
+	.info                (info),
 
 	.joystick_0          (joy0),
 	.joystick_1          (joy1),
@@ -397,6 +405,11 @@ wire        code_on;
 wire [15:0] code_in0;
 wire  [1:0] code_start;
 
+// finishing-move player (OSD Finishing Moves page): while it plays a move it
+// replaces the winner's controls
+wire  [1:0] fm_drive;
+wire  [8:0] fm_keys;
+
 // active-high port images, inverted at the end
 reg  [15:0] in0, in1, in2;
 always @(*) begin
@@ -447,6 +460,19 @@ always @(*) begin
 			in2[3:0]   = udlr(joy2);  in2[4]  = joy2[5];  in2[5]  = joy2[6];  in2[6]  = joy2[4];  in2[7]  = joy2[7];
 		end
 	endcase
+
+	// finishing moves: the player's controls replaced by the move's
+	// (fm_keys {BL, LK, HK, LP, HP, Right, Left, Down, Up}; Block 2 up)
+	if (fm_drive[0]) begin
+		in0[6:0] = {fm_keys[6], fm_keys[8], fm_keys[4], fm_keys[3:0]};
+		if (cfg_layout == L_MK) {in1[15], in1[13:12]} = {1'b0, fm_keys[7], fm_keys[5]};
+		else                    in2[2:0] = {1'b0, fm_keys[7], fm_keys[5]};
+	end
+	if (fm_drive[1]) begin
+		in0[14:8] = {fm_keys[6], fm_keys[8], fm_keys[4], fm_keys[3:0]};
+		if (cfg_layout == L_MK) in1[11:9] = {1'b0, fm_keys[7], fm_keys[5]};
+		else                    in2[6:4]  = {1'b0, fm_keys[7], fm_keys[5]};
+	end
 
 	if (code_on) begin
 		in0    = code_in0;
@@ -542,7 +568,10 @@ wire [223:0] pt_addr;
 wire [127:0] pt_data;
 wire   [7:0] pt_en;
 wire         cpu_rd;             // the board's completed CPU reads (a code's success)
+wire         cpu_wr;             // and writes (the finishing-move player follows the fight)
 wire  [27:0] cpu_wa;
+wire  [15:0] cpu_wd;
+wire         code_ok, code_fail;
 
 reg  secrets_dl_d = 1'b0;
 wire secrets_dl   = ioctl_download && ioctl_index == 16'd1;
@@ -568,11 +597,135 @@ tunit_secrets secrets
 	.code_on    (code_on),
 	.code_in0   (code_in0),
 	.code_start (code_start),
+	.code_ok    (code_ok),
+	.code_fail  (code_fail),
 
 	.pt_addr    (pt_addr),
 	.pt_data    (pt_data),
 	.pt_en      (pt_en)
 );
+
+//////////////////////////////////////////////////////////////////
+// Finishing moves (MK, MK2)
+//
+// The Finishing Moves page picks a fighter (O[30:28] MK, O[27:24] MK2; the
+// menu mask's bits 8-11 show that fighter's lines) and one of its moves
+// (R[32]-R[39], the fighter's lines in order; R[40] clears the set move).
+// rtl/tunit_fmoves.sv plays it at the winner's next FINISH HIM, following
+// the fight through the CPU's writes to the variables the MRA gives (ROM
+// index 1, bytes 0x400-0x44F, tools/tunit_fmoves.py).
+//////////////////////////////////////////////////////////////////
+
+assign fm_line = menu_mk2 ? status[27:24] : {1'b0, status[30:28]};
+
+reg   [8:0] fm_bits_d;
+reg         fm_sel;
+reg   [3:0] fm_slot;
+wire        fm_msg_req;
+wire  [4:0] fm_msg;
+
+integer fi;
+always @(posedge clk_sys) begin
+	fm_bits_d <= status[40:32];
+	fm_sel    <= 1'b0;
+	for (fi = 8; fi >= 0; fi = fi - 1)
+		if (status[32 + fi] & ~fm_bits_d[fi]) begin
+			fm_sel  <= 1'b1;
+			fm_slot <= (fi == 8) ? 4'd15 : fi[3:0];
+		end
+end
+
+tunit_fmoves fmoves
+(
+	.clk       (clk_sys),
+	.reset     (reset),
+	.game_mk   (menu_mk),
+	.game_mk2  (menu_mk2),
+
+	.dl_start  (secrets_dl & ~secrets_dl_d),
+	.dl_wr     (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr[26:7] == 20'h8),
+	.dl_addr   (ioctl_addr[6:1]),
+	.dl_data   (ioctl_dout),
+
+	.sel       (fm_sel),
+	.sel_line  (fm_line),
+	.sel_slot  (fm_slot),
+	.frame     (osd_frame),
+
+	.cpu_wr    (cpu_wr),
+	.cpu_wa    (cpu_wa),
+	.cpu_wd    (cpu_wd),
+
+	.drive     (fm_drive),
+	.keys      (fm_keys),
+	.msg_req   (fm_msg_req),
+	.msg       (fm_msg)
+);
+
+//////////////////////////////////////////////////////////////////
+// OSD messages (CONF_STR "I" line, rtl/tunit_fmoves_osd.svh)
+//
+// The finishing-move player's, the secrets' codes (their menu opened, or
+// not) and the Secrets page's options turned on (MK2; looked at when the
+// OSD closes). Main_MiSTer shows a message for 2 s, and only with the OSD
+// closed: messages wait in a set (lowest number first) and go out one
+// every 2.2 s, starting 0.3 s after the OSD closes.
+//////////////////////////////////////////////////////////////////
+
+localparam [27:0] MSG_GAP   = 28'd211_200_000;     // 2.2 s at 96 MHz
+localparam [27:0] MSG_DELAY = 28'd28_800_000;      // 0.3 s
+
+reg  [31:1] msg_pend;
+reg   [5:0] sec_open;            // Secrets options when the OSD opened
+reg  [27:0] msg_timer;
+reg         osd_was;
+reg         msg_out;
+reg   [4:0] msg_num;             // the lowest waiting message
+reg   [4:0] msg_num_q;           // the one going out
+
+integer mi;
+always @(*) begin
+	msg_num = 5'd0;
+	for (mi = 31; mi >= 1; mi = mi - 1)
+		if (msg_pend[mi]) msg_num = mi[4:0];
+end
+
+always @(posedge clk_sys) begin
+	osd_was <= OSD_STATUS;
+	msg_out <= 1'b0;
+
+	if (OSD_STATUS & ~osd_was) sec_open <= status[21:16];
+
+	if (fm_msg_req) msg_pend[fm_msg] <= 1'b1;
+	if (code_ok)    msg_pend[MSG_CODE_OK] <= 1'b1;
+	if (code_fail)  msg_pend[MSG_CODE_FAIL] <= 1'b1;
+	if (~OSD_STATUS & osd_was & menu_mk2) begin
+		if (status[16] & ~sec_open[0]) msg_pend[MSG_SECURITY] <= 1'b1;
+		if (status[17] & ~sec_open[1]) msg_pend[MSG_HITBOXES] <= 1'b1;
+		if (status[18] & ~sec_open[2]) msg_pend[MSG_PONG]     <= 1'b1;
+		if (status[19] & ~sec_open[3]) msg_pend[MSG_NOOB]     <= 1'b1;
+		if (status[20] & ~sec_open[4]) msg_pend[MSG_JADE]     <= 1'b1;
+		if (status[21] & ~sec_open[5]) msg_pend[MSG_SMOKE]    <= 1'b1;
+	end
+
+	if (reset)
+		msg_pend <= 31'd0;
+	else if (OSD_STATUS) begin
+		if (msg_timer < MSG_DELAY) msg_timer <= MSG_DELAY;
+	end
+	else if (msg_timer != 28'd0)
+		msg_timer <= msg_timer - 28'd1;
+	else if (msg_num != 5'd0) begin
+		msg_out  <= 1'b1;
+		msg_pend[msg_num] <= 1'b0;
+		msg_timer <= MSG_GAP;
+	end
+end
+
+always @(posedge clk_sys) if (!msg_out) msg_num_q <= msg_num;
+
+assign info_req = msg_out;
+assign info     = {3'd0, msg_num_q};
 
 midway_tunit board
 (
@@ -643,10 +796,10 @@ midway_tunit board
 	.dbg_pc         (),
 	.dbg_retire     (),
 	.dbg_blit_busy  (),
-	.dbg_wr         (),
+	.dbg_wr         (cpu_wr),
 	.dbg_rd         (cpu_rd),
 	.dbg_wa         (cpu_wa),
-	.dbg_wdata      (),
+	.dbg_wdata      (cpu_wd),
 	.dbg_rdata      ()
 );
 
