@@ -44,3 +44,4 @@ sim/out/
 sim/dma_test/obj_dir/
 sim/crt_test/obj_dir/
 sim/crt_test/out/
+COMMIT.md
