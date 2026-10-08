@@ -31,7 +31,7 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FF9CF1C0 (27 presses), menu FF9CEAF0; EJB code handler not called: Block handlers pointed at it while the code plays; security screen branches FF9CF770 FF9CF7A0; hitbox flag 01061F30; battle 250 check not found; Noob Saibot check not found -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FF9CF1C0 (27 presses), menu FF9CEAF0; EJB code handler not called: Block handlers pointed at it while the code plays; security screen branches FF9CF770 FF9CF7A0; hitbox flag 01061F30; battle 250 check not found; Noob Saibot check not found; Jade check not found; Smoke check not found -->
 		<part>
 		02 00 01 00 D3 11 F8 4F B0 E6 D4 11 F8 4F 9C FF EB 11 F8 4F D0 E6 EC 11 F8 4F 9C FF 77 CF F9 1F
 		00 03 7A CF F9 1F 00 03 F3 61 10 20 01 00 00 00 00 00 00 00 20 00 00 00 AF CE F9 0F 00 00 00 00
