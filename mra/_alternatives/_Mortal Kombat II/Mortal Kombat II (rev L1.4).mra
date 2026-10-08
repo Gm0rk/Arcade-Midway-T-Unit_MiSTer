@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II (rev L1.4)</name>
-	<mratimestamp>20261007</mratimestamp>
+	<mratimestamp>20261008</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2r14</setname>
 	<year>1993</year>
@@ -42,6 +42,13 @@ rom index 3 (SDRAM 0xD00000):
 		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 80
+		</part>
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; 53 moves not in this revision -->
+		<part repeat="744">00</part>
+		<part>
+		01 00 00 00 B0 61 10 00 28 60 10 00 E5 60 10 00 2F 60 10 00 EC 60 10 00 22 60 10 00 DF 60 10 00
+		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 10 A5 89 FF B0 DF 9C FF 00 B0 82 FF 09 0E 00 00
+		3C 3D 3C 3E 3E 30 3D 3C 3D 3C 7D 1E 00 00 00 00
 		</part>
 	</rom>
 	<rom index="0" zip="mk2r14.zip|mk2.zip" md5="286acd60885ef2fbcc1bccececfd80d8" type="merged">
