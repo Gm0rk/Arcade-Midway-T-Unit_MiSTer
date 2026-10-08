@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II (rev L2.1)</name>
-	<mratimestamp>20261006</mratimestamp>
+	<mratimestamp>20261007</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2r21</setname>
 	<year>1993</year>
@@ -31,7 +31,7 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA0EA10 (27 presses), menu FFA0E8D0; security screen branches FFA0EFC0 FFA0EFF0; hitbox flag 01061FA0; battle counter 01061B40 -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA0EA10 (27 presses), menu FFA0E8D0; security screen branches FFA0EFC0 FFA0EFF0; hitbox flag 01061FA0; battle counter 01061B40; Noob Saibot check not found -->
 		<part>
 		02 00 01 00 FC 0E FA 1F 00 03 FF 0E FA 1F 00 03 FA 61 10 20 01 00 B4 61 10 30 FA 00 00 00 00 00
 		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 8D 0E FA 0F 00 00 00 00
