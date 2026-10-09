@@ -1,5 +1,7 @@
 # Williams/Midway T-Unit for [MiSTer](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
+AI disclosure: this core was developed with the help of an AI assistant (Claude, by Anthropic).
+
 An FPGA implementation of the Midway T-Unit arcade board (1993-1994), the
 TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
 Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
