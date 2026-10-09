@@ -6,6 +6,7 @@ Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 
 - [Versions](#versions)
 - [Controls](#controls)
+- [Move List](#move-list)
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
 
@@ -32,6 +33,75 @@ With a merged ROM set they all load from `mk2.zip`.
 
 Two players: High Punch, Block, High Kick, Low Punch, Low Kick, Block 2, plus
 Start, Coin, Test (service mode) and Pause.
+
+## Move List
+
+The OSD's Move List page shows the special moves of the fighter picked
+there (the same Fighter choice as the Finishing Moves page). It only shows
+them; the core does not enter these moves for you.
+
+Commands as the game reads them: F toward the opponent, B away. In
+(BL U U) LK, Block keeps the fighter from jumping on U and is let go
+before LK; (HP 1 s) means High Punch held for about a second, then let
+go; X+Y pressed together; "in air" during a jump. The list is the one of
+rev L3.1; other revisions and the hacks may differ.
+
+| Fighter | Move | Command |
+|---|---|---|
+| Liu Kang | High Fireball | F F HP |
+|  | Low Fireball | F F LP |
+|  | Flying Kick | F F HK |
+|  | Bicycle Kick | (LK 3 s) |
+| Kung Lao | Hat Throw | B F LP, Up / Down steer the hat |
+|  | Teleport | D U |
+|  | Spin | (BL U U) LK |
+|  | Dive Kick | D HK in air |
+| Johnny Cage | High Bolt | F D B HP |
+|  | Low Bolt | B D F LP |
+|  | Shadow Kick | B F LK |
+|  | Uppercut | B D B HP |
+|  | Ball Breaker | LP+BL |
+| Reptile | Acid Spit | F F HP |
+|  | Force Ball | B B HP+LP |
+|  | Invisibility | (BL U U D) HP |
+|  | Slide | B+LP+LK+BL |
+| Sub-Zero | Freeze | D F LP |
+|  | Ground Freeze | D B LK |
+|  | Slide | B+LP+LK+BL |
+| Shang Tsung | Skull | B B HP |
+|  | 2 Skulls | B B F HP |
+|  | 3 Skulls | B B F F HP |
+|  | Morph into Liu Kang | B F F BL |
+|  | Morph into Kung Lao | B D B HK |
+|  | Morph into Johnny Cage | B B D LP |
+|  | Morph into Reptile | (BL U D) HP |
+|  | Morph into Sub-Zero | F D F HP |
+|  | Morph into Kitana | BL BL BL |
+|  | Morph into Jax | D F B HK |
+|  | Morph into Mileena | (HP 1 s) |
+|  | Morph into Baraka | D D LK |
+|  | Morph into Scorpion | (BL U U) |
+|  | Morph into Raiden | D B F LK |
+| Kitana | Fan Throw | F F HP+LP |
+|  | Fan Lift | B B B HP |
+|  | Flying Punch | F D B HP |
+| Jax | Energy Wave | F D B HK |
+|  | Gotcha Grab | F F LP |
+|  | Ground Smash | (LK 2 s) |
+|  | Back Breaker | BL in air, next to an opponent in the air |
+| Mileena | Sai Throw | (HP 1 s) |
+|  | Teleport Kick | F F LK |
+|  | Roll | B B D HK |
+| Baraka | Blade Spark | D B HP |
+|  | Blade Fury | B B B LP |
+| Scorpion | Spear | B B LP |
+|  | Teleport | D B HP |
+|  | Scissors | F D B LK |
+|  | Air Throw | BL in air, next to an opponent in the air |
+| Raiden | Lightning | D F LP |
+|  | Teleport | D U |
+|  | Torpedo | B B F |
+|  | Electric Grab | (HP 2 s), close to the opponent |
 
 ## Secrets
 
