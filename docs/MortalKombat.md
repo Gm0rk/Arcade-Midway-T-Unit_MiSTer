@@ -7,6 +7,7 @@ board. The earlier Y Unit revisions are not part of this core.
 
 - [Versions](#versions)
 - [Controls](#controls)
+- [Move List](#move-list)
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
 
@@ -26,6 +27,36 @@ Mortal Kombat sets.
 
 Two players: High Punch, Block, High Kick, Low Punch, Low Kick, Block 2, plus
 Start, Coin, Test (service mode) and Pause.
+
+## Move List
+
+The OSD's Move List page shows the special moves of the fighter picked
+there (the same Fighter choice as the Finishing Moves page). It only shows
+them; the core does not enter these moves for you.
+
+Commands as the game reads them: F toward the opponent, B away; (BL B F)
+means Block held while you enter B F; X+Y pressed together. The list is
+the one of rev 5.0; rev 4.0 and the Turbo Ninja hack may differ.
+
+| Fighter | Move | Command |
+|---|---|---|
+| Johnny Cage | Green Bolt | B F LP |
+|  | Shadow Kick | B F LK |
+|  | Split Punch | LP+BL |
+| Kano | Knife Throw | (BL B F) |
+|  | Cannonball | F D B U |
+| Sub-Zero | Freeze | D F LP |
+|  | Slide | B+LP+LK+BL |
+| Sonya | Ring Toss | LP B LP, quickly (all within about 0.4 s) |
+|  | Leg Grab | D+LP+LK+BL |
+|  | Square Wave | F B HP |
+| Raiden | Lightning | D F LP |
+|  | Teleport | D U |
+|  | Torpedo | B B F |
+| Liu Kang | Fireball | F F HP |
+|  | Flying Kick | F F HK |
+| Scorpion | Spear | B B LP |
+|  | Teleport | D B HP |
 
 ## Secrets
 
