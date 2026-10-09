@@ -4,7 +4,7 @@ tunit_fmoves.py - finishing moves for Mortal Kombat and Mortal Kombat II
 
     python3 tools/tunit_fmoves.py <game id> <maincpu.bin>   addresses of a set
     python3 tools/tunit_fmoves.py --gen                     write the tables
-    python3 tools/tunit_fmoves.py --readme                  README move lists
+    python3 tools/tunit_fmoves.py --docs mk|mk2             a game page's move table
 
 The OSD's "Finishing Moves" page picks a fighter and one of the fighter's
 moves; rtl/tunit_fmoves.sv plays it on the winner's controls at the next
@@ -14,7 +14,8 @@ FINISH HIM it fits. This script holds the move list and makes from it:
     controls they press), included by rtl/tunit_fmoves.sv
   - rtl/tunit_fmoves_osd.svh: the OSD page and the core's info messages
     (CONF_STR lines), included by the top level
-  - with --readme, the move tables of README.md
+  - with --docs, the move table of docs/MortalKombat.md (mk) or
+    docs/MortalKombatII.md (mk2)
 
 and, for mra_gen.py, each set's RAM addresses (ROM index 1, words 0x200 on):
 the move player follows the fight by watching the CPU's writes to them.
@@ -549,8 +550,8 @@ def gen_osd():
     return '\n'.join(o) + '\n'
 
 
-def readme():
-    """The README's move tables."""
+def docs(game):
+    """The move table of a game's page (docs/MortalKombat.md, docs/MortalKombatII.md)."""
     def dist(dmin, dmax):
         if dmin == 0 and dmax >= FAR:
             return 'any'
@@ -560,20 +561,16 @@ def readme():
             return '%d or more' % dmin
         return '%d-%d' % (dmin, dmax)
     o = []
-    for game, title in (('mk2', 'Mortal Kombat II'), ('mk', 'Mortal Kombat')):
-        o.append('**%s**' % title)
-        o.append('')
-        o.append('| Fighter | Move | Command | Distance |')
-        o.append('|---|---|---|---|')
-        for name, cid, moves in fighters(game):
-            moves = [m for m in moves if m[1] not in (K_DEAD, K_MKPIT)]
-            for n, (mname, kind, cmd, prog, dmin, dmax, note) in enumerate(moves):
-                c = cmd + (', ' + note if note else '')
-                o.append('| %s | %s | %s | %s |' % (name if n == 0 else '', mname, c, dist(dmin, dmax)))
-        o.append('')
-        mname, kind, cmd, prog, dmin, dmax, note = MK2_DEADPOOL if game == 'mk2' else MK_PIT
-        o.append('Every fighter also has %s: %s, %s.' % ('the Dead Pool' if game == 'mk2' else 'The Pit', cmd, dist(dmin, dmax)))
-        o.append('')
+    o.append('| Fighter | Move | Command | Distance |')
+    o.append('|---|---|---|---|')
+    for name, cid, moves in fighters(game):
+        moves = [m for m in moves if m[1] not in (K_DEAD, K_MKPIT)]
+        for n, (mname, kind, cmd, prog, dmin, dmax, note) in enumerate(moves):
+            c = cmd + (', ' + note if note else '')
+            o.append('| %s | %s | %s | %s |' % (name if n == 0 else '', mname, c, dist(dmin, dmax)))
+    o.append('')
+    mname, kind, cmd, prog, dmin, dmax, note = MK2_DEADPOOL if game == 'mk2' else MK_PIT
+    o.append('Every fighter also has %s: %s, %s.' % ('the Dead Pool' if game == 'mk2' else 'The Pit', cmd, dist(dmin, dmax)))
     return '\n'.join(o)
 
 
@@ -585,8 +582,8 @@ def main():
         lines, info = osd_lines()
         n = sum(len(l) for l in lines) + len(info)
         print('OSD page %d bytes, %d lines; %d steps' % (n, len(lines), len(tables()[1])))
-    elif a and a[0] == '--readme':
-        print(readme())
+    elif len(a) == 2 and a[0] == '--docs' and a[1] in ('mk', 'mk2'):
+        print(docs(a[1]))
     elif len(a) == 2:
         r, notes = addresses(int(a[0]), open(a[1], 'rb').read())
         for n in notes:
