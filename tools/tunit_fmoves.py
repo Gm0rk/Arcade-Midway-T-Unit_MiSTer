@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-tunit_fmoves.py - finishing moves for Mortal Kombat and Mortal Kombat II
+tunit_fmoves.py - finishing moves and move lists for Mortal Kombat and
+Mortal Kombat II
 
     python3 tools/tunit_fmoves.py <game id> <maincpu.bin>   addresses of a set
     python3 tools/tunit_fmoves.py --gen                     write the tables
-    python3 tools/tunit_fmoves.py --docs mk|mk2             a game page's move table
+    python3 tools/tunit_fmoves.py --docs mk|mk2             a game page's finishing moves
+    python3 tools/tunit_fmoves.py --moves mk|mk2            a game page's move list
 
 The OSD's "Finishing Moves" page picks a fighter and one of the fighter's
 moves; rtl/tunit_fmoves.sv plays it on the winner's controls at the next
@@ -12,10 +14,10 @@ FINISH HIM it fits. This script holds the move list and makes from it:
 
   - rtl/tunit_fmoves_tab.svh: the move records and their programs (the
     controls they press), included by rtl/tunit_fmoves.sv
-  - rtl/tunit_fmoves_osd.svh: the OSD page and the core's info messages
-    (CONF_STR lines), included by the top level
-  - with --docs, the move table of docs/MortalKombat.md (mk) or
-    docs/MortalKombatII.md (mk2)
+  - rtl/tunit_fmoves_osd.svh: the Finishing Moves and Move List OSD pages
+    and the core's info messages (CONF_STR lines), included by the top level
+  - with --docs / --moves, the finishing move and move list tables of
+    docs/MortalKombat.md (mk) or docs/MortalKombatII.md (mk2)
 
 and, for mra_gen.py, each set's RAM addresses (ROM index 1, words 0x200 on):
 the move player follows the fight by watching the CPU's writes to them.
@@ -162,6 +164,69 @@ MK_FIGHTERS = [  # select screen order
     ("Scorpion", 4, [("Fire Breath", K_FATAL, "(BL) U U", "[BL U U ]BL", 120, 144, None)]),
 ]
 MK_PIT = ("The Pit", K_MKPIT, "D+HP", "[D w8 HP w8 ]D", 24, 64, None)
+
+# Move List page (P5): each fighter's special moves, shown only (the core
+# does not enter them). Same order as the fighters above; (name, command),
+# a None command is a heading. Found in the move handlers (MK2 L3.1 per
+# button and direction at FF8628A0 on, matcher FF8775D0, button pairs
+# FF86A460, slide FF866630; MK 5.0 per event at FFD993A0, matcher
+# FFD9CFB0, button buffer FFD9E3C0, held combinations FFD9CE60) and each
+# one played in MAME 0.289 at a FINISH HIM, the move's process start seen
+# (MK2 FF877370 A7, MK FFD9C9C0 A7); the air grabs and Raiden's grab need
+# an opponent not dizzy and come from the handlers only. Charge times are
+# the handlers' minimum (frames since the press: Liu Kang 80h, Jax 60h,
+# Raiden 50h, Mileena 22h, Shang Tsung's Mileena 30h) rounded up.
+# "(BL U U) LK": Block held over the directions (so U does not jump), let
+# go before the button; "(HP 1 s)": HP held about a second, then let go.
+MK2_SPECIALS = [
+    [("High Fireball", "F F HP"), ("Low Fireball", "F F LP"), ("Flying Kick", "F F HK"),
+     ("Bicycle Kick", "(LK 3 s)")],
+    [("Hat Throw", "B F LP"), ("Teleport", "D U"), ("Spin", "(BL U U) LK"),
+     ("Dive Kick", "D HK in air")],
+    [("High Bolt", "F D B HP"), ("Low Bolt", "B D F LP"), ("Shadow Kick", "B F LK"),
+     ("Uppercut", "B D B HP"), ("Ball Breaker", "LP+BL")],
+    [("Acid Spit", "F F HP"), ("Force Ball", "B B HP+LP"), ("Invisibility", "(BL U U D) HP"),
+     ("Slide", "B+LP+LK+BL")],
+    [("Freeze", "D F LP"), ("Ground Freeze", "D B LK"), ("Slide", "B+LP+LK+BL")],
+    [("Skull", "B B HP"), ("2 Skulls", "B B F HP"), ("3 Skulls", "B B F F HP"),
+     ("Morph into:", None),
+     ("Liu Kang", "B F F BL"), ("Kung Lao", "B D B HK"), ("Johnny Cage", "B B D LP"),
+     ("Reptile", "(BL U D) HP"), ("Sub-Zero", "F D F HP"), ("Kitana", "BL BL BL"),
+     ("Jax", "D F B HK"), ("Mileena", "(HP 1 s)"), ("Baraka", "D D LK"),
+     ("Scorpion", "(BL U U)"), ("Raiden", "D B F LK")],
+    [("Fan Throw", "F F HP+LP"), ("Fan Lift", "B B B HP"), ("Flying Punch", "F D B HP")],
+    [("Energy Wave", "F D B HK"), ("Gotcha Grab", "F F LP"), ("Ground Smash", "(LK 2 s)"),
+     ("Back Breaker", "BL in air")],
+    [("Sai Throw", "(HP 1 s)"), ("Teleport Kick", "F F LK"), ("Roll", "B B D HK")],
+    [("Blade Spark", "D B HP"), ("Blade Fury", "B B B LP")],
+    [("Spear", "B B LP"), ("Teleport", "D B HP"), ("Scissors", "F D B LK"),
+     ("Air Throw", "BL in air")],
+    [("Lightning", "D F LP"), ("Teleport", "D U"), ("Torpedo", "B B F"),
+     ("Electric Grab", "(HP 2 s)")],
+]
+MK_SPECIALS = [
+    [("Green Bolt", "B F LP"), ("Shadow Kick", "B F LK"), ("Split Punch", "LP+BL")],
+    [("Knife Throw", "(BL B F)"), ("Cannonball", "F D B U")],
+    [("Freeze", "D F LP"), ("Slide", "B+LP+LK+BL")],
+    [("Ring Toss", "LP B LP"), ("Leg Grab", "D+LP+LK+BL"), ("Square Wave", "F B HP")],
+    [("Lightning", "D F LP"), ("Teleport", "D U"), ("Torpedo", "B B F")],
+    [("Fireball", "F F HP"), ("Flying Kick", "F F HK")],
+    [("Spear", "B B LP"), ("Teleport", "D B HP")],
+]
+# notes for the game pages (docs/), keyed by (game, fighter, move)
+SPECIAL_NOTES = {
+    ('mk', 'Sonya', 'Ring Toss'): 'quickly (all within about 0.4 s)',
+    ('mk2', 'Kung Lao', 'Hat Throw'): 'Up / Down steer the hat',
+    ('mk2', 'Raiden', 'Electric Grab'): 'close to the opponent',
+    ('mk2', 'Jax', 'Back Breaker'): 'next to an opponent in the air',
+    ('mk2', 'Scorpion', 'Air Throw'): 'next to an opponent in the air',
+}
+
+
+def specials(game):
+    """(fighter name, [(move, command)]) in the Fighter option's order."""
+    f, s = (MK2_FIGHTERS, MK2_SPECIALS) if game == 'mk2' else (MK_FIGHTERS, MK_SPECIALS)
+    return [(n, m) for (n, _, _), m in zip(f, s)]
 
 
 def fighters(game):
@@ -440,29 +505,45 @@ def sv_str(s):
     return s.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n')
 
 
+def sel_prefix(game, li):
+    """Hide prefixes that show a line only for the game (menu mask bit 4 MK,
+    5 MK2) and fighter li (bits 8-11 = the Fighter option; MK's bit 11 is
+    always 0, so its lines test bits 8-10 only)."""
+    pre = 'h' + ('5' if game == 'mk2' else '4')
+    for b in range(4 if game == 'mk2' else 3):
+        pre += ('h' if li >> b & 1 else 'H') + '0123456789ABCDEF'[MASK_SEL + b]
+    return pre
+
+
+def label(name, cmd):
+    s = '%-12s %s' % (name, cmd) if cmd else name
+    if len(s) > 27 or ',' in s or ';' in s:
+        raise ValueError('label too long or with , / ;: ' + s)
+    return s
+
+
+def fighter_options(page):
+    """The Fighter option of a page; both pages set the same status bits."""
+    out = []
+    for game, bit, sel in (('mk', '4', SEL_MK), ('mk2', '5', SEL_MK2)):
+        f = fighters(game)
+        out.append('h%s%sO[%d:%d],Fighter,%s;' % (bit, page, sel[0], sel[1], ','.join(n for n, _, _ in f)))
+    return out
+
+
 def osd_lines():
-    """CONF_STR lines of the Finishing Moves page (P4) and the I line."""
+    """CONF_STR lines of the Finishing Moves page (P4), the Move List page
+    (P5) and the I line."""
     out = []
     out.append('h3P4,Finishing Moves;')
     out.append('P4-;')
-    for game, bit, sel in (('mk', '4', SEL_MK), ('mk2', '5', SEL_MK2)):
-        f = fighters(game)
-        out.append('h%sP4O[%d:%d],Fighter,%s;' % (bit, sel[0], sel[1], ','.join(n for n, _, _ in f)))
+    out += fighter_options('P4')
     out.append('P4-;')
-    for game, bit, nbits in (('mk', '4', 3), ('mk2', '5', 4)):
+    for game in ('mk', 'mk2'):
         for li, (name, cid, moves) in enumerate(fighters(game)):
-            pre = 'h' + bit
-            for b in range(4):
-                c = '0123456789ABCDEF'[MASK_SEL + b]
-                if b < nbits:
-                    pre += ('h' if li >> b & 1 else 'H') + c
-                else:
-                    pre += 'H' + c
+            pre = sel_prefix(game, li)
             for slot, (mname, kind, cmd, prog, dmin, dmax, note) in enumerate(moves):
-                label = '%-12s %s' % (mname, cmd)
-                if len(label) > 27:
-                    raise ValueError('label too long: ' + label)
-                out.append('%sP4R[%d],%s;' % (pre, SLOT_BIT + slot, label))
+                out.append('%sP4R[%d],%s;' % (pre, SLOT_BIT + slot, label(mname, cmd)))
                 if note:
                     out.append('%sP4-,%s%s;' % (pre, ' ' * 12, note))
     out.append('P4-;')
@@ -470,6 +551,15 @@ def osd_lines():
     out.append('P4-;')
     out.append('P4-,The move plays at the;')
     out.append('P4-,winner\'s FINISH HIM;')
+    out.append('h3P5,Move List;')
+    out.append('P5-;')
+    out += fighter_options('P5')
+    out.append('P5-;')
+    for game in ('mk', 'mk2'):
+        for li, (name, moves) in enumerate(specials(game)):
+            pre = sel_prefix(game, li)
+            for mname, cmd in moves:
+                out.append('%sP5-,%s;' % (pre, label(mname, cmd)))
     info = 'I,' + ','.join(m for _, m in MESSAGES) + ';'
     return out, info
 
@@ -532,7 +622,8 @@ def gen_tab():
 def gen_osd():
     lines, info = osd_lines()
     o = []
-    o.append('// tunit_fmoves_osd.svh - the Finishing Moves page and the info messages')
+    o.append('// tunit_fmoves_osd.svh - the Finishing Moves and Move List pages, the info')
+    o.append('// messages')
     o.append('// Generated by tools/tunit_fmoves.py --gen; do not edit.')
     o.append('//')
     o.append('// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later')
@@ -574,6 +665,22 @@ def docs(game):
     return '\n'.join(o)
 
 
+def docs_moves(game):
+    """The Move List table of a game's page."""
+    o = ['| Fighter | Move | Command |', '|---|---|---|']
+    for name, moves in specials(game):
+        first, head = True, ''
+        for mname, cmd in moves:
+            if cmd is None:
+                head = mname.rstrip(':') + ' '
+                continue
+            note = SPECIAL_NOTES.get((game, name, mname))
+            o.append('| %s | %s | %s |' % (name if first else '', head + mname,
+                                           cmd + (', ' + note if note else '')))
+            first = False
+    return '\n'.join(o)
+
+
 def main():
     a = sys.argv[1:]
     if a and a[0] == '--gen':
@@ -584,6 +691,8 @@ def main():
         print('OSD page %d bytes, %d lines; %d steps' % (n, len(lines), len(tables()[1])))
     elif len(a) == 2 and a[0] == '--docs' and a[1] in ('mk', 'mk2'):
         print(docs(a[1]))
+    elif len(a) == 2 and a[0] == '--moves' and a[1] in ('mk', 'mk2'):
+        print(docs_moves(a[1]))
     elif len(a) == 2:
         r, notes = addresses(int(a[0]), open(a[1], 'rb').read())
         for n in notes:
