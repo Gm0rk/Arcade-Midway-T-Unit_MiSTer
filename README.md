@@ -3,6 +3,10 @@
 > **AI disclosure:** this core was developed with the help of an AI assistant
 > (Claude, by Anthropic).
 
+> **Testing in progress:** this core is currently undergoing testing. It can
+> be compiled and is playable in its current state, but bugs are expected.
+> Issues and pull requests are not accepted at the moment.
+
 An FPGA implementation of the Midway T-Unit arcade board (1993-1994), the
 TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
 Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
@@ -37,13 +41,17 @@ Mortal Kombat games, the Move List and Finishing Moves.
 
 | Game | Sound | Players | Status |
 |---|---|---|---|
-| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | Awaiting hardware test |
-| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | Awaiting hardware test |
-| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | Awaiting hardware test |
-| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | Awaiting hardware test |
-| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | Awaiting hardware test |
+| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat) |
+| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat-ii) |
+| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam) |
+| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam-tournament-edition) |
+| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | [Awaiting hardware test](docs/TestPlan.md#judge-dredd) |
 
 Verified on hardware: `[░░░░░░░░░░░░░░░░░░░░]` 0 / 5
+
+Progress is tracked in the [test plan](docs/TestPlan.md): a game counts as
+verified when its section and the core-wide tests pass (optional tests
+aside).
 
 ## Features
 
