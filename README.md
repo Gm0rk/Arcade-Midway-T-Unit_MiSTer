@@ -33,7 +33,7 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 ## Games
 
 Each game has its own page: its versions, controls, Secrets and, for the
-Mortal Kombat games, Finishing Moves.
+Mortal Kombat games, the Move List and Finishing Moves.
 
 | Game | Sound | Players | Status |
 |---|---|---|---|
@@ -60,6 +60,8 @@ Verified on hardware: `[░░░░░░░░░░░░░░░░░░�
   programmers left in the games
 - Finishing Moves page in the OSD (Mortal Kombat, Mortal Kombat II): every
   fighter's finishing moves, entered for you at FINISH HIM
+- Move List page in the OSD (Mortal Kombat, Mortal Kombat II): every
+  fighter's special moves and their commands
 - OSD messages: what a set finishing move is waiting for, whether a secrets
   code was taken, what a Secrets option just turned on does
 
