@@ -101,7 +101,8 @@ localparam CONF_STR = {
 };
 
 // OSD menu mask bits (assigned in "Game configuration"): which secrets the
-// loaded game has; bits 8-11 the Finishing Moves page's fighter
+// loaded game has; bits 8-11 the fighter picked on the Finishing Moves and
+// Move List pages
 wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd;
 wire  [3:0] fm_line;
 wire        info_req;
@@ -611,6 +612,8 @@ tunit_secrets secrets
 // The Finishing Moves page picks a fighter (O[30:28] MK, O[27:24] MK2; the
 // menu mask's bits 8-11 show that fighter's lines) and one of its moves
 // (R[32]-R[39], the fighter's lines in order; R[40] clears the set move).
+// The Move List page (P5) has the same Fighter option and shows that
+// fighter's special moves as text lines; nothing in the core acts on it.
 // rtl/tunit_fmoves.sv plays it at the winner's next FINISH HIM, following
 // the fight through the CPU's writes to the variables the MRA gives (ROM
 // index 1, bytes 0x400-0x44F, tools/tunit_fmoves.py).
