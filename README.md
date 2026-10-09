@@ -7,9 +7,9 @@ An FPGA implementation of the Midway T-Unit arcade board (1993-1994), the
 TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
 Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 
-> **Testing in progress:** this core is currently undergoing testing. It can
-> be compiled and is playable in its current state, but bugs are expected.
-> Issues and pull requests are not accepted at the moment.
+> **Status:** the core is currently undergoing testing. It can be compiled and is playable in its
+> current state, but bugs are expected. Issues and pull requests are not
+> accepted at the moment.
 
 ## Contents
 
