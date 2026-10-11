@@ -36,9 +36,12 @@ Start, Coin, Test (service mode) and Pause.
 
 ## Move List
 
-The OSD's Move List page shows the special moves of the fighter picked
-there (the same Fighter choice as the Finishing Moves page). It only shows
-them; the core does not enter these moves for you.
+The OSD's Move List page has the Fighter (the same choice as the Finishing
+Moves page) and Show Move List: a window over the game, on the game's title
+screen, with that fighter's special moves and finishing moves and the
+distance each finishing move needs. The game waits while the window is on;
+turn it off to play on. The window only shows the moves; the core does not
+enter them for you (the Finishing Moves page does that).
 
 Commands as the game reads them: F toward the opponent, B away. In
 (BL U U) LK, Block keeps the fighter from jumping on U and is let go
@@ -119,6 +122,9 @@ most).
 | Jade Fight | In a one-player game, the first round you win is followed by the fight against Jade ("Now you must battle with an undiscovered warrior from Mortal Kombat One"). Normally that takes winning a round with Low Kicks only in the battle before the "?" on the tower (rev L2.0 and later) |
 | Smoke Fight | Hold Down and press Start during any fight to fight Smoke next ("You have found the passage from the Outworld to the Earth Realm"). Normally that only works on The Portal while the "Toasty!" man is on screen (rev L2.0 and later) |
 
+When the OSD closes, a message says what an option just turned on does, or
+that the loaded revision does not have it.
+
 ## Finishing Moves
 
 The OSD's Finishing Moves page enters a fighter's finishing moves for you.
@@ -139,16 +145,24 @@ the move. A move is used once; "Clear the set move" drops a set move.
 Commands as the game reads them: F toward the opponent, B away, U up, D
 down; HP / LP / HK / LK / BL High Punch, Low Punch, High Kick, Low Kick,
 Block. (X) means X held during the rest of the command and let go at the
-end, (X 2 s) held for about 2 seconds. Distances are in pixels between the
-two fighters (the screen is 400 wide; standing against each other is about
-62).
+end, (X 2 s) held for about 2 seconds.
+
+Distances: Close (touching, up to about a step away), Sweep (within a
+sweep's reach), Jump (beyond the sweep, about a jump away), Half screen, Full
+screen, Anywhere; "Close to sweep" means anywhere from close up to a sweep
+away. Measured in MAME: a sweep reaches about 118 pixels between the
+fighters (they stand no closer than about 62), a forward jump covers about
+160; the zones are Close up to 79, Sweep 80-127, Jump 128-199, Half screen
+200-259, Full screen 260 or more.
 
 Pit / Spikes works on The Pit II and the Kombat Tomb (Shang Tsung's Pit only
 on The Pit II), the Dead Pool on The Dead Pool. Friendships and babalities
 need a round won without High or Low Punch: the game's rule. Two fatalities
 are not in the list because they need a button held from before FINISH HIM:
-Shang Tsung's Kintaro (Low Punch for about 18 seconds) and Raiden's Super
-Uppercut (High Punch for about 7 seconds).
+Shang Tsung's Kintaro (Low Punch held about 18 seconds and let go at FINISH
+HIM, sweep distance) and Raiden's Super Uppercut (High Punch about 7
+seconds, close). The Move List window shows them too (from the game's code; not
+tried in MAME).
 
 The early revisions have fewer moves: L2.0 and L2.1 have no Dead Pool and no
 Kung Lao friendship, and Shang Tsung's friendship and Pit differ there; L1.1
@@ -158,65 +172,65 @@ the game".
 
 | Fighter | Move | Command | Distance |
 |---|---|---|---|
-| Liu Kang | Dragon | D F B B HK | up to 108 |
-|  | Cartwheel | D F U B D | up to 196 |
-|  | Friendship | F B B B LK | any |
-|  | Babality | D D F B LK | any |
-|  | Pit / Spikes | B F F LK | close (up to 70) |
-| Kung Lao | Hat Throw | (LP) B F | 260 or more |
-|  | Decapitation | F F F LK | 100-124 |
-|  | Friendship | B B B D HK | any |
-|  | Babality | B B F F HK | any |
-|  | Pit / Spikes | F F F HP | close (up to 70) |
-| Johnny Cage | Torso Rip | D D F F LP | close (up to 68) |
-|  | Decapitation | F F D U | close (up to 70) |
-|  | Friendship | D D D D HK | any |
-|  | Babality | B B B HK | any |
-|  | Pit / Spikes | D D D HK | close (up to 70) |
-| Reptile | Tongue | B B D LP | 164-220 |
-|  | Slice | U U D HP, then F F D HK | close (up to 68) |
-|  | Friendship | B B D LK | any |
-|  | Babality | D B B LK | any |
-|  | Pit / Spikes | D F F BL | close (up to 70) |
-| Sub-Zero | Deep Freeze | F F D HK, then F D F F HP | 116-188 |
-|  | Ice Grenade | (LP) B B D F | 260 or more |
-|  | Friendship | B B D HK | any |
-|  | Babality | D B B HK | any |
-|  | Pit / Spikes | D F F BL | close (up to 70) |
-| Shang Tsung | Soul Drain | U D U LK | close (up to 78) |
-|  | Spikes | (HK 1 s) | 84-116 |
-|  | Friendship | B B D F HK | any |
-|  | Babality | B F D HK | any |
-|  | Pit | D D U D | close (up to 70) |
-| Kitana | Fan Decap | BL BL BL HK | close (up to 70) |
-|  | Kiss of Death | (LK) F F D F | close (up to 68) |
-|  | Friendship | D D D U LK | any |
-|  | Babality | D D D LK | any |
-|  | Pit / Spikes | F D F HK | close (up to 70) |
-| Jax | Arm Rip | BL BL BL BL LP | 72-124 |
-|  | Head Smash | (LP) F F F | close (up to 80) |
-|  | Friendship | D D U U LK | any |
-|  | Babality | D U D U LK | any |
-|  | Pit / Spikes | U U D LK | close (up to 70) |
-| Mileena | Sai Stab | F B F LP | close (up to 74) |
-|  | Inhale | (HK 2 s) | close (up to 68) |
-|  | Friendship | D D D U HK | any |
-|  | Babality | D D D HK | any |
-|  | Pit / Spikes | F D F LK | close (up to 70) |
-| Baraka | Decapitation | B B B B HP | up to 96 |
-|  | Impale | B F D F LP | up to 132 |
-|  | Friendship | U F F HK | any |
-|  | Babality | F F F HK | any |
-|  | Pit / Spikes | F F D HK | close (up to 70) |
-| Scorpion | Toasty | D D U U HP | any |
-|  | Torch | U U HP | 148-172 |
-|  | Slice | (HP) D F F F | close (up to 68) |
-|  | Friendship | B B D HK | any |
-|  | Babality | D B B HK | any |
-|  | Pit / Spikes | D F F BL | close (up to 70) |
-| Raiden | Electrocution | (LK 2 s) | close (up to 64) |
-|  | Friendship | D B F HK | 164 or more |
-|  | Babality | D D U HK | any |
-|  | Pit / Spikes | U U HP | close (up to 70) |
+| Liu Kang | Dragon | D F B B HK | Close to sweep |
+|  | Cartwheel | D F U B D | Close to jump |
+|  | Friendship | F B B B LK | Anywhere |
+|  | Babality | D D F B LK | Anywhere |
+|  | Pit / Spikes | B F F LK | Close |
+| Kung Lao | Hat Throw | (LP) B F | Full screen |
+|  | Decapitation | F F F LK | Sweep |
+|  | Friendship | B B B D HK | Anywhere |
+|  | Babality | B B F F HK | Anywhere |
+|  | Pit / Spikes | F F F HP | Close |
+| Johnny Cage | Torso Rip | D D F F LP | Close |
+|  | Decapitation | F F D U | Close |
+|  | Friendship | D D D D HK | Anywhere |
+|  | Babality | B B B HK | Anywhere |
+|  | Pit / Spikes | D D D HK | Close |
+| Reptile | Tongue | B B D LP | Jump to half screen |
+|  | Slice | U U D HP, then F F D HK | Close |
+|  | Friendship | B B D LK | Anywhere |
+|  | Babality | D B B LK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Sub-Zero | Deep Freeze | F F D HK, then F D F F HP | Sweep to jump |
+|  | Ice Grenade | (LP) B B D F | Full screen |
+|  | Friendship | B B D HK | Anywhere |
+|  | Babality | D B B HK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Shang Tsung | Soul Drain | U D U LK | Close |
+|  | Spikes | (HK 1 s) | Sweep |
+|  | Friendship | B B D F HK | Anywhere |
+|  | Babality | B F D HK | Anywhere |
+|  | Pit | D D U D | Close |
+| Kitana | Fan Decap | BL BL BL HK | Close |
+|  | Kiss of Death | (LK) F F D F | Close |
+|  | Friendship | D D D U LK | Anywhere |
+|  | Babality | D D D LK | Anywhere |
+|  | Pit / Spikes | F D F HK | Close |
+| Jax | Arm Rip | BL BL BL BL LP | Close to sweep |
+|  | Head Smash | (LP) F F F | Close |
+|  | Friendship | D D U U LK | Anywhere |
+|  | Babality | D U D U LK | Anywhere |
+|  | Pit / Spikes | U U D LK | Close |
+| Mileena | Sai Stab | F B F LP | Close |
+|  | Inhale | (HK 2 s) | Close |
+|  | Friendship | D D D U HK | Anywhere |
+|  | Babality | D D D HK | Anywhere |
+|  | Pit / Spikes | F D F LK | Close |
+| Baraka | Decapitation | B B B B HP | Close to sweep |
+|  | Impale | B F D F LP | Close to sweep |
+|  | Friendship | U F F HK | Anywhere |
+|  | Babality | F F F HK | Anywhere |
+|  | Pit / Spikes | F F D HK | Close |
+| Scorpion | Toasty | D D U U HP | Anywhere |
+|  | Torch | U U HP | Jump |
+|  | Slice | (HP) D F F F | Close |
+|  | Friendship | B B D HK | Anywhere |
+|  | Babality | D B B HK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Raiden | Electrocution | (LK 2 s) | Close |
+|  | Friendship | D B F HK | Jump or farther |
+|  | Babality | D D U HK | Anywhere |
+|  | Pit / Spikes | U U HP | Close |
 
-Every fighter also has the Dead Pool: D+LP+LK HP, close (up to 76).
+Every fighter also has the Dead Pool: D+LP+LK HP, close.
