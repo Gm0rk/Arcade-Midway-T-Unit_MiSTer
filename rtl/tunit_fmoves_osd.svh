@@ -107,81 +107,12 @@
 	"P5-;", \
 	"h4P5O[30:28],Fighter,Johnny Cage,Kano,Sub-Zero,Sonya,Raiden,Liu Kang,Scorpion;", \
 	"h5P5O[27:24],Fighter,Liu Kang,Kung Lao,Johnny Cage,Reptile,Sub-Zero,Shang Tsung,Kitana,Jax,Mileena,Baraka,Scorpion,Raiden;", \
+	"h3P5O[44],Show Move List,Off,On;", \
 	"P5-;", \
-	"h4H8H9HAP5-,Green Bolt   B F LP;", \
-	"h4H8H9HAP5-,Shadow Kick  B F LK;", \
-	"h4H8H9HAP5-,Split Punch  LP+BL;", \
-	"h4h8H9HAP5-,Knife Throw  (BL B F);", \
-	"h4h8H9HAP5-,Cannonball   F D B U;", \
-	"h4H8h9HAP5-,Freeze       D F LP;", \
-	"h4H8h9HAP5-,Slide        B+LP+LK+BL;", \
-	"h4h8h9HAP5-,Ring Toss    LP B LP;", \
-	"h4h8h9HAP5-,Leg Grab     D+LP+LK+BL;", \
-	"h4h8h9HAP5-,Square Wave  F B HP;", \
-	"h4H8H9hAP5-,Lightning    D F LP;", \
-	"h4H8H9hAP5-,Teleport     D U;", \
-	"h4H8H9hAP5-,Torpedo      B B F;", \
-	"h4h8H9hAP5-,Fireball     F F HP;", \
-	"h4h8H9hAP5-,Flying Kick  F F HK;", \
-	"h4H8h9hAP5-,Spear        B B LP;", \
-	"h4H8h9hAP5-,Teleport     D B HP;", \
-	"h5H8H9HAHBP5-,High Fireball F F HP;", \
-	"h5H8H9HAHBP5-,Low Fireball F F LP;", \
-	"h5H8H9HAHBP5-,Flying Kick  F F HK;", \
-	"h5H8H9HAHBP5-,Bicycle Kick (LK 3 s);", \
-	"h5h8H9HAHBP5-,Hat Throw    B F LP;", \
-	"h5h8H9HAHBP5-,Teleport     D U;", \
-	"h5h8H9HAHBP5-,Spin         (BL U U) LK;", \
-	"h5h8H9HAHBP5-,Dive Kick    D HK in air;", \
-	"h5H8h9HAHBP5-,High Bolt    F D B HP;", \
-	"h5H8h9HAHBP5-,Low Bolt     B D F LP;", \
-	"h5H8h9HAHBP5-,Shadow Kick  B F LK;", \
-	"h5H8h9HAHBP5-,Uppercut     B D B HP;", \
-	"h5H8h9HAHBP5-,Ball Breaker LP+BL;", \
-	"h5h8h9HAHBP5-,Acid Spit    F F HP;", \
-	"h5h8h9HAHBP5-,Force Ball   B B HP+LP;", \
-	"h5h8h9HAHBP5-,Invisibility (BL U U D) HP;", \
-	"h5h8h9HAHBP5-,Slide        B+LP+LK+BL;", \
-	"h5H8H9hAHBP5-,Freeze       D F LP;", \
-	"h5H8H9hAHBP5-,Ground Freeze D B LK;", \
-	"h5H8H9hAHBP5-,Slide        B+LP+LK+BL;", \
-	"h5h8H9hAHBP5-,Skull        B B HP;", \
-	"h5h8H9hAHBP5-,2 Skulls     B B F HP;", \
-	"h5h8H9hAHBP5-,3 Skulls     B B F F HP;", \
-	"h5h8H9hAHBP5-,Morph into:;", \
-	"h5h8H9hAHBP5-,Liu Kang     B F F BL;", \
-	"h5h8H9hAHBP5-,Kung Lao     B D B HK;", \
-	"h5h8H9hAHBP5-,Johnny Cage  B B D LP;", \
-	"h5h8H9hAHBP5-,Reptile      (BL U D) HP;", \
-	"h5h8H9hAHBP5-,Sub-Zero     F D F HP;", \
-	"h5h8H9hAHBP5-,Kitana       BL BL BL;", \
-	"h5h8H9hAHBP5-,Jax          D F B HK;", \
-	"h5h8H9hAHBP5-,Mileena      (HP 1 s);", \
-	"h5h8H9hAHBP5-,Baraka       D D LK;", \
-	"h5h8H9hAHBP5-,Scorpion     (BL U U);", \
-	"h5h8H9hAHBP5-,Raiden       D B F LK;", \
-	"h5H8h9hAHBP5-,Fan Throw    F F HP+LP;", \
-	"h5H8h9hAHBP5-,Fan Lift     B B B HP;", \
-	"h5H8h9hAHBP5-,Flying Punch F D B HP;", \
-	"h5h8h9hAHBP5-,Energy Wave  F D B HK;", \
-	"h5h8h9hAHBP5-,Gotcha Grab  F F LP;", \
-	"h5h8h9hAHBP5-,Ground Smash (LK 2 s);", \
-	"h5h8h9hAHBP5-,Back Breaker BL in air;", \
-	"h5H8H9HAhBP5-,Sai Throw    (HP 1 s);", \
-	"h5H8H9HAhBP5-,Teleport Kick F F LK;", \
-	"h5H8H9HAhBP5-,Roll         B B D HK;", \
-	"h5h8H9HAhBP5-,Blade Spark  D B HP;", \
-	"h5h8H9HAhBP5-,Blade Fury   B B B LP;", \
-	"h5H8h9HAhBP5-,Spear        B B LP;", \
-	"h5H8h9HAhBP5-,Teleport     D B HP;", \
-	"h5H8h9HAhBP5-,Scissors     F D B LK;", \
-	"h5H8h9HAhBP5-,Air Throw    BL in air;", \
-	"h5h8h9HAhBP5-,Lightning    D F LP;", \
-	"h5h8h9HAhBP5-,Teleport     D U;", \
-	"h5h8h9HAhBP5-,Torpedo      B B F;", \
-	"h5h8h9HAhBP5-,Electric Grab (HP 2 s);"
+	"P5-,The fighter's moves over the;", \
+	"P5-,game, which waits meanwhile;"
 
-`define CORE_INFO "I,Finishing move set: it plays\nat the next FINISH HIM,Not this fighter's FINISH HIM:\nthe move waits for a later one,Too far: step closer,Too close: step back,Stage move: The Pit II\nand Kombat Tomb only,Stage move: The Pit II only,Dead Pool only,Stage move: The Pit only,FINISH HIM is over: the move\nwaits for the next one,Move not taken,Not taken: a Friendship or\nBabality needs a round won\nwithout punches,Finishing move cleared,Not available in this\nrevision of the game,Security Screen on: it starts\neach attract cycle,Hitboxes on: shown in fights,Pong on: it follows the first\nround of a 2-player battle,Noob Saibot on: the winner of\nthe first round of a 2-player\nbattle fights him,Jade on: the first round you\nwin in a 1-player game is\nfollowed by her fight,Smoke on: hold Down and press\nStart in a fight,Code entered,Code not taken: codes work\nin the attract mode;"
+`define CORE_INFO "I,Finishing move set: it plays\nat the next FINISH HIM,Not this fighter's FINISH HIM:\nthe move waits for a later one,Too far: step closer,Too close: step back,Stage move: The Pit II\nand Kombat Tomb only,Stage move: The Pit II only,Dead Pool only,Stage move: The Pit only,FINISH HIM is over: the move\nwaits for the next one,Move not taken,Not taken: a Friendship or\nBabality needs a round won\nwithout punches,Finishing move cleared,Not available in this\nrevision of the game,Security Screen on: it starts\neach attract cycle,Hitboxes on: shown in fights,Pong on: it follows the first\nround of a 2-player battle,Noob Saibot on: the winner of\nthe first round of a 2-player\nbattle fights him,Jade on: the first round you\nwin in a 1-player game is\nfollowed by her fight,Smoke on: hold Down and press\nStart in a fight,Code entered,Code not taken: codes work\nin the attract mode,On for all players,On for all players from the\nnext game;"
 
 // message numbers (the I line's fields)
 localparam [4:0] MSG_SET = 5'd1;
@@ -205,3 +136,5 @@ localparam [4:0] MSG_JADE = 5'd18;
 localparam [4:0] MSG_SMOKE = 5'd19;
 localparam [4:0] MSG_CODE_OK = 5'd20;
 localparam [4:0] MSG_CODE_FAIL = 5'd21;
+localparam [4:0] MSG_ON_ALL = 5'd22;
+localparam [4:0] MSG_ON_NEXT = 5'd23;
