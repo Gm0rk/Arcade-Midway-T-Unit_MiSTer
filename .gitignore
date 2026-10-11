@@ -46,4 +46,5 @@ COMMIT.md
 sim/crt_test/obj_dir/
 sim/crt_test/out/
 sim/fmoves_test/obj_dir/
-test_plan/Arcade-Midway-T-Unit_TestPlan.csv
+sim/window_test/obj_dir/
+sim/window_test/out/
