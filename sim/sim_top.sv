@@ -31,13 +31,13 @@ module sim_top
 	input      [63:0] in_ports,
 
 	// secrets: the ROM index 1 table (written by the harness during reset)
-	// and the OSD items (R[15:14] triggers, O[19:16] options)
+	// and the OSD items (R[15:14] triggers, option slots 1-11)
 	input             info_start,
 	input             info_wr,
 	input       [8:0] info_addr,
 	input      [15:0] info_data,
 	input       [1:0] osd_trig,
-	input       [3:0] osd_opt,
+	input      [10:0] osd_opt,
 
 	// DDR3 (C++ model)
 	input             ddr_busy,
