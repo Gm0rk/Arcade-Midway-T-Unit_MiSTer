@@ -55,9 +55,10 @@ set_global_assignment -name SEED 1
 set_global_assignment -name TIMEQUEST_DO_REPORT_TIMING ON
 
 # hps_io's confstr_rom fills its ROM with one loop step per CONF_STR byte;
-# the OSD string is about 9 KB (Finishing Moves and Move List pages, OSD
-# messages), past Quartus' default limit of 5000 steps for constant loops
-# (Error 10106). Main_MiSTer reads at most 10 KB of it.
+# the OSD string is about 7.2 KB (Finishing Moves page, OSD messages), past
+# Quartus' default limit of 5000 steps for constant loops
+# (Error 10106). Main_MiSTer reads at most 10239 characters of it, so the
+# string must stay below that.
 set_global_assignment -name VERILOG_CONSTANT_LOOP_LIMIT 10240
 
 # after a successful build: output_files/Arcade-Midway-T-Unit.rbf ->
