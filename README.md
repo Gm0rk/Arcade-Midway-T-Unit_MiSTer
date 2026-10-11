@@ -36,8 +36,9 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 
 ## Games
 
-Each game has its own page: its versions, controls, Secrets and, for the
-Mortal Kombat games, the Move List and Finishing Moves.
+Each game has its own page: its versions, controls, Secrets (for the NBA
+Jam games with the secret players) and, for the Mortal Kombat games, the
+Move List and Finishing Moves.
 
 | Game | Sound | Players | Status |
 |---|---|---|---|
@@ -65,22 +66,26 @@ aside).
 - Start, Coin, Test (service mode) and Pause (button or OSD) in every game;
   Service Credit and Tilt on the OSD's Controls page
 - Secrets page in the OSD: the hidden menus, screens and debug features the
-  programmers left in the games
+  programmers left in the games; for NBA Jam and NBA Jam Tournament Edition,
+  the power-up codes and a Secret Player List window (every secret player's
+  name, initials, birthday and versions, over the game's title screen)
 - Finishing Moves page in the OSD (Mortal Kombat, Mortal Kombat II): every
   fighter's finishing moves, entered for you at FINISH HIM
-- Move List page in the OSD (Mortal Kombat, Mortal Kombat II): every
-  fighter's special moves and their commands
+- Move List window (Mortal Kombat, Mortal Kombat II): every fighter's special
+  moves and finishing moves, with the distance each finishing move needs,
+  over the game's title screen
 - OSD messages: what a set finishing move is waiting for, whether a secrets
-  code was taken, what a Secrets option just turned on does
+  code was taken, what a Secrets option just turned on does (or that the
+  loaded version does not have it)
 
 The Secrets page shows the items of the loaded game. Hidden menus are opened
 by codes on the controls, which the core enters for you: pick the item, and
 the OSD closes and the code plays (a few seconds; the controls are ignored
 meanwhile). The games only accept these codes in the attract mode, so use
-them with no game running. The other items are options: they take effect at
-once and stay set until switched off. When the OSD closes, a message says
-whether a code's menu opened, and what an option just turned on does. Each
-game's page lists its items.
+them with no game running. The other items are options: they stay set until
+switched off, and take effect at once unless the game's page says otherwise.
+When the OSD closes, a message says whether a code's menu opened, and what
+an option just turned on does. Each game's page lists its items.
 
 ## CRT V-Size (experimental)
 
