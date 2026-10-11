@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam (rev 3.01 4/07/93)</name>
-	<mratimestamp>20261006</mratimestamp>
+	<mratimestamp>20261011</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajam</setname>
 	<year>1993</year>
@@ -29,10 +29,10 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9217E0 (11 presses) -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9217E0 (11 presses); power-ups: counters 010F1250, big heads 010E59C0, interceptions 010E59D0, 5 patches -->
 		<part>
-		03 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
+		03 00 01 00 9C E5 10 10 0F 00 9D E5 10 30 0F 00 29 F1 10 60 01 00 58 84 F8 2F 00 03 2A F1 10 70
+		01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
 		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 00 40 00 03 00 00 00 03 00 40 00 03 00 00 00 03 00
 		00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 20 03 00 00 00 03 00
 		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
