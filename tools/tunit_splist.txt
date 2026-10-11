@@ -1,0 +1,99 @@
+# Secret players, from tools/tunit_splist.py --scan (the games' tables).
+# game | full name | team select name | initials | birthday | versions
+# (initials: _ is a space; versions: the list names of tunit_splist.py, oldest first)
+nbajam | Tony Goskie | Goskie | TWG | DEC 7 | 1.00,2.00,3.01
+nbajam | Jamie Rivett | Rivett | RJR | JAN 17 | 1.00,2.00,3.01
+nbajam | John Carlton | Carlton | JMC | AUG 5 | 1.00,2.00,3.01
+nbajam | Sal DiVita | Di Vita | SAL | FEB 1 | 1.00,2.00,3.01
+nbajam | Shawn Liptak | Liptak | SL_ | JUN 24 | 1.00,2.00,3.01
+nbajam | Mark Turmell | Turmell | MJT | MAR 22 | 1.00,2.00,3.01
+nbajam | Jon Hey | Hey | JWH | SEP 20 | 1.00,2.00,3.01
+nbajam | George Petro | Petro | GNP | OCT 8 | 1.00,2.00,3.01
+nbajam | John Newcomer | Newcomer | JRN | JUN 18 | 1.00,2.00,3.01
+nbajam | Sheridan Oursler | Oursler | SNO | JAN 3 | 1.00,2.00,3.01
+nbajam | Stephen Howard | Howard | HOW | JUL 15 | 1.00,2.00,3.01
+nbajam | Willie Morris Jr. | Air Morris | WIL | JAN 1 | 1.00,2.00,3.01
+nbajam | Tony Scott | Scott | TON | JUL 3 | 1.00,2.00,3.01
+nbajamte | Tony Goskie | Goskie | TWG | DEC 7 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jamie Rivett | Rivett | RJR | JAN 17 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | John Carlton | Carlton | JMC | AUG 5 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Sal DiVita | Di Vita | SAL | FEB 1 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Shawn Liptak | Liptak | SL_ | JUN 24 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Mark Turmell | Turmell | MJT | MAR 22 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jon Hey | Hey | JWH | SEP 20 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | George Petro | Petro | GNP | OCT 8 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | John Newcomer | Newcomer | JRN | JUN 18 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Sheridan Oursler | Oursler | SNO | JAN 3 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Al Lasko | Lasko | AML | AUG 31 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Willie Morris Jr. | Air Morris | WIL | JAN 1 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Cary Mednick | Mednick | CMM | JUL 2 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Dan Forden | Forden | DWF | SEP 28 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Eric Kinkead | Kinkead | DIE | JAN 1 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Eugene Jarvis | Jarvis | EPJ | JAN 27 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jack Haeger | Haeger | JEH | JUL 13 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jake Simpson | Simpson | JMS | FEB 22 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jim Green | Green | JDG | MAY 31 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jim Gentile | Gentile | JPG | JAN 23 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jim Gentile | Gentile | JZG | JAN 1 | proto
+nbajamte | Joe Dillon | Dillon | JPD | JUN 3 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | John Lowes | Lowes | JML | NOV 4 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | John Vogel | Vogel | VOG | JUN 27 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Josh Tsui | Tsui | JYT | NOV 28 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Larry DeMar | Kamm | VLK | NOV 9 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Linda Deal | Deal | LTD | APR 30 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Matt Booty | Booty | MVB | APR 18 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Mark Loffredo | Loffredo | ML_ | MAY 25 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Mark Penacho | Penacho | MDP | JAN 13 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Paul Barker | Barker | PCB | MAY 9 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Pat Cox | Cox | PGC | APR 11 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Ray Macika | Macika | REM | MAR 26 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Ray Macika | Macika | RZM | JAN 1 | proto
+nbajamte | Roger Sharpe | Sharpe | ROG | AUG 1 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Steve Beran | Beran | SAB | AUG 29 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Vince Pontarelli | Pontarelli | VJP | APR 11 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Warren Davis | Davis | WBD | AUG 17 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Warren Davis | Davis | WZD | JAN 1 | proto
+nbajamte | Ed Boon | Boon | EJB | FEB 22 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | John Tobias | Tobias | TOB | AUG 24 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Paul Heitsch | Heitsch | WMN | NOV 11 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Bill Dabelstein | Dabelstein | DOZ | DEC 31 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Bill Dabelstein | Dabelstein | BZD | JAN 1 | proto
+nbajamte | Martin Martinez | Martinez | MAM | AUG 7 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Rachel Davies | Davies | RJD | SEP 3 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Kerri Hoskins | Hoskins | KER | OCT 10 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Kerri Hoskins | Hoskins | KER | JAN 1 | proto
+nbajamte | Lorraine Olivia | Olivia | LOR | FEB 20 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Lorraine Olivia | Olivia | LOR | JAN 1 | proto
+nbajamte | Chris Granner | Granner | CG_ | DEC 4 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Ray Gay | Gay | RMG | AUG 11 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Jason Skiles | Skiles | JMS | JUL 29 | proto,1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Joe Linhoff | Linhoff | JFL | APR 16 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Joe Linhoff | Linhoff | JZL | JAN 1 | proto
+nbajamte | Dominique Wilkins | Wilkins | DOM | APR 16 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Dee Brown | Brown | DEE | NOV 29 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Alonzo Mourning | Mourning | ZO_ | FEB 8 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Scottie Pippen | Pippen | PIP | SEP 25 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Isiah Thomas | Thomas | ZEK | APR 30 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23
+nbajamte | Chris Webber | Webber | WEB | MAR 1 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Hakeem Olajuwon | Olajuwon | HAK | JAN 21 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Derrick Coleman | Coleman | DC_ | JUN 21 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Patrick Ewing | Ewing | PAT | AUG 5 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Charles Barkley | Barkley | BRK | FEB 20 | 1.00,2.0,2.1,3.0 2-26,4.0 3-23,Nani
+nbajamte | David Robinson | Robinson | ROB | AUG 6 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Shawn Kemp | Kemp | KMP | NOV 26 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Karl Malone | Malone | KRL | JUL 24 | 1.00,2.0,2.1,3.0 2-26,4.0 3-03,3.0 3-04,4.0 3-23,Nani
+nbajamte | Dennis Rodman | Rodman | ROD | MAY 13 | 4.0 3-03,3.0 3-04
+nbajamte | Gary Payton | Payton | GEE | JUL 23 | Nani
+nbajamte | Sub-Zero | Sub-Zero | SUB | DEC 5 | proto,1.00,2.0
+nbajamte | Sub-Zero | Sub-Zero | SUB | NOV 5 | 2.1,3.0 2-26
+nbajamte | Scorpion | Scorpion | SCO | JUL 6 | proto,1.00,2.0
+nbajamte | Scorpion | Scorpion | SCO | JUL 5 | 2.1,3.0 2-26
+nbajamte | Reptile | Reptile | RPT | NOV 11 | proto,1.00,2.0
+nbajamte | Reptile | Reptile | RPT | NOV 10 | 2.1,3.0 2-26
+nbajamte | Raiden | Raiden | RAD | JUL 9 | proto,1.00,2.0,2.1,3.0 2-26
+nbajamte | Grim Reaper | Reaper | GRM | OCT 31 | proto,1.00,2.0
+nbajamte | Grim Reaper | Reaper | BIG | SEP 31 | 2.1,3.0 2-26
+nbajamte | Kongo | Kongo | KNG | JAN 16 | proto,1.00,2.0
+nbajamte | Kongo | Kongo | KNG | MAR 26 | 2.1,3.0 2-26
+nbajamte | Tim Coman | Coman | TJC | OCT 11 | proto,1.00,2.0,2.1,3.0 2-26
+nbajamte | Elviscious | Elviscious | ELV | JAN 8 | proto,1.00,2.0,2.1,3.0 2-26
