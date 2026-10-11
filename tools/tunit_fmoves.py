@@ -16,6 +16,8 @@ FINISH HIM it fits. This script holds the move list and makes from it:
     controls they press), included by rtl/tunit_fmoves.sv
   - rtl/tunit_fmoves_osd.svh: the Finishing Moves and Move List OSD pages
     and the core's info messages (CONF_STR lines), included by the top level
+  - for tools/tunit_window.py, the moves of the Move List window (each
+    fighter's special moves, and the finishing moves with their distances)
   - with --docs / --moves, the finishing move and move list tables of
     docs/MortalKombat.md (mk) or docs/MortalKombatII.md (mk2)
 
@@ -165,8 +167,20 @@ MK_FIGHTERS = [  # select screen order
 ]
 MK_PIT = ("The Pit", K_MKPIT, "D+HP", "[D w8 HP w8 ]D", 24, 64, None)
 
-# Move List page (P5): each fighter's special moves, shown only (the core
-# does not enter them). Same order as the fighters above; (name, command),
+# Fatalities the move player leaves out (the button must be held from before
+# FINISH HIM), for the Move List window: (fighter, after this move, (name,
+# command, note, min distance, max distance)). From the release handlers
+# (MK2 L3.1, table FF863020): Shang Tsung's LP release FF863CA0 (LP held at
+# least 3C0h frames, state 3, distance 50h-78h), Raiden's HP release
+# FF863750 (HP held at least 180h frames, state 3, start with A1 = 52h).
+# Not played in MAME.
+WINDOW_EXTRA = {
+    'mk2': [('Shang Tsung', 'Spikes', ('Kintaro', '(LP 18 s)', 'held from before FINISH HIM', 80, 120)),
+            ('Raiden', 'Electrocution', ('Super Uppercut', '(HP 7 s)', 'held from before FINISH HIM', 0, 82))],
+}
+
+# Move List window (P5, tools/tunit_window.py): each fighter's special moves,
+# shown only (the core does not enter them). Same order as the fighters above; (name, command),
 # a None command is a heading. Found in the move handlers (MK2 L3.1 per
 # button and direction at FF8628A0 on, matcher FF8775D0, button pairs
 # FF86A460, slide FF866630; MK 5.0 per event at FFD993A0, matcher
@@ -489,6 +503,8 @@ MESSAGES = [
     ('SMOKE', "Smoke on: hold Down and press\nStart in a fight"),
     ('CODE_OK', "Code entered"),
     ('CODE_FAIL', "Code not taken: codes work\nin the attract mode"),
+    ('ON_ALL', "On for all players"),
+    ('ON_NEXT', "On for all players from the\nnext game"),
 ]
 
 N_FM_MESSAGES = 13             # the move player's (rtl/tunit_fmoves.sv)
@@ -497,6 +513,7 @@ N_FM_MESSAGES = 13             # the move player's (rtl/tunit_fmoves.sv)
 SEL_MK2 = (27, 24)               # O[27:24] fighter, MK2
 SEL_MK = (30, 28)                # O[30:28] fighter, MK
 SLOT_BIT = 32                    # R[32] + line: the fighter's moves
+LIST_BIT = 44                    # O[44]: the Move List window (tools/tunit_window.py)
 CLEAR_BIT = 40                   # R[40]: clear the set move
 MASK_SEL = 8                     # status_menumask bits 8-11: the page's fighter
 
@@ -533,7 +550,7 @@ def fighter_options(page):
 
 def osd_lines():
     """CONF_STR lines of the Finishing Moves page (P4), the Move List page
-    (P5) and the I line."""
+    (P5: the Fighter and the window, rtl/tunit_window.sv) and the I line."""
     out = []
     out.append('h3P4,Finishing Moves;')
     out.append('P4-;')
@@ -554,12 +571,10 @@ def osd_lines():
     out.append('h3P5,Move List;')
     out.append('P5-;')
     out += fighter_options('P5')
+    out.append('h3P5O[%d],Show Move List,Off,On;' % LIST_BIT)
     out.append('P5-;')
-    for game in ('mk', 'mk2'):
-        for li, (name, moves) in enumerate(specials(game)):
-            pre = sel_prefix(game, li)
-            for mname, cmd in moves:
-                out.append('%sP5-,%s;' % (pre, label(mname, cmd)))
+    out.append('P5-,The fighter\'s moves over the;')
+    out.append('P5-,game, which waits meanwhile;')
     info = 'I,' + ','.join(m for _, m in MESSAGES) + ';'
     return out, info
 
@@ -641,16 +656,36 @@ def gen_osd():
     return '\n'.join(o) + '\n'
 
 
+# Distances in words (the Move List window, the game pages). The move
+# windows are pixels between the fighters (object word 9); in MAME 0.289,
+# from FINISH HIM states, fighters stand no closer than 62 (MK2), a sweep
+# (B+LK) still hits the dizzy opponent at 116 (MK2 Liu Kang, MK 5.0 Johnny
+# Cage) / 120 (MK2 Sub-Zero) and misses at 120 / 124, and a forward jump
+# covers about 160 (MK2) / 166 (MK). The zones: Close up to 79 (touching to
+# a step away), Sweep 80-127 (a sweep's reach), Jump 128-199 (beyond the
+# sweep, within about a jump), Half screen 200-259, Full screen 260 or more.
+DIST_ZONES = [(0, 'Close'), (80, 'Sweep'), (128, 'Jump'), (200, 'Half screen'), (260, 'Full screen')]
+DIST_REACH = 8                   # a window names a zone it reaches this far into
+
+
+def dist(dmin, dmax):
+    """A move's distance window in words: its zone, 'A to b', 'A or farther'
+    or 'Anywhere'."""
+    def zone(x):
+        return max(k for k, (edge, _) in enumerate(DIST_ZONES) if x >= edge)
+    lo = zone(dmin)
+    if dmax >= FAR:
+        if lo == 0:
+            return 'Anywhere'
+        return DIST_ZONES[lo][1] + ('' if lo == len(DIST_ZONES) - 1 else ' or farther')
+    hi = max(lo, zone(dmax - DIST_REACH))
+    if hi == lo:
+        return DIST_ZONES[lo][1]
+    return DIST_ZONES[lo][1] + ' to ' + DIST_ZONES[hi][1].lower()
+
+
 def docs(game):
     """The move table of a game's page (docs/MortalKombat.md, docs/MortalKombatII.md)."""
-    def dist(dmin, dmax):
-        if dmin == 0 and dmax >= FAR:
-            return 'any'
-        if dmin == 0:
-            return 'close (up to %d)' % dmax if dmax <= 80 else 'up to %d' % dmax
-        if dmax >= FAR:
-            return '%d or more' % dmin
-        return '%d-%d' % (dmin, dmax)
     o = []
     o.append('| Fighter | Move | Command | Distance |')
     o.append('|---|---|---|---|')
@@ -661,7 +696,8 @@ def docs(game):
             o.append('| %s | %s | %s | %s |' % (name if n == 0 else '', mname, c, dist(dmin, dmax)))
     o.append('')
     mname, kind, cmd, prog, dmin, dmax, note = MK2_DEADPOOL if game == 'mk2' else MK_PIT
-    o.append('Every fighter also has %s: %s, %s.' % ('the Dead Pool' if game == 'mk2' else 'The Pit', cmd, dist(dmin, dmax)))
+    o.append('Every fighter also has %s: %s, %s.' % ('the Dead Pool' if game == 'mk2' else 'The Pit', cmd,
+                                                     dist(dmin, dmax).lower()))
     return '\n'.join(o)
 
 
