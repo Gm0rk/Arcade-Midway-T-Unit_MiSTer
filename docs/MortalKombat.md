@@ -30,9 +30,12 @@ Start, Coin, Test (service mode) and Pause.
 
 ## Move List
 
-The OSD's Move List page shows the special moves of the fighter picked
-there (the same Fighter choice as the Finishing Moves page). It only shows
-them; the core does not enter these moves for you.
+The OSD's Move List page has the Fighter (the same choice as the Finishing
+Moves page) and Show Move List: a window over the game, on the game's title
+screen, with the special moves, the fatality and the distance it needs of
+that fighter and the others on the same page (four fighters, then three).
+The game waits while the window is on; turn it off to play on. The window only shows the moves; the core does not
+enter them for you (the Finishing Moves page does that).
 
 Commands as the game reads them: F toward the opponent, B away; (BL B F)
 means Block held while you enter B F; X+Y pressed together. The list is
@@ -88,17 +91,23 @@ move. A move is used once; "Clear the set move" drops a set move.
 Commands as the game reads them: F toward the opponent, B away, U up, D
 down; HP / LP / HK / LK / BL High Punch, Low Punch, High Kick, Low Kick,
 Block. (X) means X held during the rest of the command and let go at the
-end. Distances are in pixels between the two fighters (the screen is 400
-wide). The Pit works on The Pit stage only.
+end. The Pit works on The Pit stage only.
+
+Distances: Close (touching, up to about a step away), Sweep (within a
+sweep's reach), Jump (beyond the sweep, about a jump away), Half screen, Full
+screen, Anywhere; "Close to sweep" means anywhere from close up to a sweep
+away. Measured in MAME: a sweep reaches about 116 pixels between the
+fighters, a forward jump covers about 165; the zones are Close up to 79,
+Sweep 80-127, Jump 128-199, Half screen 200-259, Full screen 260 or more.
 
 | Fighter | Move | Command | Distance |
 |---|---|---|---|
-| Johnny Cage | Decapitation | F F F HP | close (up to 60) |
-| Kano | Heart Rip | B D F LP | up to 84 |
-| Sub-Zero | Spine Rip | F D F HP | up to 84 |
-| Sonya | Kiss of Death | F F B B BL | any |
-| Raiden | Electrocution | F B B B HP | 80-124 |
-| Liu Kang | Cartwheel | D B U F D | any |
-| Scorpion | Fire Breath | (BL) U U | 120-144 |
+| Johnny Cage | Decapitation | F F F HP | Close |
+| Kano | Heart Rip | B D F LP | Close |
+| Sub-Zero | Spine Rip | F D F HP | Close |
+| Sonya | Kiss of Death | F F B B BL | Anywhere |
+| Raiden | Electrocution | F B B B HP | Sweep |
+| Liu Kang | Cartwheel | D B U F D | Anywhere |
+| Scorpion | Fire Breath | (BL) U U | Sweep to jump |
 
-Every fighter also has The Pit: D+HP, 24-64.
+Every fighter also has The Pit: D+HP, close.
