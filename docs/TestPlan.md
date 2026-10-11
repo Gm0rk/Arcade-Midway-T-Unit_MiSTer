@@ -19,8 +19,8 @@ it is in `config/nvram` on the SD card, named after the MRA.
 | [Core-wide](#core-wide) | 13 | 0 | No |
 | [Mortal Kombat](#mortal-kombat) | 16 | 0 | No |
 | [Mortal Kombat II](#mortal-kombat-ii) | 18 | 0 | No |
-| [NBA Jam](#nba-jam) | 14 | 0 | No |
-| [NBA Jam Tournament Edition](#nba-jam-tournament-edition) | 14 | 0 | No |
+| [NBA Jam](#nba-jam) | 17 | 0 | No |
+| [NBA Jam Tournament Edition](#nba-jam-tournament-edition) | 17 | 0 | No |
 | [Judge Dredd](#judge-dredd) | 13 | 0 | No |
 
 ## Core-wide
@@ -65,7 +65,7 @@ Main MRA: Mortal Kombat (rev 5.0 T-Unit 03-19-93). See also the
 | MK12 | A DIP switch (OSD), then reset | The game's DIP switch screen (diagnostics) or its behaviour shows the change | |
 | MK13 | Secrets: EJB Menu and EJB Menu (Copyright Screen) | Each opens its menu (the copyright screen first for the second); the OSD message says the code was entered | |
 | MK14 | Finishing Moves: set Sub-Zero's Spine Rip (or any fatality) and win a fight | The move plays at FINISH HIM; at the wrong distance a message says to step closer or back | |
-| MK15 | Move List: switch the Fighter | The page lists the picked fighter's special moves; two of them work as shown | |
+| MK15 | Move List: Show Move List On, switch the Fighter, then Off | The window shows the page with the fighter (Cage to Sonya on the first, Raiden to Scorpion on the second): each fighter's special moves and fatality with its distance in words (Close, Sweep, ...) over the dimmed MK title, all readable; the game waits and goes on when Off; two moves work as shown, a fatality at its distance | |
 | MK16 | Other versions: rev 4.0 and Turbo Ninja | Each boots to the attract mode and starts a game | |
 
 ## Mortal Kombat II
@@ -90,7 +90,7 @@ Main MRA: Mortal Kombat II (rev L3.1). See also the
 | MK2-13 | Secrets: Security Screen, Hitboxes, Pong at Battle 250 | Each does what the game page says; the OSD message names it when the OSD closes | |
 | MK2-14 | Secrets: Noob Saibot, Jade and Smoke fights | Each fight comes up as the game page says | |
 | MK2-15 | Finishing Moves: a fatality, a friendship or babality, a Pit / Spikes and the Dead Pool | Each plays at FINISH HIM on its stage; a wrong stage or distance gives its message | |
-| MK2-16 | Move List: switch the Fighter, including Shang Tsung | The page lists the picked fighter's special moves; a few of them work as shown | |
+| MK2-16 | Move List: Show Move List On, switch the Fighter (including Shang Tsung), then Off | The window shows the fighter's special and finishing moves with the distance in words (Close, Sweep, Jump, ...) over the dimmed MK II title, all readable; the game waits and goes on when Off; a few moves work as shown, a fatality at its distance | |
 | MK2-17 | Other versions: L3.2 and L3.1 European, L3.0, L2.1, L2.0, L1.4, L1.1 | Each boots to the attract mode and starts a game | |
 | MK2-18 | Hacks: L4.2, L9.1, Challenger | Each boots to the attract mode and starts a game | |
 
@@ -114,6 +114,9 @@ Main MRA: NBA Jam (rev 3.01 4-07-93). See also the [game page](NBAJam.md).
 | NJ12 | Secrets: Secret Menu | The design team screen, then the secret Midway menu (Jam Info); the OSD message says the code was entered | |
 | NJ13 | Other versions: rev 2.00, rev 1.00, proto 2.00, proto 1.01 | Each boots to the attract mode and starts a game | |
 | NJ14 | Secret Menu on rev 2.00 or 1.00 | The hidden audit pages show | |
+| NJ15 | Secrets: Secret Player List On, then Off; start a game, answer YES and enter Mark Turmell's code from the list (MJT, Mar 22) | The window lists the 13 players over the dimmed NBA Jam title, all readable; Off brings the game back; the team select shows TURMELL as your player | |
+| NJ16 | Secrets: Big Heads, then start a game | The message says "from the next game"; every player has a big head | |
+| NJ17 | Secrets: Power-Up Defense, Power-Up Interceptions, Shot Percentage, No CPU Assistance | The message says "On for all players"; the shot percentage shows when a player shoots | |
 
 ## NBA Jam Tournament Edition
 
@@ -136,6 +139,9 @@ Main MRA: NBA Jam Tournament Edition (rev 4.0 3-23-94). See also the
 | TE12 | Secrets: Secret Menu | The design team screen, then the secret Midway menu (Jam Info) | |
 | TE13 | Other versions: rev 4.0 (3-03-94), 3.0 (both), 2.1, 2.0, 1.00, proto 2.00 | Each boots to the attract mode and starts a game | |
 | TE14 | Nani Edition | Boots to the attract mode and starts a game | |
+| TE15 | Secrets: Secret Player List, Page 1 to Page 4, then Off; start a game, answer YES and enter a code from the list (rev 2.1: Sub-Zero, SUB, Nov 5) | Each page lists its players over the dimmed TE title, all readable; the team select shows the player | |
+| TE16 | Secrets: Head Size Big, then Huge, then Baby Size Players, each followed by a new game | Big heads, huge heads, small players | |
+| TE17 | Secrets: Max Power, Quick Hands, Power-Up Goaltending, Shot Percentage, No CPU Assistance | The message says "On for all players"; the shot percentage shows when a player shoots | |
 
 ## Judge Dredd
 
