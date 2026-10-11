@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam Tournament Edition (proto 2.00 12/17/93)</name>
-	<mratimestamp>20261006</mratimestamp>
+	<mratimestamp>20261011</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajamtep2</setname>
 	<year>1993</year>
@@ -28,10 +28,10 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9555D0 (11 presses) -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9555D0 (11 presses); power-ups: counters 010EB150, big heads 010E6950, quick hands 010E6960, 8 patches -->
 		<part>
-		04 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
+		04 00 01 00 95 E6 10 10 0F 00 96 E6 10 70 0F 00 19 EB 10 90 01 00 AA EA 10 30 01 00 1F EB 10 60
+		0F 00 4C 76 F8 2F 03 C0 6A A5 F8 8F 00 03 1A EB 10 A0 01 00 20 00 00 00 00 00 00 00 00 00 00 00
 		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 00 40 00 03 00 00 00 03 00 40 00 03 00 00 00 03 00
 		00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 20 03 00 00 00 03 00
 		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
