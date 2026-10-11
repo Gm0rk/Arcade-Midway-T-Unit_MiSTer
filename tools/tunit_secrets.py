@@ -3,6 +3,7 @@
 tunit_secrets.py - the per-set secrets table (MRA ROM index 1)
 
     python3 tools/tunit_secrets.py <game id> <maincpu.bin> [--out table.bin]
+    python3 tools/tunit_secrets.py --gen      (rtl/tunit_secrets_osd.svh)
 
 Builds the table rtl/tunit_secrets.sv reads: the game id, the read patches
 and the codes for the OSD Secrets page. Every address and code is taken from
@@ -11,7 +12,9 @@ revision gets its own (MK2 L1.1 and L1.4 have a different EJB code from the
 later revisions, and the RAM variables move between revisions). A feature
 whose code is not found is left out of that set's table, and the script
 says so. mra_gen.py calls build() for every set; run alone, it prints what
-it finds in a region dump (tools/mame/region_dump.lua).
+it finds in a region dump (tools/mame/region_dump.lua). --gen writes the
+NBA Jam / TE lines of the OSD Secrets page (the power-ups, and the Secret
+Player List window of tools/tunit_window.py).
 
 What the games hide (34010 addresses below are MK2 L3.1, NBA Jam 3.01,
 TE 4.0, Judge Dredd TA1, MK 5.0):
@@ -44,12 +47,40 @@ TE 4.0, Judge Dredd TA1, MK 5.0):
                  L3.0 and later, the hacks compare with 6). The long JRNE
                  that leaves when it is not gets displacement 0, so it goes
                  on into the fight either way.
+                 Jade: at the end of a round of a one-player game the
+                 winner fights Jade ("NOW YOU MUST BATTLE WITH AN
+                 UNDISCOVERED WARRIOR...") when the battle is the one before
+                 the "?" on the tower (@1061B30 = 10) and the round was won
+                 with Low Kicks only (four move counters 0) (FFA199F0). The
+                 tower check becomes a NOP and the first counter check a jump
+                 past the others. The game then sets the tower to 12 itself.
+                 Smoke: Start with Down held during a fight brings Smoke
+                 ("YOU HAVE FOUND THE PASSAGE FROM THE OUTWORLD TO THE EARTH
+                 REALM") on The Portal (stage 7) while the "Toasty!" man shows
+                 (FFA19FD0, from the Start switch handlers). The stage check
+                 becomes a jump past the stage and time checks. Both L2.0 and
+                 later (the hacks move Jade's battle and drop the stage check).
   NBA Jam, TE    Secret Midway menu: in the attract mode both players hold
                  Up + all three buttons, then exactly 52 frames later Down
                  (FF9995B0); the design team screen follows, and while it is
                  shown (3.01, TE) a second code of single presses from a table
                  of IN0 values (FF9215F0); older revisions go straight to the
                  menu (audits).
+                 Secret players: after the initials and birthday a player
+                 enters for record keeping, the game compares them with a
+                 table (NBA Jam: 13 entries, FF963400; TE: 56-69 by revision,
+                 FF9DF3D0) and, on a match, plays as that person. The core
+                 does not patch this: tools/tunit_splist.py reads the tables
+                 for the Secret Player List window (tools/tunit_window.py).
+                 Power-ups (Tonight's Matchup codes): RAM flags read as set
+                 for all four players: big heads, power-up interceptions (NBA
+                 Jam) / quick hands, max power, baby size (TE), the shot
+                 percentage display and no computer assistance; power-up
+                 defense (NBA Jam: counter 8) and goaltending (TE: counter
+                 24) by jumping their counter checks, huge heads (TE: counter
+                 6) the same way. Found from the code that clears and sets
+                 them (FF906D00 / FF9380D0, the tip-off code FF8592F0 /
+                 FF8762A0).
   Judge Dredd    Secret audits: in the attract mode P1 Down + P2 Right with
                  one set of buttons, then another (FFD3BCD0); six pages of
                  audits, each turned by any press. Holding both start buttons
@@ -60,21 +91,42 @@ Table layout: rtl/tunit_secrets.sv.
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 """
 
+import os
 import struct
 import sys
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 G_MK, G_MKTURBO, G_MK2, G_NBAJAM, G_NBAJAMTE, G_JDREDDP = range(6)
 
 FORMAT = 1
 STEP_BASE = 0x20                 # first code step (word index)
 TABLE_WORDS = 512
-N_PATCH = 8
+N_PATCH = 8                      # patches 0-7 at words 2-25
 
 # OSD options (O[16], O[17], O[18]; O[19] is option 6); 4 / 5: while code 1 /
 # code 2 plays
 OPT_SECURITY, OPT_HITBOX, OPT_PONG = 1, 2, 3
 OPT_CODE1, OPT_CODE2 = 4, 5
-OPT_NOOB = 6
+OPT_NOOB, OPT_JADE, OPT_SMOKE = 6, 7, 8           # O[19], O[20], O[21]
+# NBA Jam / TE: option codes of the table; the top level maps each game's
+# OSD bits to the option slots (codes 1-3, 6-13)
+NJ_BIG, NJ_DEF, NJ_INT, NJ_SHOT, NJ_NOCPU = 1, 2, 3, 6, 7
+TE_BIG, TE_HUGE, TE_BABY, TE_MAX, TE_QUICK, TE_GOAL, TE_SHOT, TE_NOCPU = 1, 2, 3, 6, 7, 8, 9, 10
+NOP, JRUC = 0x0300, 0xC000
+
+# OSD (Secrets page, rtl/tunit_secrets_osd.svh): status bits and the menu
+# mask bits of the two games; the top level maps the bits to the option
+# slots of rtl/tunit_secrets.sv
+OSD_LIST = (43, 41)              # Secret Player List: Off, page 1-n
+OSD_HEADS = 48                   # NBA Jam: Big Heads; TE: O[49:48] Head Size
+OSD_DEF = 50                     # NBA Jam: Power-Up Defense; TE: Power-Up Goaltending
+OSD_INT = 51                     # NBA Jam: Power-Up Interceptions; TE: Quick Hands
+OSD_SHOT = 52                    # Shot Percentage
+OSD_NOCPU = 53                   # No CPU Assistance
+OSD_BABY = 54                    # TE: Baby Size Players
+OSD_MAX = 55                     # TE: Max Power
+MASK_NBA, MASK_NJ, MASK_TE = '6', 'C', 'D'
 
 LAST, START1, START2 = 0x8000, 0x0100, 0x0200
 
@@ -260,6 +312,39 @@ def mk2_codes(p, notes):
         notes.append('Noob Saibot check %08X (%d wins)' % (bit_address(h[0]), ~p.w[h[0] + 20] & 0xFFFF))
     else:
         notes.append('Noob Saibot check not found')
+
+    # Jade: MOVE @tower,A0 / CMPI n,A0 / JRNE / CALLA (players) / CMPI 2h,A0 /
+    # JREQ / six MOVIs (player 1's energy, counters, flag) / MOVE @winner,A14 /
+    # CMPI 1h,A14 / JREQ / six MOVIs (player 2's) / MOVE *A5,A5 / CMPI 1h,A5 /
+    # JRNE / MOVE *A1,A1 / JRNE / ... four counters ... / MMFM SP,A0. The
+    # tower JRNE (word 5) becomes a NOP, the first counter JRNE (word 59) a
+    # JRUC to the MMFM (+6 words).
+    regs6 = []
+    for r in range(6):
+        regs6 += [0x09E0 + r, X, X]
+    h = p.find([0x05A0, X, X, 0x0B40, X, X, 0x0D5F, X, X, 0x0B40, 0xFFFD, X] + regs6 +
+               [0x05AE, X, X, 0x0B4E, 0xFFFE, X] + regs6 +
+               [0x84A5, 0x0B45, 0xFFFE, X, 0x8421, X, 0x8442, X, 0x8463, X, 0x8484, X, 0x09AF, 0x0001])
+    if len(h) == 1 and all(p.w[h[0] + k] >> 8 == 0xCB for k in (5, 57, 59, 61, 63, 65)):
+        patches.append((bit_address(h[0] + 5) >> 4, OPT_JADE, 0x0300))
+        patches.append((bit_address(h[0] + 59) >> 4, OPT_JADE, 0xC006))
+        notes.append('Jade check %08X (battle %d)' % (bit_address(h[0]), ~p.w[h[0] + 4] & 0xFFFF))
+    else:
+        notes.append('Jade check not found')
+
+    # Smoke: MOVI p1,A3 / MOVE A0,A14 / JREQ / MOVI p2,A3 / MOVE *A3,A3 /
+    # CMPI 1h,A3 / JRNE / MOVE @mode,A0 / CMPI 2h,A0 / JRNE / MOVE @stage,A0 /
+    # CMPI 7h,A0 / JRNE / MOVE @toasty,A0 / MOVE @time,A1 / SUB / ABS /
+    # CMPI 40h,A1 / JRHI / MOVE @IN0,A0. The MOVE @stage (word 20) becomes a
+    # JRUC to the IN0 read (+18 words).
+    h = p.find([0x09E3, X, X, 0x4C0E, 0xCA03, 0x09E3, X, X, 0x8463, 0x0B43, 0xFFFE, 0xCB00, X,
+                0x05A0, X, X, 0x0B40, 0xFFFD, 0xCB00, X, 0x05A0, X, X, 0x0B40, X, X, X,
+                0x05A0, X, X, 0x05A1, X, X, 0x4401, 0x0381, 0x0B41, X, 0xC300, X, 0x07A0, 0x0000, 0x0160])
+    if len(h) == 1:
+        patches.append((bit_address(h[0] + 20) >> 4, OPT_SMOKE, 0xC012))
+        notes.append('Smoke check %08X (stage %d)' % (bit_address(h[0]), ~p.w[h[0] + 24] & 0xFFFF))
+    else:
+        notes.append('Smoke check not found')
     return [code1], patches
 
 
@@ -287,6 +372,80 @@ def nba_codes(p, notes):
     else:
         notes.append('secret menu code (no second part)')
     return [(code, None)], None
+
+
+def nba_extras(p, te, notes):
+    """NBA Jam / TE power-ups: the read patches."""
+    patches = []
+    # the variables the matchup screen clears: CLR A0 / MOVE A0,@c0 .. @c3
+    # (each player's code counter, 10h apart) / MOVE A0,@shot (/ TE:
+    # @tournament, @baby, @max power) / MMTM
+    clr = None
+    for i in p.find([0x5600, 0x0580, X, X, 0x0580, X, X, 0x0580, X, X, 0x0580, X, X, 0x0580]):
+        c = [p.u32(i + 2 + 3 * k) for k in range(4)]
+        if c[1] == c[0] + 0x10 and c[2] == c[0] + 0x20 and c[3] == c[0] + 0x30:
+            v, k = [], i + 13
+            while p.w[k] == 0x0580:
+                v.append(p.u32(k + 1))
+                k += 3
+            clr = (c, v)
+            break
+    # tip-off: CMPI 72h (TE 12h),A0 / ... @c0 ... / MOVE @int (TE quick),A0 /
+    # ... XOR / MOVE A0,@int / CMPI 61h,A0 / ... @big ...
+    tip = p.find([0x0B40, X, 0xCB12, 0x4D00, 0x2480, 0x0B20, X, X, 0x8400, 0x0B40, 0xFFFA, 0xC409,
+                  0x05A0, X, X, 0x182E, 0x630E, 0x57C0, 0x0580, X, X, 0x0B40, 0xFF9E, 0xCB09,
+                  0x05A0, X, X, 0x182E, 0x630E, 0x57C0, 0x0580])
+    # no computer assistance: CLR A0 / MOVE A0,@noassist / (TE: CALLR / JRC) /
+    # MOVK 1Bh,A0 / CALLA <adjustment> / JRNE / MOVE @c0,A0 / CMPI Ah,A0
+    na = p.find([0x5600, 0x0580, X, X, 0x1B60, 0x0D5F, X, X, X, 0x05A0, X, X, 0x0B40, 0xFFF5]) + \
+        p.find([0x5600, 0x0580, X, X, 0x0D3F, X, X, 0x1B60, 0x0D5F, X, X, X, 0x05A0, X, X, 0x0B40, 0xFFF5])
+    # counter checks: ADDI @c0,A0 / MOVE *A0,A0 / CMPI n,A0 / JRNE +6 /
+    # MOVI <chance>,A0 (NBA Jam: n = 8, power-up defense; TE: 24, goaltending)
+    cnt = p.find([0x0B20, X, X, 0x8400, 0x0B40, 0xFFE7 if te else 0xFFF7, 0xCB06, 0x09C0])
+    # big heads, all revisions: CMPI 61h,A0 / JRNE / MOVE @big,A0 / MOVK 1,A14 /
+    # SLL A8,A14 / XOR / MOVE A0,@big (1.00 and the prototypes have only this)
+    bh = sorted(set(p.u32(i + 4) for i in p.find([0x0B40, 0xFF9E, 0xCB09, 0x05A0, X, X, 0x182E, 0x630E,
+                                                    0x57C0, 0x0580])))
+    # TE huge heads: ADDI @c0,A1 / MOVE *A1,A1 / CMPI 6,A1 / JREQ +3
+    huge = p.find([0x0B21, X, X, 0x8421, 0x0B41, 0xFFF9, 0xCA03]) if te else []
+    if len(tip) != 1:
+        if len(bh) == 1:
+            patches.append((bh[0] >> 4, TE_BIG if te else NJ_BIG, 0x000F))
+            notes.append('power-ups: big heads %08X only' % bh[0])
+        else:
+            notes.append('power-ups: variables not found')
+    elif clr is None:
+        notes.append('power-ups: variables not found')
+    else:
+        c, v = clr
+        t0 = tip[0]
+        flag, big = p.u32(t0 + 13), p.u32(t0 + 25)
+        if p.u32(t0 + 6) != c[0]:
+            notes.append('power-ups: counters differ (%08X, %08X)' % (p.u32(t0 + 6), c[0]))
+        if te:
+            patches += [(big >> 4, TE_BIG, 0x000F), (flag >> 4, TE_QUICK, 0x000F)]
+            if len(v) >= 4:
+                patches += [(v[0] >> 4, TE_SHOT, 0x0001), (v[2] >> 4, TE_BABY, 0x0001),
+                            (v[3] >> 4, TE_MAX, 0x000F)]
+            if len(huge) == 1:
+                patches.append((bit_address(huge[0] + 6) >> 4, TE_HUGE, JRUC | 3))
+            else:
+                notes.append('huge heads check not found')
+        else:
+            patches += [(big >> 4, NJ_BIG, 0x000F), (flag >> 4, NJ_INT, 0x000F)]
+            if v:
+                patches.append((v[0] >> 4, NJ_SHOT, 0x0001))
+        if len(cnt) == 1:
+            patches.append((bit_address(cnt[0] + 6) >> 4, TE_GOAL if te else NJ_DEF, NOP))
+        else:
+            notes.append('%s check not found' % ('goaltending' if te else 'defense'))
+        if len(na) == 1:
+            patches.append((p.u32(na[0] + 2) >> 4, TE_NOCPU if te else NJ_NOCPU, 0x0001))
+        else:
+            notes.append('no assistance flag not found')
+        notes.append('power-ups: counters %08X, big heads %08X, %s %08X, %d patches'
+                     % (c[0], big, 'quick hands' if te else 'interceptions', flag, len(patches)))
+    return patches
 
 
 def jd_codes(p, notes):
@@ -331,6 +490,7 @@ def build(gid, prog_bytes):
         codes, patches = mk2_codes(p, notes)
     elif gid in (G_NBAJAM, G_NBAJAMTE):
         codes, patches = nba_codes(p, notes)
+        patches = (patches or []) + nba_extras(p, gid == G_NBAJAMTE, notes)
     elif gid == G_JDREDDP:
         codes, patches = jd_codes(p, notes)
     else:
@@ -338,6 +498,8 @@ def build(gid, prog_bytes):
     patches = patches or []
     if len(patches) > N_PATCH:
         raise ValueError('too many patches')
+    if len(set(a for a, _, _ in patches)) != len(patches):
+        raise ValueError('two patches of one word')
 
     t = [0] * TABLE_WORDS
     t[0] = gid
@@ -374,8 +536,58 @@ def part_hex(data, per_line=32, indent='\t\t'):
     return lines
 
 
+# --------------------------------------------------------------------------
+# OSD lines (NBA Jam, TE)
+# --------------------------------------------------------------------------
+
+def osd_lines():
+    """The NBA Jam / TE lines of the Secrets page (P3). Lines both games have
+    test the NBA mask bit; the others the game's own bit. The Secret Player
+    List option has an entry per window page (tools/tunit_window.py)."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import tunit_window
+    nj_pages, te_pages = tunit_window.page_counts()
+    lst = 'h%sP3O[%d:%d],Secret Player List,Off,%s;'
+
+    def pages(n):
+        return 'On' if n == 1 else ','.join('Page %d' % (k + 1) for k in range(n))
+    nj, te, nba = MASK_NJ, MASK_TE, MASK_NBA
+    if max(nj_pages, te_pages) >= 1 << (OSD_LIST[0] - OSD_LIST[1] + 1):
+        raise ValueError('too many window pages for the OSD field')
+    return [lst % (nj, OSD_LIST[0], OSD_LIST[1], pages(nj_pages)),
+            lst % (te, OSD_LIST[0], OSD_LIST[1], pages(te_pages)),
+            'h%sP3O[%d],Big Heads,Off,On;' % (nj, OSD_HEADS),
+            'h%sP3O[%d:%d],Head Size,Normal,Big,Huge;' % (te, OSD_HEADS + 1, OSD_HEADS),
+            'h%sP3O[%d],Baby Size Players,Off,On;' % (te, OSD_BABY),
+            'h%sP3O[%d],Max Power,Off,On;' % (te, OSD_MAX),
+            'h%sP3O[%d],Power-Up Interceptions,Off,On;' % (nj, OSD_INT),
+            'h%sP3O[%d],Quick Hands,Off,On;' % (te, OSD_INT),
+            'h%sP3O[%d],Power-Up Defense,Off,On;' % (nj, OSD_DEF),
+            'h%sP3O[%d],Power-Up Goaltending,Off,On;' % (te, OSD_DEF),
+            'h%sP3O[%d],Shot Percentage,Off,On;' % (nba, OSD_SHOT),
+            'h%sP3O[%d],No CPU Assistance,Off,On;' % (nba, OSD_NOCPU)]
+
+
+def gen_osd():
+    o = ['// tunit_secrets_osd.svh - the NBA Jam and TE lines of the OSD Secrets page',
+         '// Generated by tools/tunit_secrets.py --gen; do not edit.',
+         '//',
+         '// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later',
+         '',
+         '`define NBA_OSD \\']
+    for l in osd_lines():
+        o.append('\t"%s", \\' % l)
+    o[-1] = o[-1].rstrip(' \\').rstrip(',')
+    o.append('')
+    return '\n'.join(o)
+
+
 def main():
     import argparse
+    if '--gen' in sys.argv:
+        open(os.path.join(ROOT, 'rtl', 'tunit_secrets_osd.svh'), 'w').write(gen_osd())
+        print('rtl/tunit_secrets_osd.svh: %d bytes of CONF_STR' % sum(len(l) for l in osd_lines()))
+        return
     ap = argparse.ArgumentParser()
     ap.add_argument('gid', type=int)
     ap.add_argument('maincpu')
