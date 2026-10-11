@@ -21,8 +21,12 @@
 //    the battle counter that brings up the hidden Pong game at battle 250). A patch can also be tied to a code
 //    and apply only while that code plays (MK2 L1.1 and L1.4 have the EJB
 //    code's handler but never call it: while the code plays, the Block
-//    buttons' switch handlers point at it). The board compares every CPU
-//    read with the table (midway_tunit.sv, "Read patches").
+//    buttons' switch handlers point at it). NBA Jam and TE: the power-up
+//    flags of all four players (big heads, interceptions, quick hands, max
+//    power, baby size, shot percentage, no computer assistance) and the
+//    counter checks of power-up defense, goaltending and huge heads. The
+//    board compares every CPU read with the table (midway_tunit.sv, "Read
+//    patches").
 //
 //  Table (16-bit words, little endian in the MRA; ROM index 1):
 //    0x000        game id (low byte; the top level keeps its own copy)
@@ -30,9 +34,10 @@
 //    0x002-0x019  read patches, 8 x 3 words:
 //                   address[15:0], {option[3:0], address[27:16]}, value
 //                 address is the CPU word address (bit address >> 4);
-//                 option 1-3 and 6-8 select OSD option 1-6 (O[16]-O[21]),
-//                 4 / 5 applies the patch while code 1 / code 2 plays, 0 is
-//                 an unused entry
+//                 option 1-3 and 6-13 select OSD option slot 1-11 (the top
+//                 level maps each game's OSD bits to the slots), 4 / 5
+//                 applies the patch while code 1 / code 2 plays, 0 is an
+//                 unused entry
 //    0x01A, 0x01B first step (word index) of code 1 and code 2, 0 = none
 //    0x01C-0x01F  success address of code 1, code 2 (word address, 2 words
 //                 each, 0 = none): the first word of the menu the code opens.
@@ -48,7 +53,8 @@
 //  so an MRA without this table (game id only) has no secrets.
 //
 //  When a code with a success address ends, code_ok or code_fail says
-//  whether its menu opened (the top level shows an OSD message).
+//  whether its menu opened (the top level shows an OSD message); opt_avail
+//  says which option slots this revision has a patch for.
 //
 //  Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 //============================================================================
@@ -66,7 +72,7 @@ module tunit_secrets
 
 	// OSD
 	input       [1:0] trig,          // rising edge starts code 1 / code 2
-	input       [5:0] opt,           // OSD options 1-6 (read patches; options 4-6 are table options 6-8)
+	input      [10:0] opt,           // OSD option slots 1-11 (table options 1-3, 6-13)
 	input             frame,         // one pulse per frame while the game runs
 
 	// CPU reads (the board's dbg_rd, dbg_wa): success of a code
@@ -80,6 +86,8 @@ module tunit_secrets
 	output reg  [1:0] code_start,
 	output reg        code_ok,       // one clock: a code with a success address opened its menu
 	output reg        code_fail,     // one clock: a code did not, after its last try
+
+	output reg [10:0] opt_avail,     // the option slot has a patch in this revision
 
 	// read patches for the board: 8 entries
 	output    [223:0] pt_addr,       // 8 x 28-bit word addresses
@@ -126,9 +134,9 @@ always @(posedge clk) begin
 	end
 	else if (dl_wr) begin
 		for (i = 0; i < 8; i = i + 1) begin
-			if (dl_addr == 9'd2 + 9'd3 * i) p_addr[i][15:0] <= dl_data;
-			if (dl_addr == 9'd3 + 9'd3 * i) {p_opt[i], p_addr[i][27:16]} <= dl_data;
-			if (dl_addr == 9'd4 + 9'd3 * i) p_val[i] <= dl_data;
+			if ({23'd0, dl_addr} == 2 + 3 * i) p_addr[i][15:0] <= dl_data;
+			if ({23'd0, dl_addr} == 3 + 3 * i) {p_opt[i], p_addr[i][27:16]} <= dl_data;
+			if ({23'd0, dl_addr} == 4 + 3 * i) p_val[i] <= dl_data;
 		end
 		if (dl_addr == 9'd26) c_first[0] <= dl_data[8:0];
 		if (dl_addr == 9'd27) c_first[1] <= dl_data[8:0];
@@ -143,20 +151,34 @@ end
 // change rarely, and the board registers its compare anyway)
 reg cur;                         // code playing: 0 code 1, 1 code 2 (code player below)
 
+// opt_avail: slot k (table option k + 1, k + 3 from slot 3 on) has a patch
+integer k, n;
+always @(posedge clk)
+	for (k = 0; k < 11; k = k + 1) begin
+		opt_avail[k] <= 1'b0;
+		for (n = 0; n < 8; n = n + 1)
+			if ({28'd0, p_opt[n]} == ((k < 3) ? k + 1 : k + 3)) opt_avail[k] <= 1'b1;
+	end
+
 genvar g;
 generate
 	for (g = 0; g < 8; g = g + 1) begin : pt
 		assign pt_addr[28 * g +: 28] = p_addr[g];
 		assign pt_data[16 * g +: 16] = p_val[g];
 		always @(posedge clk)
-			pt_en[g] <= (p_opt[g] == 4'd1 && opt[0]) ||
-			            (p_opt[g] == 4'd2 && opt[1]) ||
-			            (p_opt[g] == 4'd3 && opt[2]) ||
-			            (p_opt[g] == 4'd6 && opt[3]) ||
-			            (p_opt[g] == 4'd7 && opt[4]) ||
-			            (p_opt[g] == 4'd8 && opt[5]) ||
-			            (p_opt[g] == 4'd4 && code_on && !cur) ||
-			            (p_opt[g] == 4'd5 && code_on && cur);
+			pt_en[g] <= (p_opt[g] == 4'd1  && opt[0]) ||
+			            (p_opt[g] == 4'd2  && opt[1]) ||
+			            (p_opt[g] == 4'd3  && opt[2]) ||
+			            (p_opt[g] == 4'd6  && opt[3]) ||
+			            (p_opt[g] == 4'd7  && opt[4]) ||
+			            (p_opt[g] == 4'd8  && opt[5]) ||
+			            (p_opt[g] == 4'd9  && opt[6]) ||
+			            (p_opt[g] == 4'd10 && opt[7]) ||
+			            (p_opt[g] == 4'd11 && opt[8]) ||
+			            (p_opt[g] == 4'd12 && opt[9]) ||
+			            (p_opt[g] == 4'd13 && opt[10]) ||
+			            (p_opt[g] == 4'd4  && code_on && !cur) ||
+			            (p_opt[g] == 4'd5  && code_on && cur);
 	end
 endgenerate
 
