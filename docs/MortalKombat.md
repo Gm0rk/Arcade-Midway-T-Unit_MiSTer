@@ -25,17 +25,20 @@ Mortal Kombat sets.
 
 ## Controls
 
-Two players: High Punch, Block, High Kick, Low Punch, Low Kick, Block 2, plus
-Start, Coin, Test (service mode) and Pause.
+Two players. The buttons, in the order MiSTer's Define joystick buttons asks
+for them: High Punch, Low Punch, High Kick, Low Kick, Block, Start, Coin, Test
+(service mode) and Pause. The game's second Block input (Block 2) is not
+mapped; Block does the same.
 
 ## Move List
 
-The OSD's Move List page has the Fighter (the same choice as the Finishing
-Moves page) and Show Move List: a window over the game, on the game's title
-screen, with the special moves, the fatality and the distance it needs of
-that fighter and the others on the same page (four fighters, then three).
-The game waits while the window is on; turn it off to play on. The window only shows the moves; the core does not
-enter them for you (the Finishing Moves page does that).
+The OSD's Move List option (Off, List 1, List 2) shows a window over the
+game, on the game's title screen, with every fighter's special moves,
+fatality and the distance it needs: List 1 has Johnny Cage, Kano, Sub-Zero
+and Sonya, List 2 Raiden, Liu Kang and Scorpion. The game waits while the
+window is on; set Move List to Off to play on. The window only shows the
+moves; the core does not enter them for you (the Finishing Moves page does
+that).
 
 Commands as the game reads them: F toward the opponent, B away; (BL B F)
 means Block held while you enter B F; X+Y pressed together. The list is
@@ -63,8 +66,9 @@ the one of rev 5.0; rev 4.0 and the Turbo Ninja hack may differ.
 
 ## Secrets
 
-The game drops a half-entered code when the attract mode moves to its next
-screen; the core then enters the code again (three tries at most).
+On the OSD's Hidden Items page. The game drops a half-entered code when the
+attract mode moves to its next screen; the core then enters the code again
+(three tries at most).
 
 | OSD item | What it does |
 |---|---|
@@ -74,9 +78,9 @@ screen; the core then enters the code again (three tries at most).
 ## Finishing Moves
 
 The OSD's Finishing Moves page enters a fighter's fatality or The Pit for
-you. Pick the Fighter, then one of the moves listed under it: the OSD closes
-and the move is set. It plays at the next FINISH HIM where that fighter is the winner,
-for either player. With "Pause when OSD is open" (the default) you can open
+you. Pick the Character, then one of the moves listed under it: the OSD
+closes and the move is set. It plays at the next FINISH HIM where that
+fighter is the winner, for either player. With "Pause when OSD is open" (the default) you can open
 the OSD at FINISH HIM and pick the move then.
 
 When the loser stands dizzy and the winner stands still, the core takes the

@@ -8,14 +8,16 @@ Mortal Kombat II
     python3 tools/tunit_fmoves.py --docs mk|mk2             a game page's finishing moves
     python3 tools/tunit_fmoves.py --moves mk|mk2            a game page's move list
 
-The OSD's "Finishing Moves" page picks a fighter and one of the fighter's
-moves; rtl/tunit_fmoves.sv plays it on the winner's controls at the next
-FINISH HIM it fits. This script holds the move list and makes from it:
+The OSD's "Finishing Moves" page picks a character and one of its moves;
+rtl/tunit_fmoves.sv plays it on the winner's controls at the next FINISH
+HIM it fits. The "Move List" option shows the fighters' moves in a window
+(MK: List 1, List 2; MK2: a fighter). This script holds the move list and makes from it:
 
   - rtl/tunit_fmoves_tab.svh: the move records and their programs (the
     controls they press), included by rtl/tunit_fmoves.sv
-  - rtl/tunit_fmoves_osd.svh: the Finishing Moves and Move List OSD pages
-    and the core's info messages (CONF_STR lines), included by the top level
+  - rtl/tunit_fmoves_osd.svh: the Move List option, the Finishing Moves
+    page and the core's info messages (CONF_STR lines), included by the top
+    level
   - for tools/tunit_window.py, the moves of the Move List window (each
     fighter's special moves, and the finishing moves with their distances)
   - with --docs / --moves, the finishing move and move list tables of
@@ -179,7 +181,7 @@ WINDOW_EXTRA = {
             ('Raiden', 'Electrocution', ('Super Uppercut', '(HP 7 s)', 'held from before FINISH HIM', 0, 82))],
 }
 
-# Move List window (P5, tools/tunit_window.py): each fighter's special moves,
+# Move List window (tools/tunit_window.py): each fighter's special moves,
 # shown only (the core does not enter them). Same order as the fighters above; (name, command),
 # a None command is a heading. Found in the move handlers (MK2 L3.1 per
 # button and direction at FF8628A0 on, matcher FF8775D0, button pairs
@@ -238,7 +240,8 @@ SPECIAL_NOTES = {
 
 
 def specials(game):
-    """(fighter name, [(move, command)]) in the Fighter option's order."""
+    """(fighter name, [(move, command)]) in the order of the Character option
+    (and of the Move List window's pages)."""
     f, s = (MK2_FIGHTERS, MK2_SPECIALS) if game == 'mk2' else (MK_FIGHTERS, MK_SPECIALS)
     return [(n, m) for (n, _, _), m in zip(f, s)]
 
@@ -505,6 +508,7 @@ MESSAGES = [
     ('CODE_FAIL', "Code not taken: codes work\nin the attract mode"),
     ('ON_ALL', "On for all players"),
     ('ON_NEXT', "On for all players from the\nnext game"),
+    ('CODE_MATCHUP', "Code not taken: pick it on\nTonight's Match-Up"),
 ]
 
 N_FM_MESSAGES = 13             # the move player's (rtl/tunit_fmoves.sv)
@@ -513,7 +517,7 @@ N_FM_MESSAGES = 13             # the move player's (rtl/tunit_fmoves.sv)
 SEL_MK2 = (27, 24)               # O[27:24] fighter, MK2
 SEL_MK = (30, 28)                # O[30:28] fighter, MK
 SLOT_BIT = 32                    # R[32] + line: the fighter's moves
-LIST_BIT = 44                    # O[44]: the Move List window (tools/tunit_window.py)
+LIST_SEL = (64, 61)              # O[64:61] Move List: Off, then a window page (tools/tunit_window.py)
 CLEAR_BIT = 40                   # R[40]: clear the set move
 MASK_SEL = 8                     # status_menumask bits 8-11: the page's fighter
 
@@ -524,7 +528,7 @@ def sv_str(s):
 
 def sel_prefix(game, li):
     """Hide prefixes that show a line only for the game (menu mask bit 4 MK,
-    5 MK2) and fighter li (bits 8-11 = the Fighter option; MK's bit 11 is
+    5 MK2) and fighter li (bits 8-11 = the Character option; MK's bit 11 is
     always 0, so its lines test bits 8-10 only)."""
     pre = 'h' + ('5' if game == 'mk2' else '4')
     for b in range(4 if game == 'mk2' else 3):
@@ -539,22 +543,23 @@ def label(name, cmd):
     return s
 
 
-def fighter_options(page):
-    """The Fighter option of a page; both pages set the same status bits."""
-    out = []
-    for game, bit, sel in (('mk', '4', SEL_MK), ('mk2', '5', SEL_MK2)):
-        f = fighters(game)
-        out.append('h%s%sO[%d:%d],Fighter,%s;' % (bit, page, sel[0], sel[1], ','.join(n for n, _, _ in f)))
-    return out
-
-
 def osd_lines():
-    """CONF_STR lines of the Finishing Moves page (P4), the Move List page
-    (P5: the Fighter and the window, rtl/tunit_window.sv) and the I line."""
+    """CONF_STR lines of the main menu's Move List option (Off or the window
+    page to show, rtl/tunit_window.sv: MK List 1 / List 2, several fighters
+    to a page; MK2 a fighter), the Finishing Moves page (P4: the Character
+    and its moves) and the I line."""
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import tunit_window
+    mk_lists = ','.join('List %d' % (k + 1) for k in range(tunit_window.page_counts()['mk']))
     out = []
+    out.append('h4O[%d:%d],Move List,Off,%s;' % (LIST_SEL[0], LIST_SEL[1], mk_lists))
+    out.append('h5O[%d:%d],Move List,Off,%s;' % (LIST_SEL[0], LIST_SEL[1],
+                                                ','.join(n for n, _, _ in fighters('mk2'))))
     out.append('h3P4,Finishing Moves;')
     out.append('P4-;')
-    out += fighter_options('P4')
+    for game, bit, sel in (('mk', '4', SEL_MK), ('mk2', '5', SEL_MK2)):
+        names = ','.join(n for n, _, _ in fighters(game))
+        out.append('h%sP4O[%d:%d],Character,%s;' % (bit, sel[0], sel[1], names))
     out.append('P4-;')
     for game in ('mk', 'mk2'):
         for li, (name, cid, moves) in enumerate(fighters(game)):
@@ -568,13 +573,7 @@ def osd_lines():
     out.append('P4-;')
     out.append('P4-,The move plays at the;')
     out.append('P4-,winner\'s FINISH HIM;')
-    out.append('h3P5,Move List;')
-    out.append('P5-;')
-    out += fighter_options('P5')
-    out.append('h3P5O[%d],Show Move List,Off,On;' % LIST_BIT)
-    out.append('P5-;')
-    out.append('P5-,The fighter\'s moves over the;')
-    out.append('P5-,game, which waits meanwhile;')
+    out.append('h3-;')
     info = 'I,' + ','.join(m for _, m in MESSAGES) + ';'
     return out, info
 
@@ -637,8 +636,8 @@ def gen_tab():
 def gen_osd():
     lines, info = osd_lines()
     o = []
-    o.append('// tunit_fmoves_osd.svh - the Finishing Moves and Move List pages, the info')
-    o.append('// messages')
+    o.append('// tunit_fmoves_osd.svh - the Move List option, the Finishing Moves page,')
+    o.append('// the info messages')
     o.append('// Generated by tools/tunit_fmoves.py --gen; do not edit.')
     o.append('//')
     o.append('// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later')

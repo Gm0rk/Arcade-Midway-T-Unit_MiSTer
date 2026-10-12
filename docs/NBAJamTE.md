@@ -30,22 +30,50 @@ Test (service mode) and Pause.
 
 ## Secrets
 
+View Secret Players (OSD main menu: Off, Page 1, ...) shows a window over
+the game, on the title screen, with the hidden players (below): their
+names, initials, birthdays and the versions that have them, and the cheat
+codes as the players enter them (below). Pages 1-4 have the players, Pages 5-6 the codes. The game waits while
+the window is on; set it to Off to play on.
+
+On the OSD's Cheat Codes & Hidden Items page:
+
 | OSD item | What it does |
 |---|---|
-| Secret Menu | The design team screen, then the secret Midway menu with the Jam Info statistics |
-| Secret Player List | A window over the game with the hidden players (below): name, initials, birthday and the versions that have them, on the title screen; Page 1-4 picks the page. Close it (Off) to play |
-| Head Size | Big or huge heads for all players (the game's BIG HEAD and HUGE HEAD codes), from the next game |
+| Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics. In the attract mode only |
 | Baby Size Players | Small players (BABY SIZE PLAYERS), from the next game |
+| Head Size | Big or huge heads for all players (the game's BIG HEAD and HUGE HEAD codes), from the next game |
 | Max Power | The MAX POWER code for all players |
-| Quick Hands | The QUICK HANDS code for all players |
-| Power-Up Goaltending | The power-up goaltending code (POWERUP G.T.) for all players |
-| Shot Percentage | The shot percentage display |
 | No CPU Assistance | Turns off the computer assistance that keeps games close |
+| Power-Up Goaltending | The power-up goaltending code (POWERUP G.T.) for all players |
+| Quick Hands | The QUICK HANDS code for all players |
+| Shot Percentage | The shot percentage display |
+| Tournament Mode | Pick it on the Tonight's Match-Up screen: the core enters the code, and the game is played without power-ups, CPU assistance or other secrets ("TOURNAMENT MODE" at the tip-off) |
 
 The game takes its power-up codes on the Tonight's Match-Up screen, for
-one game and one player; these options give them to all four players
-until they are switched off. Every version has them all. When the OSD
-closes, a message says that an option is on.
+one game and one player; the options give them to all four players
+until they are switched off. Every version has them all. Tournament Mode
+turns the game's own codes off; the options above still apply. When the
+OSD closes, a message says that an option is on, or whether the game took
+a code.
+
+### Cheat codes
+
+The codes as the players enter them, as the window lists them. "Press" is
+a press of Turbo, Shoot or Pass (buttons pressed together count once).
+
+| Code | When | Enter | Versions |
+|---|---|---|---|
+| Baby Size Players | Tonight's Match-Up | Hold Down + Right and press Turbo, Shoot, Pass three times over | All |
+| Big Heads | Tonight's Match-Up | Hold Up + Turbo + Pass until the tip-off | All |
+| Huge Heads | Tonight's Match-Up | Press exactly 6 times, then hold Up + Turbo + Pass until the tip-off | All |
+| Max Power | Tonight's Match-Up | Hold Down + Turbo + Shoot + Pass + Start | All |
+| No CPU Assistance | Tonight's Match-Up | Press exactly 10 times | All |
+| Power-Up Goaltending | Tonight's Match-Up | Press exactly 24 times | All |
+| Quick Hands | Tonight's Match-Up | Press 5 times or more, then hold Down + Shoot until the tip-off | All |
+| Shot Percentage | Tonight's Match-Up | Turn the joystick a full circle and press 15 times or more | All |
+| Tournament Mode | Tonight's Match-Up | Hold Right + Turbo + Shoot + Pass: no power-ups, CPU assistance or secrets in this game | All |
+| Secret Menu | Attract mode | Both players hold Up + Turbo + Shoot + Pass, then hold Down for 2 s, then on the design team screen: P1 Turbo 2x, P2 Shoot 3x, P2 Pass 2x, P1 Shoot, P1 Pass, P2 Turbo 2x | All |
 
 ### Secret players
 

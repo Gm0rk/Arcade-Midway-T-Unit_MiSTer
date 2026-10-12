@@ -20,7 +20,9 @@ Up to three players: Kick, Jump, Punch, Crouch, plus Start, Coin, Test
 
 ## Secrets
 
+On the OSD's Secret Menus page:
+
 | OSD item | What it does |
 |---|---|
-| Secret Audits | Six hidden audit pages; any button turns the page |
-| Secret Audits + Credits | Turns through the audits and holds both Start buttons at the end, which shows the staff credits |
+| Secret Audit Menu | Six hidden audit pages; any button turns the page |
+| Secret Audit Menu + Credits | Turns through the audits and holds both Start buttons at the end, which shows the staff credits |

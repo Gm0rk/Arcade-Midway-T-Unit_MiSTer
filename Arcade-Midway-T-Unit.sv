@@ -69,34 +69,33 @@ localparam CONF_STR = {
 	"H1P1O[78:74],CRT V-Shift,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"H1P1O[107:104],CRT V-Size,0,+1,+2,+3,+4,+5,+6,+7,-7,-6,-5,-4,-3,-2,-1;",
 	"H1P1O[108],CRT V-Size Mode,PVM,Cabinet;",
-	"P2,Controls;",
-	"P2-;",
-	"P2O[9],Service Mode,Off,On;",
-	"P2T[12],Service Credit;",
-	"P2T[13],Tilt;",
-	"h2P3,Secrets;",
-	"P3-;",
-	"h3P3R[14],EJB Menu;",
-	"h4P3R[15],EJB Menu (Copyright Screen);",
-	"h5P3O[16],Security Screen,Off,On;",
-	"h5P3O[17],Hitboxes,Off,On;",
-	"h5P3O[18],Pong at Battle 250,Off,On;",
-	"h5P3O[19],Noob Saibot Fight,Off,On;",
-	"h5P3O[20],Jade Fight,Off,On;",
-	"h5P3O[21],Smoke Fight,Off,On;",
-	"h6P3R[14],Secret Menu;",
+	"-;",
+	`FMOVES_OSD,
+	"DIP;",
 	`NBA_OSD,
-	"h7P3R[14],Secret Audits;",
-	"h7P3R[15],Secret Audits + Credits;",
+	"h7P3,Secret Menus;",
+	"P3-;",
+	"P3R[14],Secret Audit Menu;",
+	"P3R[15],Secret Audit Menu + Credits;",
 	"P3-;",
 	"P3-,Codes work in attract mode;",
-	`FMOVES_OSD,
-	"-;",
-	"DIP;",
-	"-;",
+	"h3P6,Hidden Items;",
+	"P6-;",
+	"P6R[14],EJB Menu;",
+	"h4P6R[15],EJB Menu (Copyright Screen);",
+	"h5P6O[17],Hitboxes,Off,On;",
+	"h5P6O[20],Jade Fight,Off,On;",
+	"h5P6O[19],Noob Saibot Fight,Off,On;",
+	"h5P6O[18],Pong at Battle 250,Off,On;",
+	"h5P6O[16],Security Screen,Off,On;",
+	"h5P6O[21],Smoke Fight,Off,On;",
+	"P6-;",
+	"P6-,EJB Menu: attract mode only;",
+	"O[9],Service Mode,Off,On;",
 	"O[8],Pause when OSD is open,On,Off;",
 	"-;",
-	"R[0],Reset;",
+	"T[0],Reset;",
+	"R[0],Reset and close OSD;",
 	"J1,B1,B2,B3,B4,B5,B6,Start,Coin,Test,Pause;",
 	"jn,A,B,X,Y,L,R,Start,Select,,;",
 	`CORE_INFO,
@@ -273,7 +272,7 @@ always @(posedge clk_sys) begin
 	endcase
 end
 
-// OSD Secrets page items for the loaded game (status_menumask bits 2-7)
+// OSD lines and pages of the loaded game (status_menumask bits 2-7, 12, 13)
 assign menu_secrets = (game_id <= G_JDREDDP);
 assign menu_ejb     = (game_id == G_MK) || (game_id == G_MKTURBO) || (game_id == G_MK2);
 assign menu_mk      = (game_id == G_MK) || (game_id == G_MKTURBO);
@@ -388,11 +387,13 @@ wire [15:0] nv_din  = cmos_clr ? 16'h0000 : ioctl_dout;
 // Inputs
 //
 // Joystick bits: 0 R, 1 L, 2 D, 3 U, 4-9 B1-B6, 10 Start, 11 Coin, 12 Test,
-// 13 Pause. B1-B6 are MAME's BUTTON1-BUTTON6 of each game. Ports are active
-// low; the layouts follow MAME's input ports (midtunit.cpp).
+// 13 Pause. B1-B6 are MAME's BUTTON1-BUTTON6 of each game, except MK and
+// MK2: High Punch, Low Punch, High Kick, Low Kick, Block (B6 unused). The
+// MRAs name the buttons in this order. Ports are active low; the layouts
+// follow MAME's input ports (midtunit.cpp).
 //
-// Service Credit and Tilt are not on the controllers: they are OSD items
-// (Controls page), handled in "OSD service credit and tilt" below.
+// Service Credit and Tilt are not on the controllers: they are lines of the
+// OSD's DIP Switches page, handled in "Service credit and tilt" below.
 //////////////////////////////////////////////////////////////////
 
 // {R, L, D, U} as MAME's bit order up, down, left, right
@@ -406,8 +407,8 @@ reg  [3:0] tilt_cnt = 4'd0;                 // slam tilt held while non-zero
 wire       svc_sw  = |svc_cnt;
 wire       tilt_sw = |tilt_cnt;
 
-// secrets code player (OSD Secrets page): while it plays a code it replaces
-// IN0 and holds the start buttons it needs
+// secrets code player (OSD hidden items and cheat codes): while it plays a
+// code it replaces IN0 and holds the start buttons it needs
 wire        code_on;
 wire [15:0] code_in0;
 wire  [1:0] code_start;
@@ -437,18 +438,19 @@ always @(*) begin
 
 	case (cfg_layout)
 		L_MK: begin
-			// B1 high punch, B2 block, B3 high kick, B4 low punch, B5 low kick, B6 block 2
-			in0[3:0]   = udlr(joy0);  in0[6:4]   = joy0[6:4];
-			in0[11:8]  = udlr(joy1);  in0[14:12] = joy1[6:4];
-			in1[11:9]  = joy1[9:7];
-			in1[13:12] = joy0[8:7];
-			in1[15]    = joy0[9];
+			// B1 high punch, B2 low punch, B3 high kick, B4 low kick, B5 block;
+			// B6 not used (MAME's Block 2, a second block input, stays up)
+			in0[3:0]   = udlr(joy0);  in0[4]  = joy0[4];  in0[5]  = joy0[8];  in0[6]  = joy0[6];
+			in0[11:8]  = udlr(joy1);  in0[12] = joy1[4];  in0[13] = joy1[8];  in0[14] = joy1[6];
+			in1[12]    = joy0[5];     in1[13] = joy0[7];  // P1 low punch, low kick
+			in1[9]     = joy1[5];     in1[10] = joy1[7];  // P2 low punch, low kick
 		end
 		L_MK2: begin
-			in0[3:0]   = udlr(joy0);  in0[6:4]   = joy0[6:4];
-			in0[11:8]  = udlr(joy1);  in0[14:12] = joy1[6:4];
-			in2[2:0]   = joy0[9:7];
-			in2[6:4]   = joy1[9:7];
+			// as MK; the low punch / low kick bits are in IN2
+			in0[3:0]   = udlr(joy0);  in0[4]  = joy0[4];  in0[5]  = joy0[8];  in0[6]  = joy0[6];
+			in0[11:8]  = udlr(joy1);  in0[12] = joy1[4];  in0[13] = joy1[8];  in0[14] = joy1[6];
+			in2[0]     = joy0[5];     in2[1]  = joy0[7];
+			in2[4]     = joy1[5];     in2[5]  = joy1[7];
 		end
 		L_NBA: begin
 			// B1 turbo (bit 6), B2 shoot / block (bit 4), B3 pass / steal (bit 5)
@@ -502,9 +504,14 @@ always @(posedge clk_sys) begin
 	else if ((joy0[13] | joy1[13]) & ~pause_btn_d) pause_toggle <= ~pause_toggle;
 end
 
-// the Move List window (see Video) holds the game too
-wire movelist_on = menu_ejb & status[44];
-wire pause = pause_toggle | (OSD_STATUS & ~status[8]) | movelist_on;
+// the information windows (see Video) hold the game too: the OSD option
+// picks the page (0 Off, n page n), a value past the list's pages is Off
+wire [3:0] list_sel    = menu_nba ? {1'b0, status[67:65]} : status[64:61];
+wire [4:0] list_n      = menu_te ? WIN_NBAJAMTE_N : menu_nj ? WIN_NBAJAM_N : menu_mk2 ? WIN_MK2_N : WIN_MK_N;
+wire       list_valid  = list_sel != 4'd0 && {1'b0, list_sel} <= list_n;
+wire       movelist_on = menu_ejb & list_valid;
+wire       splist_on   = menu_nba & list_valid;
+wire pause = pause_toggle | (OSD_STATUS & ~status[8]) | movelist_on | splist_on;
 
 //////////////////////////////////////////////////////////////////
 // T-Unit board
@@ -531,47 +538,55 @@ wire  [7:0] core_r, core_g, core_b;       // with the information window
 wire        core_hs, core_vs, core_hb, core_vb;
 
 //////////////////////////////////////////////////////////////////
-// OSD service credit and tilt
+// Service credit and tilt (OSD DIP Switches page)
 //
-// Each OSD item is a trigger: the HPS sets its status bit briefly when it
-// is selected. The matching cabinet switch is then held closed for 8
-// frames (about 150 ms), long enough for the game's switch scan to accept
-// it, like a real coin or slam switch. Frames are counted only while the
-// game runs, so with "Pause when OSD is open" the switch closes when the
-// OSD is shut.
+// The MRAs list them with the game's DIP switches (bits 16 and 17 of the
+// switches, tools/mra_gen.py). Main_MiSTer sends all the switches each time
+// one changes, so selecting the line flips its bit: each flip after the
+// first download (the saved values when the game loads) holds the matching
+// cabinet switch closed for 8 frames (about 150 ms), long enough for the
+// game's switch scan to accept it, like a real coin or slam switch. Frames
+// are counted only while the game runs, so with "Pause when OSD is open"
+// the switch closes when the OSD is shut.
 //////////////////////////////////////////////////////////////////
 
-reg  [1:0] osd_sw_d;
 reg        osd_vb_d;
 wire       osd_frame = core_vb & ~osd_vb_d & ~pause;   // start of a running frame
 
+reg        dsw_seen = 1'b0;      // the switches' second word has come once
+wire       dsw_w1   = ioctl_wr && ioctl_index == 16'd254 && ioctl_addr[26:1] == 26'd1;
+wire       svc_flip  = dsw_w1 && dsw_seen && (ioctl_dout[0] ^ dsw[16]);
+wire       tilt_flip = dsw_w1 && dsw_seen && (ioctl_dout[1] ^ dsw[17]);
+
 always @(posedge clk_sys) begin
-	osd_sw_d <= status[13:12];
 	osd_vb_d <= core_vb;
+	if (dsw_w1) dsw_seen <= 1'b1;
 
 	if (reset) begin
 		svc_cnt  <= 4'd0;
 		tilt_cnt <= 4'd0;
 	end
 	else begin
-		if (status[12] & ~osd_sw_d[0])   svc_cnt  <= 4'd8;
+		if (svc_flip)                    svc_cnt  <= 4'd8;
 		else if (osd_frame && svc_sw)    svc_cnt  <= svc_cnt - 4'd1;
 
-		if (status[13] & ~osd_sw_d[1])   tilt_cnt <= 4'd8;
+		if (tilt_flip)                   tilt_cnt <= 4'd8;
 		else if (osd_frame && tilt_sw)   tilt_cnt <= tilt_cnt - 4'd1;
 	end
 end
 
 //////////////////////////////////////////////////////////////////
-// OSD secrets (Secrets page)
+// OSD secrets (Secret Menus, Hidden Items, Cheat Codes & Hidden Items)
 //
 // R[14] / R[15] play the loaded set's code 1 / code 2 (hidden menus, entered
-// on the controls during the attract mode); the options switch its read
-// patches through the option slots of rtl/tunit_secrets.sv (MK2, O[21:16]:
-// security screen, hitboxes, Pong at battle 250, Noob Saibot, Jade and
-// Smoke fights; NBA Jam and TE, O[55:48]: the power-ups, slots in the
-// order of tools/tunit_secrets.py's NJ_* / TE_* codes). The codes and
-// patch addresses come with the MRA (ROM index 1), found per revision by
+// on the controls during the attract mode; NBA Jam's tank game and TE's
+// tournament mode, entered on the Tonight's Match-Up screen and held until
+// the game takes them); the options switch its read patches through the
+// option slots of rtl/tunit_secrets.sv (MK2, O[21:16]: security screen,
+// hitboxes, Pong at battle 250, Noob Saibot, Jade and Smoke fights; NBA Jam
+// and TE, O[55:48]: the power-ups, slots in the order of
+// tools/tunit_secrets.py's NJ_* / TE_* codes). The codes and patch
+// addresses come with the MRA (ROM index 1), found per revision by
 // tools/tunit_secrets.py.
 // Frames are counted while the game runs, so with "Pause when OSD is open"
 // a code starts when the OSD closes.
@@ -593,6 +608,8 @@ wire         cpu_wr;             // and writes (the finishing-move player follow
 wire  [27:0] cpu_wa;
 wire  [15:0] cpu_wd;
 wire         code_ok, code_fail;
+wire         code_cur;           // the code that ended: 0 code 1, 1 code 2
+wire   [1:0] code_avail;         // the set has code 1 / code 2
 
 reg  secrets_dl_d = 1'b0;
 wire secrets_dl   = ioctl_download && ioctl_index == 16'd1;
@@ -620,6 +637,8 @@ tunit_secrets secrets
 	.code_start (code_start),
 	.code_ok    (code_ok),
 	.code_fail  (code_fail),
+	.code_cur   (code_cur),
+	.code_avail (code_avail),
 	.opt_avail  (opt_avail),
 
 	.pt_addr    (pt_addr),
@@ -630,11 +649,11 @@ tunit_secrets secrets
 //////////////////////////////////////////////////////////////////
 // Finishing moves (MK, MK2)
 //
-// The Finishing Moves page picks a fighter (O[30:28] MK, O[27:24] MK2; the
-// menu mask's bits 8-11 show that fighter's lines) and one of its moves
-// (R[32]-R[39], the fighter's lines in order; R[40] clears the set move).
-// The Move List page (P5) has the same Fighter option and shows that
-// fighter's special moves as text lines; nothing in the core acts on it.
+// The Finishing Moves page picks a character (O[30:28] MK, O[27:24] MK2;
+// the menu mask's bits 8-11 show that character's lines) and one of its
+// moves (R[32]-R[39], the character's lines in order; R[40] clears the set
+// move). (The main menu's Move List option, O[64:61], only shows the moves
+// in the window, see Video.)
 // rtl/tunit_fmoves.sv plays it at the winner's next FINISH HIM, following
 // the fight through the CPU's writes to the variables the MRA gives (ROM
 // index 1, bytes 0x400-0x44F, tools/tunit_fmoves.py).
@@ -689,18 +708,20 @@ tunit_fmoves fmoves
 //////////////////////////////////////////////////////////////////
 // OSD messages (CONF_STR "I" line, rtl/tunit_fmoves_osd.svh)
 //
-// The finishing-move player's, the secrets' codes (their menu opened, or
-// not) and the Secrets page's options turned on (looked at when the OSD
-// closes: what an MK2 option does, that an NBA Jam / TE power-up is on for
-// all players, or that this revision does not have it). Main_MiSTer shows a message for 2 s, and only with the OSD
-// closed: messages wait in a set (lowest number first) and go out one
-// every 2.2 s, starting 0.3 s after the OSD closes.
+// The finishing-move player's, the secrets' codes (their menu opened or the
+// game took them, or not; a code this revision lacks) and the hidden items'
+// and power-ups' options turned on (looked at when the OSD closes: what an
+// MK2 option does, that an NBA Jam / TE power-up is on for all players, or
+// that this revision does not have it). Main_MiSTer shows a message for
+// 2 s, and only with the OSD closed: messages wait in a set (lowest number
+// first) and go out one every 2.2 s, starting 0.3 s after the OSD closes.
 //////////////////////////////////////////////////////////////////
 
 localparam [27:0] MSG_GAP   = 28'd211_200_000;     // 2.2 s at 96 MHz
 localparam [27:0] MSG_DELAY = 28'd28_800_000;      // 0.3 s
 
 reg  [31:1] msg_pend;
+reg   [1:0] code_trig_d;         // R[15:14] last clock: a code picked that the set lacks
 reg  [10:0] sec_open;            // Secrets option slots when the OSD opened
 reg  [27:0] msg_timer;
 reg         osd_was;
@@ -730,12 +751,15 @@ end
 always @(posedge clk_sys) begin
 	osd_was <= OSD_STATUS;
 	msg_out <= 1'b0;
+	code_trig_d <= status[15:14];
 
 	if (OSD_STATUS & ~osd_was) sec_open <= sec_opt;
 
 	if (fm_msg_req) msg_pend[fm_msg] <= 1'b1;
 	if (code_ok)    msg_pend[MSG_CODE_OK] <= 1'b1;
-	if (code_fail)  msg_pend[MSG_CODE_FAIL] <= 1'b1;
+	if (code_fail)  msg_pend[(menu_nba && code_cur) ? MSG_CODE_MATCHUP : MSG_CODE_FAIL] <= 1'b1;
+	for (si = 0; si < 2; si = si + 1)
+		if (status[14 + si] & ~code_trig_d[si] & ~code_avail[si]) msg_pend[MSG_NOT_HERE] <= 1'b1;
 	if (~OSD_STATUS & osd_was) begin
 		for (si = 0; si < 11; si = si + 1)
 			if (sec_opt[si] & ~sec_open[si])
@@ -999,21 +1023,15 @@ sdram sdram
 
 // ---- Information window (rtl/tunit_window.sv) ----
 //
-// The Secrets page's Secret Player List (NBA Jam, TE; O[43:41]: NBA Jam Off /
-// On, TE Off / Page 1-n) and the Move List page's Show Move List (MK, MK2;
-// O[44], the page of the fighter picked under Fighter: O[30:28] MK, several
-// fighters to a page, O[27:24] MK2) draw a page over the game's dimmed title
-// screen in place of the picture. The game runs on behind the Secret Player
-// List and waits behind the Move List (pause above). The first page of each
-// list and the MK fighters' pages: rtl/tunit_window_pages.svh.
+// View Secret Players (NBA Jam, TE; O[67:65]: Off, Page 1-n: the players,
+// then the cheat codes) and Move List (MK, MK2; O[64:61]: Off, MK List 1 /
+// List 2 with several fighters to a page, MK2 a fighter) draw a page over
+// the game's dimmed title screen in place of the picture; the game waits
+// meanwhile (pause above). The first page and page count of each list:
+// rtl/tunit_window_pages.svh.
 
-wire [2:0] splist_sel = status[43:41];
-wire       splist_on  = menu_nba && splist_sel != 3'd0 && (menu_te || splist_sel == 3'd1);
-
-wire [4:0] win_page = menu_te  ? WIN_NBAJAMTE + {2'd0, splist_sel} - 5'd1 :
-                      menu_nj  ? WIN_NBAJAM :
-                      menu_mk2 ? WIN_MK2 + {1'b0, status[27:24]} :
-                                 win_mk_page(status[30:28]);
+wire [4:0] list_p0  = menu_te ? WIN_NBAJAMTE : menu_nj ? WIN_NBAJAM : menu_mk2 ? WIN_MK2 : WIN_MK;
+wire [4:0] win_page = list_p0 + {1'b0, list_sel} - 5'd1;
 wire [1:0] win_game = menu_nj ? 2'd0 : menu_te ? 2'd1 : menu_mk2 ? 2'd3 : 2'd2;
 
 tunit_window tunit_window

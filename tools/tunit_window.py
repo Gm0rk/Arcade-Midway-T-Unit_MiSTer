@@ -8,13 +8,15 @@ window):
 
   - Secret Player List (NBA Jam, NBA Jam TE): every secret player with the
     name, the initials and birthday that bring them up and the versions
-    that have them (tools/tunit_splist.py has the players). NBA Jam has one
-    page, TE several.
+    that have them (tools/tunit_splist.py has the players), then the cheat
+    codes as the players enter them (tools/tunit_secrets.py CHEATS). The
+    OSD option picks the page (Off, Page 1 to Page n).
   - Move List (Mortal Kombat, Mortal Kombat II): each fighter's special
     moves and finishing moves with the distance they need, in words (Close,
     Sweep, Jump, Half screen, Full screen; tools/tunit_fmoves.py has the
-    moves and the distances). MK2 has a page per fighter; MK1's fighters
-    have fewer moves, so several share a page.
+    moves and the distances). MK2 has a page per fighter (the OSD option
+    picks the fighter); MK1's fighters have fewer moves, so several share a
+    page (the option picks List 1 or List 2).
 
 A page is 30 rows of 56 characters; a row is a list of segments, runs of
 text in one colour (the blanks between them are not stored). ROM images
@@ -37,8 +39,8 @@ for $readmemh:
                                picture's resolution, a palette index each
     rtl/tunit_window_pal.hex   128 x 24 bits: the palettes, 32 colours per
                                background (RGB, already dimmed)
-    rtl/tunit_window_pages.svh the first page of each list and the MK
-                               fighters' pages (top level)
+    rtl/tunit_window_pages.svh the first page and the page count of each
+                               list (top level)
 
 The backgrounds come from captures of the title screens (--bg; the 4:3
 picture is taken from the middle of the image, so a 1920 x 1080 capture
@@ -63,6 +65,7 @@ REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import tunit_splist as sl   # noqa: E402
 import tunit_fmoves as fm   # noqa: E402
+import tunit_secrets as ts  # noqa: E402
 
 OUT = {k: os.path.join(REPO, 'rtl', 'tunit_window_%s.hex' % k)
        for k in ('row', 'seg', 'text', 'font', 'bg', 'pal')}
@@ -210,26 +213,79 @@ def player_rows(players, sets):
     return out
 
 
-def secret_pages(game):
-    """The Secret Player List pages of nbajam or nbajamte."""
+def paginate(groups, room):
+    """Row groups (kept together) into pages of at most room rows, a blank
+    row between groups that ask for one ((rows, gap))."""
+    pg, cur = [], []
+    for rows, gap in groups:
+        need = len(rows) + (1 if gap and cur else 0)
+        if cur and len(cur) + need > room:
+            pg.append(cur)
+            cur, need = [], len(rows)
+        if gap and cur:
+            cur.append(None)
+        cur += rows
+    pg.append(cur)
+    return pg
+
+
+def wrap_words(text, width_):
+    """Lines of at most width_ characters, broken between words."""
+    out, cur = [], ''
+    for w in text.split(' '):
+        if cur and len(cur) + 1 + len(w) > width_:
+            out.append(cur)
+            cur = w
+        else:
+            cur = (cur + ' ' + w) if cur else w
+    out.append(cur)
+    if any(len(line) > width_ for line in out):
+        raise SystemExit('too long: ' + text)
+    return out
+
+
+C_CODE = LEFT + 2                   # a code's text under its name
+CODE_FOOTER = [
+    [('Press', YELLOW), (': ' + ts.CHEATS_NOTE.split(': ', 1)[1], GRAY)],
+    [("The OSD's Cheat Codes & Hidden Items page does these", GRAY)],
+]
+
+
+def code_groups(game):
+    """The codes of a game (tools/tunit_secrets.py CHEATS) as row groups: a
+    section's heading with its first code, then each code (name and
+    versions, the code under it)."""
+    groups = []
+    for head, items in ts.CHEATS[game]:
+        for k, (name, how, ver) in enumerate(items):
+            rows = [at((LEFT, name, WHITE), (RIGHT + 1 - len(ver), ver, GRAY))]
+            rows += [at((C_CODE, line, YELLOW)) for line in wrap_words(how, RIGHT + 1 - C_CODE)]
+            if k == 0:
+                groups.append(([row((head, CYAN))] + rows, True))
+            else:
+                groups.append((rows, False))
+    return groups
+
+
+def nba_pages(game):
+    """The Secret Player List window of nbajam or nbajamte: the secret
+    players, then the cheat codes (the OSD option picks the page)."""
     data = sl.load()
     _, title, _, sets = [g for g in sl.GAMES if g[0] == game][0]
-    foot = [row(*f) for f in SP_FOOTER] + [row(*SP_FOOTER_GAME[game])]
-    room = ROWS - 3 - 1 - len(foot)         # title, blank, header ... blank, footer
-    pg, cur = [], []
-    for g in player_rows(data[game], sets):
-        if len(cur) + len(g) > room:
-            pg.append(cur)
-            cur = []
-        cur += g
-    pg.append(cur)
+    sp_foot = [row(*f) for f in SP_FOOTER] + [row(*SP_FOOTER_GAME[game])]
+    sp = paginate([(g, False) for g in player_rows(data[game], sets)], ROWS - 3 - 1 - len(sp_foot))
+    cd_foot = [row(*f) for f in CODE_FOOTER]
+    cd = paginate(code_groups(game), ROWS - 2 - 1 - len(cd_foot))
+    n_all = len(sp) + len(cd)
     out = []
-    for n, body in enumerate(pg):
-        right = title + ('  %d/%d' % (n + 1, len(pg)) if len(pg) > 1 else '')
-        head = [title_row('SECRET PLAYERS', right), None,
+    for n, body in enumerate(sp):
+        head = [title_row('SECRET PLAYERS', '%s  %d/%d' % (title, n + 1, n_all)), None,
                 at((C_NAME, 'PLAYER', GRAY), (C_INI, 'INI', GRAY), (C_DAY, 'BIRTHDAY', GRAY),
                    (C_VER, 'VERSIONS', GRAY))]
-        out.append(compose('%s %d' % (game, n + 1), head, body, foot))
+        out.append(compose('%s players %d' % (game, n + 1), head, body, sp_foot))
+    for n, body in enumerate(cd):
+        head = [title_row('CHEAT CODES', '%s  %d/%d' % (title, len(sp) + n + 1, n_all)), None]
+        out.append(compose('%s codes %d' % (game, n + 1), head, body, cd_foot))
     return out
 
 
@@ -308,7 +364,7 @@ def special_rows(game, name, sp, col, cmd_col):
 
 
 def mk2_pages():
-    """MK2's Move List: a page per fighter (Fighter option order)."""
+    """MK2's Move List: a page per fighter (the Move List option's order)."""
     out = []
     for (name, cid, moves), (n2, sp) in zip(fm.fighters('mk2'), fm.specials('mk2')):
         assert name == n2
@@ -342,9 +398,9 @@ def mk2_pages():
 
 
 def mk_pages():
-    """MK's Move List: as many fighters to a page as fit (Fighter option
-    order), each with the special moves and the fatality; The Pit, the same
-    for all, in the footer. MK_GROUPS[fighter] is the fighter's page."""
+    """MK's Move List: as many fighters to a page as fit (the Character
+    option's order), each with the special moves and the fatality; The Pit,
+    the same for all, in the footer."""
     foot = [row(*f) for f in ML_NOTATION + [ML_DISTANCE, ML_FOOTER_STAGE[fm.K_MKPIT]]]
     blocks = []
     fighters = [(n, [m for m in moves if m[1] != fm.K_MKPIT]) for n, _, moves in fm.fighters('mk')]
@@ -370,11 +426,9 @@ def mk_pages():
         cur.append((name, b))
     groups.append(cur)
     out = []
-    MK_GROUPS.clear()
     for k, g in enumerate(groups):
         body = []
         for name, b in g:
-            MK_GROUPS.append(k)
             body += ([None] if body else []) + b
         head = [title_row('MOVE LIST' + ('  %d/%d' % (k + 1, len(groups)) if len(groups) > 1 else ''),
                           MK_TITLES['mk']), None,
@@ -383,14 +437,11 @@ def mk_pages():
     return out
 
 
-MK_GROUPS = []                       # MK fighter -> its page (of MK's pages)
-
-
 # ----------------------------------------------------------------------------
 # All pages, the ROM images
 # ----------------------------------------------------------------------------
 
-LISTS = [('nbajam', lambda: secret_pages('nbajam')), ('nbajamte', lambda: secret_pages('nbajamte')),
+LISTS = [('nbajam', lambda: nba_pages('nbajam')), ('nbajamte', lambda: nba_pages('nbajamte')),
          ('mk', mk_pages), ('mk2', mk2_pages)]
 
 
@@ -405,9 +456,9 @@ def pages():
 
 
 def page_counts():
-    """(NBA Jam's pages, TE's pages) for the OSD lines (tunit_secrets.py)"""
+    """{list: pages} for the OSD options (tunit_secrets.py, tunit_fmoves.py)"""
     _, first = pages()
-    return first['nbajam'][1], first['nbajamte'][1]
+    return {name: n for name, (p0, n) in first.items()}
 
 
 def segments(r):
@@ -449,8 +500,8 @@ def images():
     seg += [0] * (SEG_SIZE - len(seg))
     codes = [ord(ch) - 32 for ch in text] + [0] * (TEXT_SIZE - len(text))
     font = [b for ch in font_rows() for b in ch]
-    svh = ['// tunit_window_pages.svh - the first window page of each list and the',
-           '// MK fighters\' pages',
+    svh = ['// tunit_window_pages.svh - the first window page and the page count of',
+           '// each list',
            '// Generated by tools/tunit_window.py --write; do not edit.',
            '//',
            '// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later',
@@ -458,11 +509,9 @@ def images():
     for name, (p0, n) in first.items():
         svh.append("%-40s// %d page%s" % ("localparam [4:0] WIN_%s = 5'd%d;" % (name.upper(), p0),
                                           n, 's' if n > 1 else ''))
-    svh += ['', '// MK: the page of each fighter (Fighter option order; several to a page)',
-            'function automatic [4:0] win_mk_page(input [2:0] fighter);', '\tcase (fighter)']
-    for f, k in enumerate(MK_GROUPS):
-        svh.append("\t\t3'd%d: win_mk_page = 5'd%d;" % (f, first['mk'][0] + k))
-    svh += ["\t\tdefault: win_mk_page = 5'd%d;" % first['mk'][0], '\tendcase', 'endfunction']
+    svh += ['', '// pages of each list (the OSD options: Off, then one value per page)']
+    for name, (p0, n) in first.items():
+        svh.append("localparam [4:0] WIN_%s_N = 5'd%d;" % (name.upper(), n))
     return {'row': '\n'.join('%03X' % w for w in rows) + '\n',
             'seg': '\n'.join('%07X' % w for w in seg) + '\n',
             'text': '\n'.join('%02X' % w for w in codes) + '\n',

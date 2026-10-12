@@ -4,17 +4,21 @@ tunit_secrets.py - the per-set secrets table (MRA ROM index 1)
 
     python3 tools/tunit_secrets.py <game id> <maincpu.bin> [--out table.bin]
     python3 tools/tunit_secrets.py --gen      (rtl/tunit_secrets_osd.svh)
+    python3 tools/tunit_secrets.py --codes nbajam|nbajamte
+                                              (the codes the window lists)
 
 Builds the table rtl/tunit_secrets.sv reads: the game id, the read patches
-and the codes for the OSD Secrets page. Every address and code is taken from
-the set's own program ROM by looking for the code that uses it, so each
-revision gets its own (MK2 L1.1 and L1.4 have a different EJB code from the
-later revisions, and the RAM variables move between revisions). A feature
-whose code is not found is left out of that set's table, and the script
-says so. mra_gen.py calls build() for every set; run alone, it prints what
-it finds in a region dump (tools/mame/region_dump.lua). --gen writes the
-NBA Jam / TE lines of the OSD Secrets page (the power-ups, and the Secret
-Player List window of tools/tunit_window.py).
+and the codes for the OSD's hidden items and cheat codes. Every address and
+code is taken from the set's own program ROM by looking for the code that
+uses it, so each revision gets its own (MK2 L1.1 and L1.4 have a different
+EJB code from the later revisions, and the RAM variables move between
+revisions). A feature whose code is not found is left out of that set's
+table, and the script says so. mra_gen.py calls build() for every set; run
+alone, it prints what it finds in a region dump
+(tools/mame/region_dump.lua). --gen writes the NBA Jam / TE lines of the OSD
+(View Secret Players and the Cheat Codes & Hidden Items page); CHEATS
+below is what the Secret Player List window (tools/tunit_window.py) and the
+game pages show of the codes.
 
 What the games hide (34010 addresses below are MK2 L3.1, NBA Jam 3.01,
 TE 4.0, Judge Dredd TA1, MK 5.0):
@@ -81,6 +85,18 @@ TE 4.0, Judge Dredd TA1, MK 5.0):
                  6) the same way. Found from the code that clears and sets
                  them (FF906D00 / FF9380D0, the tip-off code FF8592F0 /
                  FF8762A0).
+                 Tank game (NBA Jam 1.00, 2.00, 3.01): a hidden 3D tank game
+                 ("YOU ARE DEAD!") instead of the tip-off when, as the court
+                 is set up after the match-up, P1 holds Down + Turbo + Shoot
+                 + Pass and P2 Turbo + Shoot + Pass (FF83D190: IN0 AND 7072h;
+                 3.01 once a game). Code 2, held until the CPU starts the
+                 tank game (FF8E1010).
+                 Tournament mode (TE): any player holding Right + Turbo +
+                 Shoot + Pass on the match-up screen (FF939250) turns off
+                 the power-ups, the computer's assistance and the secrets
+                 for the game ("TOURNAMENT MODE / NO CPU ASSISTANCE,
+                 POWERUPS, OR SECRETS ALLOWED!" at the tip-off). Code 2,
+                 held until the CPU takes it.
   Judge Dredd    Secret audits: in the attract mode P1 Down + P2 Right with
                  one set of buttons, then another (FFD3BCD0); six pages of
                  audits, each turned by any press. Holding both start buttons
@@ -115,10 +131,11 @@ NJ_BIG, NJ_DEF, NJ_INT, NJ_SHOT, NJ_NOCPU = 1, 2, 3, 6, 7
 TE_BIG, TE_HUGE, TE_BABY, TE_MAX, TE_QUICK, TE_GOAL, TE_SHOT, TE_NOCPU = 1, 2, 3, 6, 7, 8, 9, 10
 NOP, JRUC = 0x0300, 0xC000
 
-# OSD (Secrets page, rtl/tunit_secrets_osd.svh): status bits and the menu
-# mask bits of the two games; the top level maps the bits to the option
-# slots of rtl/tunit_secrets.sv
-OSD_LIST = (43, 41)              # Secret Player List: Off, page 1-n
+# OSD (rtl/tunit_secrets_osd.svh): status bits and the menu mask bits of
+# the two games; the top level maps the bits to the option slots of
+# rtl/tunit_secrets.sv
+OSD_LIST = (67, 65)              # View Secret Players: Off, Page 1-n (the window's pages)
+OSD_PAGE = 7                     # the Cheat Codes & Hidden Items page
 OSD_HEADS = 48                   # NBA Jam: Big Heads; TE: O[49:48] Head Size
 OSD_DEF = 50                     # NBA Jam: Power-Up Defense; TE: Power-Up Goaltending
 OSD_INT = 51                     # NBA Jam: Power-Up Interceptions; TE: Quick Hands
@@ -129,6 +146,7 @@ OSD_MAX = 55                     # TE: Max Power
 MASK_NBA, MASK_NJ, MASK_TE = '6', 'C', 'D'
 
 LAST, START1, START2 = 0x8000, 0x0100, 0x0200
+UNTIL = 0x8000                   # first-step word: end at the success fetch, no retries
 
 X = None                         # wildcard in a signature
 
@@ -371,7 +389,31 @@ def nba_codes(p, notes):
         notes.append('secret menu code, second part %08X (%d presses)' % (tab, len(vals)))
     else:
         notes.append('secret menu code (no second part)')
-    return [(code, None)], None
+    return [(code, None), matchup_code(p, notes)], None
+
+
+def matchup_code(p, notes):
+    """Code 2 of NBA Jam / TE, played on the Tonight's Match-Up screen and
+    held until the CPU takes it: NBA Jam's tank game or TE's tournament mode
+    (or None)."""
+    # tank game: MOVE @IN0,A0 / ANDI 7072h,A0 (P1 Down + buttons, P2 buttons)
+    # / JRNE / (3.01: the game mode and a once-a-game flag) / JA tank
+    for i in p.find([0x05A0, 0x0000, 0x0160, 0x0B80, 0x8F8D, 0xFFFF, X]):
+        if p.w[i + 6] >> 8 != 0xCB:
+            continue
+        for k in range(i + 7, i + 24):
+            if p.w[k] == 0xC080:
+                tank = p.u32(k + 1)
+                notes.append('tank game %08X' % tank)
+                return [(0x7072, 250, 0), (0x7072, 250, 0), (0, 2, 0)], tank, True
+    # tournament mode: CALLA (joystick) / CMPI 8h,A0 (Right) / JRNE / MOVK 1,A0
+    # / MOVE A0,@tournament / MOVI FFFFh,A0
+    h = p.find([0x0D5F, X, X, 0x0B40, 0xFFF7, X, 0x1820, 0x0580, X, X, 0x09C0, 0xFFFF])
+    if len(h) == 1 and p.w[h[0] + 5] >> 8 == 0xCB:
+        done = bit_address(h[0] + 6)
+        notes.append('tournament mode %08X' % done)
+        return [(0x0078, 30, 0), (0, 2, 0)], done, True
+    return None
 
 
 def nba_extras(p, te, notes):
@@ -512,8 +554,8 @@ def build(gid, prog_bytes):
     for n, c in enumerate(codes[:2]):
         if not c or not c[0]:
             continue
-        code, done = c
-        t[26 + n] = pos
+        code, done = c[:2]
+        t[26 + n] = pos | (UNTIL if len(c) > 2 and c[2] else 0)
         if done:
             t[28 + 2 * n] = (done >> 4) & 0xFFFF
             t[29 + 2 * n] = done >> 20
@@ -537,39 +579,111 @@ def part_hex(data, per_line=32, indent='\t\t'):
 
 
 # --------------------------------------------------------------------------
+# The codes as the players enter them (the Secret Player List window's code
+# page, tools/tunit_window.py; the game pages)
+#
+# From the code that checks them (NBA Jam 3.01, TE 4.0 3-23; the versions
+# from each revision's program ROM): "press" is a new press of Turbo, Shoot
+# or Pass (presses in the same frame count once), counted per player on the
+# match-up screen; "until the tip-off" is the input word the tip-off reads,
+# exactly those directions and buttons.
+# --------------------------------------------------------------------------
+
+MATCHUP = "TONIGHT'S MATCH-UP, BEFORE THE TIP-OFF"
+ATTRACT = 'ATTRACT MODE'
+MENU_FIRST = 'Both players hold Up + Turbo + Shoot + Pass, then hold Down for 2 s'
+MENU_SECOND = ('on the design team screen: P1 Turbo 2x, P2 Shoot 3x, P2 Pass 2x, P1 Shoot, P1 Pass, '
+               'P2 Turbo 2x')
+CHEATS = {
+    'nbajam': [
+        (MATCHUP, [
+            ('Big Heads', 'Hold Up + Turbo + Pass until the tip-off', 'All'),
+            ('No CPU Assistance', 'Press exactly 10 times', '3.01'),
+            ('Power-Up Defense', 'Press exactly 8 times', '2.00, 3.01'),
+            ('Power-Up Interceptions', 'Press 5 times or more, then hold Down + Turbo + Shoot + Pass '
+             'until the tip-off', '2.00, 3.01'),
+            ('Shot Percentage', 'Turn the joystick a full circle and press 15 times or more', '2.00, 3.01'),
+            ('Tank Game', 'P1 holds Down + Turbo + Shoot + Pass and P2 Turbo + Shoot + Pass until the '
+             'tip-off (3.01: once a game)', '1.00, 2.00, 3.01'),
+        ]),
+        (ATTRACT, [
+            ('Secret Menu', MENU_FIRST + '; 3.01 then ' + MENU_SECOND, 'All'),
+        ]),
+    ],
+    'nbajamte': [
+        (MATCHUP, [
+            ('Baby Size Players', 'Hold Down + Right and press Turbo, Shoot, Pass three times over', 'All'),
+            ('Big Heads', 'Hold Up + Turbo + Pass until the tip-off', 'All'),
+            ('Huge Heads', 'Press exactly 6 times, then hold Up + Turbo + Pass until the tip-off', 'All'),
+            ('Max Power', 'Hold Down + Turbo + Shoot + Pass + Start', 'All'),
+            ('No CPU Assistance', 'Press exactly 10 times', 'All'),
+            ('Power-Up Goaltending', 'Press exactly 24 times', 'All'),
+            ('Quick Hands', 'Press 5 times or more, then hold Down + Shoot until the tip-off', 'All'),
+            ('Shot Percentage', 'Turn the joystick a full circle and press 15 times or more', 'All'),
+            ('Tournament Mode', 'Hold Right + Turbo + Shoot + Pass: no power-ups, CPU assistance or '
+             'secrets in this game', 'All'),
+        ]),
+        (ATTRACT, [
+            ('Secret Menu', MENU_FIRST + ', then ' + MENU_SECOND, 'All'),
+        ]),
+    ],
+}
+CHEATS_NOTE = 'Press: Turbo, Shoot or Pass (together counts once)'
+
+
+def cheats_docs(game):
+    """Markdown table of a game's codes (the game pages)."""
+    o = ['| Code | When | Enter | Versions |', '|---|---|---|---|']
+    for head, rows in CHEATS[game]:
+        when = "Tonight's Match-Up" if head == MATCHUP else 'Attract mode'
+        for name, how, ver in rows:
+            o.append('| %s | %s | %s | %s |' % (name, when, how, ver))
+    return '\n'.join(o) + '\n'
+
+
+# --------------------------------------------------------------------------
 # OSD lines (NBA Jam, TE)
 # --------------------------------------------------------------------------
 
 def osd_lines():
-    """The NBA Jam / TE lines of the Secrets page (P3). Lines both games have
-    test the NBA mask bit; the others the game's own bit. The Secret Player
-    List option has an entry per window page (tools/tunit_window.py)."""
+    """The NBA Jam / TE lines of the OSD: View Secret Players in the main
+    menu (Off or the window page to show), then the Cheat Codes & Hidden
+    Items page: the secret menu code (R[14]), the power-ups in alphabetical
+    order, and the code played on the Tonight's Match-Up screen (R[15]).
+    Lines both games have test the NBA mask bit; the others the game's own
+    bit."""
+    nj, te, nba = MASK_NJ, MASK_TE, MASK_NBA
+    pg = 'P%d' % OSD_PAGE
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import tunit_window
-    nj_pages, te_pages = tunit_window.page_counts()
-    lst = 'h%sP3O[%d:%d],Secret Player List,Off,%s;'
-
-    def pages(n):
-        return 'On' if n == 1 else ','.join('Page %d' % (k + 1) for k in range(n))
-    nj, te, nba = MASK_NJ, MASK_TE, MASK_NBA
-    if max(nj_pages, te_pages) >= 1 << (OSD_LIST[0] - OSD_LIST[1] + 1):
+    n = tunit_window.page_counts()
+    if max(n['nbajam'], n['nbajamte']) >= 1 << (OSD_LIST[0] - OSD_LIST[1] + 1):
         raise ValueError('too many window pages for the OSD field')
-    return [lst % (nj, OSD_LIST[0], OSD_LIST[1], pages(nj_pages)),
-            lst % (te, OSD_LIST[0], OSD_LIST[1], pages(te_pages)),
-            'h%sP3O[%d],Big Heads,Off,On;' % (nj, OSD_HEADS),
-            'h%sP3O[%d:%d],Head Size,Normal,Big,Huge;' % (te, OSD_HEADS + 1, OSD_HEADS),
-            'h%sP3O[%d],Baby Size Players,Off,On;' % (te, OSD_BABY),
-            'h%sP3O[%d],Max Power,Off,On;' % (te, OSD_MAX),
-            'h%sP3O[%d],Power-Up Interceptions,Off,On;' % (nj, OSD_INT),
-            'h%sP3O[%d],Quick Hands,Off,On;' % (te, OSD_INT),
-            'h%sP3O[%d],Power-Up Defense,Off,On;' % (nj, OSD_DEF),
-            'h%sP3O[%d],Power-Up Goaltending,Off,On;' % (te, OSD_DEF),
-            'h%sP3O[%d],Shot Percentage,Off,On;' % (nba, OSD_SHOT),
-            'h%sP3O[%d],No CPU Assistance,Off,On;' % (nba, OSD_NOCPU)]
+    view = 'h%%sO[%d:%d],View Secret Players,Off,%%s;' % OSD_LIST
+    return [view % (nj, ','.join('Page %d' % (k + 1) for k in range(n['nbajam']))),
+            view % (te, ','.join('Page %d' % (k + 1) for k in range(n['nbajamte']))),
+            'h%s%s,Cheat Codes & Hidden Items;' % (nba, pg),
+            '%s-;' % pg,
+            '%sR[14],Open Secret Menu (Attract);' % pg,
+            'h%s%sO[%d],Baby Size Players,Off,On;' % (te, pg, OSD_BABY),
+            'h%s%sO[%d],Big Heads,Off,On;' % (nj, pg, OSD_HEADS),
+            'h%s%sO[%d:%d],Head Size,Normal,Big,Huge;' % (te, pg, OSD_HEADS + 1, OSD_HEADS),
+            'h%s%sO[%d],Max Power,Off,On;' % (te, pg, OSD_MAX),
+            '%sO[%d],No CPU Assistance,Off,On;' % (pg, OSD_NOCPU),
+            'h%s%sO[%d],Power-Up Defense,Off,On;' % (nj, pg, OSD_DEF),
+            'h%s%sO[%d],Power-Up Goaltending,Off,On;' % (te, pg, OSD_DEF),
+            'h%s%sO[%d],Power-Up Interceptions,Off,On;' % (nj, pg, OSD_INT),
+            'h%s%sO[%d],Quick Hands,Off,On;' % (te, pg, OSD_INT),
+            '%sO[%d],Shot Percentage,Off,On;' % (pg, OSD_SHOT),
+            '%s-;' % pg,
+            "%s-,Pick on Tonight's Match-Up:;" % pg,
+            'h%s%sR[15],Tank Game;' % (nj, pg),
+            'h%s%sR[15],Tournament Mode;' % (te, pg)]
 
 
 def gen_osd():
-    o = ['// tunit_secrets_osd.svh - the NBA Jam and TE lines of the OSD Secrets page',
+    o = ['// tunit_secrets_osd.svh - the NBA Jam and TE lines of the OSD (View Secret',
+         '// Players, the Cheat Codes & Hidden Items page)',
          '// Generated by tools/tunit_secrets.py --gen; do not edit.',
          '//',
          '// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later',
@@ -584,6 +698,9 @@ def gen_osd():
 
 def main():
     import argparse
+    if sys.argv[1:2] == ['--codes'] and len(sys.argv) == 3:
+        print(cheats_docs(sys.argv[2]), end='')
+        return
     if '--gen' in sys.argv:
         open(os.path.join(ROOT, 'rtl', 'tunit_secrets_osd.svh'), 'w').write(gen_osd())
         print('rtl/tunit_secrets_osd.svh: %d bytes of CONF_STR' % sum(len(l) for l in osd_lines()))

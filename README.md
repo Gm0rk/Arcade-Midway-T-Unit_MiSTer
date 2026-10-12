@@ -62,30 +62,39 @@ aside).
 - CMOS saved as NVRAM: settings, audits and high scores survive power-off
   (written to the SD card when the OSD is opened, if the game changed them,
   and with "Save Settings")
-- DIP switches in the OSD, taken from MAME
+- DIP switches in the OSD, taken from MAME, in alphabetical order
 - Start, Coin, Test (service mode) and Pause (button or OSD) in every game;
-  Service Credit and Tilt on the OSD's Controls page
-- Secrets page in the OSD: the hidden menus, screens and debug features the
-  programmers left in the games; for NBA Jam and NBA Jam Tournament Edition,
-  the power-up codes and a Secret Player List window (every secret player's
-  name, initials, birthday and versions, over the game's title screen)
+  Service Credit and Tilt on the OSD's DIP Switches page (selecting the
+  line adds a credit or slams the tilt switch), Service Mode in the OSD's
+  main menu
+- The hidden menus, screens and debug features the programmers left in the
+  games, on an OSD page of each game (Judge Dredd: Secret Menus, Mortal
+  Kombat games: Hidden Items, NBA Jam games: Cheat Codes & Hidden Items);
+  for NBA Jam and NBA Jam Tournament Edition, the power-up codes for all
+  players and the codes of the Tonight's Match-Up screen (NBA Jam's hidden
+  tank game, TE's tournament mode)
+- Secret Player List window (NBA Jam, NBA Jam Tournament Edition): every
+  secret player's name, initials, birthday and versions, and every cheat
+  code as the players enter it, over the game's title screen
 - Finishing Moves page in the OSD (Mortal Kombat, Mortal Kombat II): every
   fighter's finishing moves, entered for you at FINISH HIM
 - Move List window (Mortal Kombat, Mortal Kombat II): every fighter's special
   moves and finishing moves, with the distance each finishing move needs,
   over the game's title screen
-- OSD messages: what a set finishing move is waiting for, whether a secrets
-  code was taken, what a Secrets option just turned on does (or that the
-  loaded version does not have it)
+- OSD messages: what a set finishing move is waiting for, whether a code was
+  taken, what an option just turned on does (or that the loaded version
+  does not have it)
 
-The Secrets page shows the items of the loaded game. Hidden menus are opened
-by codes on the controls, which the core enters for you: pick the item, and
-the OSD closes and the code plays (a few seconds; the controls are ignored
-meanwhile). The games only accept these codes in the attract mode, so use
-them with no game running. The other items are options: they stay set until
-switched off, and take effect at once unless the game's page says otherwise.
-When the OSD closes, a message says whether a code's menu opened, and what
-an option just turned on does. Each game's page lists its items.
+Hidden menus are opened by codes on the controls, which the core enters for
+you: pick the item, and the OSD closes and the code plays (a few seconds;
+the controls are ignored meanwhile). The games only accept these codes in
+the attract mode, so use them with no game running. The NBA Jam games' Tank
+Game and Tournament Mode are codes of the Tonight's Match-Up screen: pick
+them while it shows (with "Pause when OSD is open", the game waits while
+you do). The other items are options: they stay set until switched off,
+and take effect at once unless the game's page says otherwise. When the OSD
+closes, a message says whether a code was taken, and what an option just
+turned on does. Each game's page lists its items.
 
 ## CRT V-Size (experimental)
 

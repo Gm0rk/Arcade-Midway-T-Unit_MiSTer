@@ -8,9 +8,11 @@
 //  - Code player. The games open their hidden menus when a code is entered
 //    on the controls during the attract mode (MK and MK2: the EJB menu,
 //    NBA Jam and TE: the secret Midway menu, Judge Dredd: hidden audits and
-//    staff credits). An OSD trigger plays the set's code: a list of steps,
-//    each an IN0 value (and the two start buttons) held for a number of
-//    frames, which replaces the players' IN0 while it plays.
+//    staff credits), and NBA Jam and TE take codes on the Tonight's
+//    Match-Up screen (NBA Jam: the hidden tank game, TE: tournament mode).
+//    An OSD trigger plays the set's code: a list of steps, each an IN0
+//    value (and the two start buttons) held for a number of frames, which
+//    replaces the players' IN0 while it plays.
 //
 //  - Read patches. Up to eight 16-bit words of the CPU's address space read
 //    as a fixed value while their OSD option is on: a program ROM word (MK2:
@@ -38,7 +40,10 @@
 //                 level maps each game's OSD bits to the slots), 4 / 5
 //                 applies the patch while code 1 / code 2 plays, 0 is an
 //                 unused entry
-//    0x01A, 0x01B first step (word index) of code 1 and code 2, 0 = none
+//    0x01A, 0x01B first step (word index) of code 1 and code 2 in bits 8:0,
+//                 0 = none; bit 15: the code ends as soon as its success
+//                 address is fetched, and is not played again (a code held
+//                 until the game takes it, the match-up codes)
 //    0x01C-0x01F  success address of code 1, code 2 (word address, 2 words
 //                 each, 0 = none): the first word of the menu the code opens.
 //                 A code whose CPU never fetches it while it plays (an
@@ -53,8 +58,9 @@
 //  so an MRA without this table (game id only) has no secrets.
 //
 //  When a code with a success address ends, code_ok or code_fail says
-//  whether its menu opened (the top level shows an OSD message); opt_avail
-//  says which option slots this revision has a patch for.
+//  whether its menu opened (the top level shows an OSD message; code_cur
+//  says which code); opt_avail says which option slots this revision has a
+//  patch for, code_avail which codes it has.
 //
 //  Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 //============================================================================
@@ -86,6 +92,8 @@ module tunit_secrets
 	output reg  [1:0] code_start,
 	output reg        code_ok,       // one clock: a code with a success address opened its menu
 	output reg        code_fail,     // one clock: a code did not, after its last try
+	output            code_cur,      // the code playing or last played: 0 code 1, 1 code 2
+	output      [1:0] code_avail,    // code 1 / code 2 is in the table
 
 	output reg [10:0] opt_avail,     // the option slot has a patch in this revision
 
@@ -103,6 +111,7 @@ reg  [27:0] p_addr [0:7];
 reg  [15:0] p_val  [0:7];
 reg   [3:0] p_opt  [0:7];
 reg   [8:0] c_first [0:1];
+reg         c_held  [0:1];
 reg  [27:0] c_done  [0:1];
 
 reg  [15:0] step_ram [0:511];
@@ -120,6 +129,8 @@ initial begin
 	for (i = 0; i < 8; i = i + 1) p_opt[i] = 4'd0;
 	c_first[0] = 9'd0;
 	c_first[1] = 9'd0;
+	c_held[0] = 1'b0;
+	c_held[1] = 1'b0;
 	c_done[0]  = 28'd0;
 	c_done[1]  = 28'd0;
 end
@@ -129,6 +140,8 @@ always @(posedge clk) begin
 		for (i = 0; i < 8; i = i + 1) p_opt[i] <= 4'd0;
 		c_first[0] <= 9'd0;
 		c_first[1] <= 9'd0;
+		c_held[0] <= 1'b0;
+		c_held[1] <= 1'b0;
 		c_done[0]  <= 28'd0;
 		c_done[1]  <= 28'd0;
 	end
@@ -138,8 +151,8 @@ always @(posedge clk) begin
 			if ({23'd0, dl_addr} == 3 + 3 * i) {p_opt[i], p_addr[i][27:16]} <= dl_data;
 			if ({23'd0, dl_addr} == 4 + 3 * i) p_val[i] <= dl_data;
 		end
-		if (dl_addr == 9'd26) c_first[0] <= dl_data[8:0];
-		if (dl_addr == 9'd27) c_first[1] <= dl_data[8:0];
+		if (dl_addr == 9'd26) {c_held[0], c_first[0]} <= {dl_data[15], dl_data[8:0]};
+		if (dl_addr == 9'd27) {c_held[1], c_first[1]} <= {dl_data[15], dl_data[8:0]};
 		if (dl_addr == 9'd28) c_done[0][15:0]  <= dl_data;
 		if (dl_addr == 9'd29) c_done[0][27:16] <= dl_data[11:0];
 		if (dl_addr == 9'd30) c_done[1][15:0]  <= dl_data;
@@ -149,7 +162,10 @@ end
 
 // entries for the board, enabled by their option or code (registered: they
 // change rarely, and the board registers its compare anyway)
-reg cur;                         // code playing: 0 code 1, 1 code 2 (code player below)
+reg cur = 1'b0;                  // code playing: 0 code 1, 1 code 2 (code player below)
+
+assign code_cur   = cur;
+assign code_avail = {c_first[1] != 9'd0, c_first[0] != 9'd0};
 
 // opt_avail: slot k (table option k + 1, k + 3 from slot 3 on) has a patch
 integer k, n;
@@ -194,7 +210,9 @@ endgenerate
 // When the code has a success address and the CPU has not fetched it by the
 // end of the code, the player waits RETRY_GAP frames with nothing pressed
 // (the game's code process gives up after 16 frames without a press) and
-// plays the code again, three times at most.
+// plays the code again, three times at most. A held code (bit 15 of its
+// first-step word) instead ends as soon as the CPU fetches its success
+// address (the buttons held until the game takes them), and is played once.
 //----------------------------------------------------------------------------
 
 localparam S_IDLE = 3'd0, S_RD0 = 3'd1, S_RD1 = 3'd2, S_RD2 = 3'd3, S_RD3 = 3'd4, S_HOLD = 3'd5,
@@ -208,6 +226,7 @@ reg         seen;                // the CPU fetched the success address
 reg  [27:0] done_wa;
 always @(posedge clk) done_wa <= cur ? c_done[1] : c_done[0];
 wire        hit_done = cpu_rd && cpu_wa == done_wa && done_wa != 28'd0;
+reg         held;                // the playing code is held until the game takes it
 
 reg   [2:0] st;
 reg   [1:0] trig_d;
@@ -233,10 +252,19 @@ always @(posedge clk) begin
 	else if (go1 | go2) begin
 		// a trigger (re)starts its code from the first step
 		ptr   <= go1 ? c_first[0] : c_first[1];
+		held  <= go1 ? c_held[0] : c_held[1];
 		cur   <= ~go1;
 		tries <= 2'd0;
 		seen  <= 1'b0;
 		st    <= S_RD0;
+	end
+	else if (held && seen && st != S_IDLE) begin
+		// a held code: the game took it, hand IN0 back now
+		code_ok    <= 1'b1;
+		code_on    <= 1'b0;
+		code_in0   <= 16'h0000;
+		code_start <= 2'b00;
+		st         <= S_IDLE;
 	end
 	else begin
 		if (hit_done && st != S_IDLE) seen <= 1'b1;
@@ -265,7 +293,7 @@ always @(posedge clk) begin
 			S_HOLD: begin
 				if (frame) begin
 					if (cnt <= 8'd1) begin
-						if (last && done_wa != 28'd0 && !seen && tries != 2'd2) begin
+						if (last && done_wa != 28'd0 && !seen && tries != 2'd2 && !held) begin
 							// the menu did not open: pause, then play it again
 							tries      <= tries + 2'd1;
 							code_in0   <= 16'h0000;

@@ -9,15 +9,17 @@
 	<rbf>Arcade-Midway-T-Unit</rbf>
 	<remark>4 players</remark>
 	<switches default="FD,7F">
-		<dip bits="0" name="Test Switch" ids="Off,On" values="1,0"/>
-		<dip bits="1" name="Powerup Test" ids="Off,On"/>
-		<dip bits="5" name="Video Clips" ids="Off,On"/>
-		<dip bits="6" name="Dollar Bill Validator" ids="Installed,Not Present"/>
-		<dip bits="7" name="Players" ids="2,4"/>
 		<dip bits="8,9" name="Coin Counters" ids="1 Counter - 1 count/coin,1 Counter - Totalizing,2 Counters - 1 count/coin" values="3,2,1"/>
-		<dip bits="10,11" name="Country" ids="USA,French,German" values="3,2,1"/>
 		<dip bits="12,14" name="Coinage" ids="1,2,3,4,ECA,Free Play" values="7,3,5,1,6,0"/>
 		<dip bits="15" name="Coinage Source" ids="Dipswitch,CMOS" values="1,0"/>
+		<dip bits="10,11" name="Country" ids="USA,French,German" values="3,2,1"/>
+		<dip bits="6" name="Dollar Bill Validator" ids="Installed,Not Present"/>
+		<dip bits="7" name="Players" ids="2,4"/>
+		<dip bits="1" name="Powerup Test" ids="Off,On"/>
+		<dip bits="16" name="Service Credit" ids="Add credit,Add credit"/>
+		<dip bits="0" name="Test Switch" ids="Off,On" values="1,0"/>
+		<dip bits="17" name="Tilt" ids="Slam tilt,Slam tilt"/>
+		<dip bits="5" name="Video Clips" ids="Off,On"/>
 	</switches>
 	<buttons names="Turbo,Shoot/Block,Pass/Steal,-,-,-,Start,Coin,Test,Pause" default="R,A,B,-,-,-,Start,Select,-,-"/>
 	<romstruct>
@@ -29,14 +31,14 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9217E0 (11 presses); power-ups: counters 010F1250, big heads 010E59C0, interceptions 010E59D0, 5 patches -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9217E0 (11 presses); tank game FF8E1010; power-ups: counters 010F1250, big heads 010E59C0, interceptions 010E59D0, 5 patches -->
 		<part>
 		03 00 01 00 9C E5 10 10 0F 00 9D E5 10 30 0F 00 29 F1 10 60 01 00 58 84 F8 2F 00 03 2A F1 10 70
-		01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
+		01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 54 80 00 00 00 00 01 E1 F8 0F
 		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 00 40 00 03 00 00 00 03 00 40 00 03 00 00 00 03 00
 		00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 20 03 00 00 00 03 00
 		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
-		00 40 03 00 00 00 03 80
+		00 40 03 00 00 00 03 80 72 70 FA 00 72 70 FA 00 00 00 02 80
 		</part>
 	</rom>
 	<rom index="0" zip="nbajam.zip" md5="ec636915caaa4d85a59093937218626f" type="merged">

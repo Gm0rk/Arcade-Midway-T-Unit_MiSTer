@@ -24,21 +24,47 @@ Test (service mode) and Pause.
 
 ## Secrets
 
+View Secret Players (OSD main menu: Off, Page 1, ...) shows a window over
+the game, on the title screen, with the hidden players (below): their
+names, initials, birthdays and the versions that have them, and the cheat
+codes as the players enter them (below). Page 1 has the players, Page 2 the codes. The game waits while
+the window is on; set it to Off to play on.
+
+On the OSD's Cheat Codes & Hidden Items page:
+
 | OSD item | What it does |
 |---|---|
-| Secret Menu | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on revisions 1.00 and 2.00 and the prototypes) |
-| Secret Player List | A window over the game with the hidden players (below): name, initials, birthday and the versions that have them, on the title screen. Close it (Off) to play |
+| Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on revisions 1.00 and 2.00 and the prototypes). In the attract mode only |
 | Big Heads | Big heads for all players (the game's BIG HEAD code), from the next game |
+| No CPU Assistance | Turns off the computer assistance that keeps games close (revision 3.01) |
 | Power-Up Defense | The power-up defense code (POWERUP DEF) for all players (revisions 3.01 and 2.00) |
 | Power-Up Interceptions | The power-up interceptions code (POWERUP INT) for all players (revisions 3.01 and 2.00) |
 | Shot Percentage | The shot percentage display (revisions 3.01 and 2.00) |
-| No CPU Assistance | Turns off the computer assistance that keeps games close (revision 3.01) |
+| Tank Game | Pick it on the Tonight's Match-Up screen: the core holds the code on the controls until the game takes it, and a hidden 3D tank game ("YOU ARE DEAD!") is played instead of the tip-off (revisions 1.00, 2.00 and 3.01; 3.01 once a game) |
 
 The game takes its power-up codes on the Tonight's Match-Up screen, for
-one game and one player; these options give them to all four players
+one game and one player; the options give them to all four players
 until they are switched off. When the OSD closes, a message says that an
-option is on, or that the loaded version does not have it. Big Heads is
-the only power-up in revision 1.00 and the prototypes.
+option is on, whether the game took a code, or that the loaded version
+does not have the item. Big Heads is the only power-up in revision 1.00
+and the prototypes.
+
+### Cheat codes
+
+The codes as the players enter them, as the window lists them. "Press" is
+a press of Turbo, Shoot or Pass (buttons pressed together count once).
+Power-Up Offense (21 presses), found in code lists on the web, is in no
+revision of the game.
+
+| Code | When | Enter | Versions |
+|---|---|---|---|
+| Big Heads | Tonight's Match-Up | Hold Up + Turbo + Pass until the tip-off | All |
+| No CPU Assistance | Tonight's Match-Up | Press exactly 10 times | 3.01 |
+| Power-Up Defense | Tonight's Match-Up | Press exactly 8 times | 2.00, 3.01 |
+| Power-Up Interceptions | Tonight's Match-Up | Press 5 times or more, then hold Down + Turbo + Shoot + Pass until the tip-off | 2.00, 3.01 |
+| Shot Percentage | Tonight's Match-Up | Turn the joystick a full circle and press 15 times or more | 2.00, 3.01 |
+| Tank Game | Tonight's Match-Up | P1 holds Down + Turbo + Shoot + Pass and P2 Turbo + Shoot + Pass until the tip-off (3.01: once a game) | 1.00, 2.00, 3.01 |
+| Secret Menu | Attract mode | Both players hold Up + Turbo + Shoot + Pass, then hold Down for 2 s; 3.01 then on the design team screen: P1 Turbo 2x, P2 Shoot 3x, P2 Pass 2x, P1 Shoot, P1 Pass, P2 Turbo 2x | All |
 
 ### Secret players
 

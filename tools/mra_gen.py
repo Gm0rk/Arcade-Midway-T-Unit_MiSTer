@@ -9,13 +9,15 @@ One MRA per MAME set: parents in mra/, clones in
 mra/_alternatives/_<Game>/. Each MRA carries
   - the game id (rom index 1) that selects the board configuration, and
     after it the set's secrets table (codes and read patches for the OSD
-    Secrets page, tools/tunit_secrets.py) and, for MK and MK2 at byte
+    Secrets and cheats, tools/tunit_secrets.py) and, for MK and MK2 at byte
     0x400, the fight variables the finishing-move player follows
     (tools/tunit_fmoves.py); both need --zips: they are found in the set's
     own program ROM,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
-  - MAME's DIP switches for the set (OSD), button names, NVRAM (16 KB).
+  - MAME's DIP switches for the set and the core's Service Credit and Tilt
+    (OSD DIP Switches page, in alphabetical order), button names, NVRAM
+    (16 KB).
 
 Merged sets: every <rom> names "set.zip|parent.zip" and every part carries
 its CRC, so Main_MiSTer finds files in a merged or split zip.
@@ -51,20 +53,22 @@ NVRAM_SIZE = 16384
 # --------------------------------------------------------------------------
 # Per-game presentation (category, players, button names and defaults)
 #
-# Button order is MAME's (BUTTON1, BUTTON2, ...), which is also the order of
-# the core's joystick buttons B1-B6.
+# Button order is the core's joystick buttons B1-B6 (unused ones '-', which
+# Main_MiSTer skips when buttons are defined). NBA Jam and Judge Dredd use
+# MAME's order (BUTTON1, BUTTON2, ...); MK and MK2 list High Punch, Low
+# Punch, High Kick, Low Kick, Block (MAME's Block 2 is not mapped).
 # --------------------------------------------------------------------------
 
 GAME_INFO = {
     L.G_MK:       ('Fighter / Versus', 2,
-                   ['High Punch', 'Block', 'High Kick', 'Low Punch', 'Low Kick', 'Block 2'],
-                   ['Y', 'R', 'X', 'B', 'A', 'L']),
+                   ['High Punch', 'Low Punch', 'High Kick', 'Low Kick', 'Block'],
+                   ['Y', 'B', 'X', 'A', 'R']),
     L.G_MKTURBO:  ('Fighter / Versus', 2,
-                   ['High Punch', 'Block', 'High Kick', 'Low Punch', 'Low Kick', 'Block 2'],
-                   ['Y', 'R', 'X', 'B', 'A', 'L']),
+                   ['High Punch', 'Low Punch', 'High Kick', 'Low Kick', 'Block'],
+                   ['Y', 'B', 'X', 'A', 'R']),
     L.G_MK2:      ('Fighter / Versus', 2,
-                   ['High Punch', 'Block', 'High Kick', 'Low Punch', 'Low Kick', 'Block 2'],
-                   ['Y', 'R', 'X', 'B', 'A', 'L']),
+                   ['High Punch', 'Low Punch', 'High Kick', 'Low Kick', 'Block'],
+                   ['Y', 'B', 'X', 'A', 'R']),
     L.G_NBAJAM:   ('Sports / Basketball', 4,
                    ['Turbo', 'Shoot/Block', 'Pass/Steal'],
                    ['R', 'A', 'B']),
@@ -117,6 +121,13 @@ def dip_xml(d):
         return '\t\t<dip bits="%s" name="%s" ids="%s"/>' % (bit_attr, escape(d.name), escape(ids))
     return '\t\t<dip bits="%s" name="%s" ids="%s" values="%s"/>' % (
         bit_attr, escape(d.name), escape(ids), ','.join(map(str, vals)))
+
+# The core's own lines of the DIP Switches page: switches bits 16 and 17
+# (the game's DIP switches are 0-15). The top level adds a service credit or
+# slams the tilt switch each time the bit flips, so both settings read the
+# same.
+CORE_DIPS = [('Service Credit', '\t\t<dip bits="16" name="Service Credit" ids="Add credit,Add credit"/>'),
+             ('Tilt', '\t\t<dip bits="17" name="Tilt" ids="Slam tilt,Slam tilt"/>')]
 
 # --------------------------------------------------------------------------
 # ROM parts
@@ -204,8 +215,9 @@ def main():
 
         dv = dsw_default(inputs[g.inputs]['DSW'])
         out.append('\t<switches default="%02X,%02X">' % (dv & 0xFF, dv >> 8))
-        for d in sorted(dips, key=lambda d: (d.mask & -d.mask)):
-            out.append(dip_xml(d))
+        lines = [(d.name, dip_xml(d)) for d in dips] + CORE_DIPS
+        for _, line in sorted(lines, key=lambda x: x[0].lower()):
+            out.append(line)
         out.append('\t</switches>')
 
         names = bnames + ['-'] * (6 - len(bnames))
