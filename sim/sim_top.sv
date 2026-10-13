@@ -173,6 +173,7 @@ midway_tunit board
 	.pt_addr        (pt_addr),
 	.pt_data        (pt_data),
 	.pt_en          (pt_en),
+	.pt_fetch       (prot_id == 3'd1),  // MK (the top level's menu_mk): patches on instruction fetches only
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
