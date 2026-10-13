@@ -26,7 +26,9 @@
 //    buttons' switch handlers point at it). NBA Jam and TE: the power-up
 //    flags of all four players (big heads, interceptions, quick hands, max
 //    power, baby size, shot percentage, no computer assistance) and the
-//    counter checks of power-up defense, goaltending and huge heads. The
+//    counter checks of power-up defense, goaltending and huge heads. MK:
+//    Reptile's fight, the moon silhouettes and his hints (program
+//    instructions, which the board applies to instruction fetches only). The
 //    board compares every CPU read with the table (midway_tunit.sv, "Read
 //    patches").
 //
