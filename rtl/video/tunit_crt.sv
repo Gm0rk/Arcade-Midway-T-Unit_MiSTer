@@ -28,7 +28,9 @@
 //     there.
 //   - H-Size about the middle: CRT Adjust stretches from HSync, so a centring
 //     table moves the content back by -m x H / (base + H) dots.
-//   - the OSD/HDMI window (DE) while CRT Adjust is on.
+//   - the OSD/HDMI window (DE) while CRT Adjust is on; nothing is sent
+//     during sync, and when a V-Shift puts VSync on the picture (57/60 Hz
+//     video timings) the smaller part of the split picture is blanked.
 //
 //  All but CRT V-Size carried over from the Y Unit core (itself ported from
 //  Arcade-ITech8 following its notes "CRT Adjust and Auto-Width: Porting
@@ -418,7 +420,46 @@ crt_adjust #(
 // high so nothing is ever sent during sync.
 //----------------------------------------------------------------------------
 
-wire str_vis = ~str_hb & ~hs_out;
+// VSync on the picture. With the board's own 289-line frame there are 35
+// blank lines; the 57/60 Hz video timings leave 23/9, so a V-Shift can put
+// VSync on the picture. The picture is then split: lines after VSync are
+// drawn at the top of the new field, lines before it at the bottom of the
+// old one. The smaller part would wrap to the wrong edge of the screen (and
+// the HDMI frame would wrap the same way), so it is blanked: lines from
+// VSync on when VSync is in the lower half of the picture, lines before
+// VSync when it is in the upper half. The position is measured on one
+// picture and used on the next (it only moves with a setting). Lines are
+// counted at the end of HSync; a line is a picture line when CRT Adjust's
+// picture area was open in it.
+reg        hs_out_d = 1'b0, vs_line = 1'b0, seen = 1'b0, seen_prev = 1'b0;
+reg  [8:0] pl = 9'd0;                // picture line index of the current line
+reg  [8:0] np_c = 9'd0, np_m = 9'd0; // picture lines (this one / last one)
+reg  [8:0] vp_c = 9'd0, vp_m = 9'd0; // VSync's line inside the picture
+reg        vi_c = 1'b0, vi_m = 1'b0; // VSync came inside the picture
+always @(posedge clk) begin
+	hs_out_d <= hs_out;
+	if (~str_hb) seen <= 1'b1;
+	if (~hs_out & hs_out_d) begin                  // end of HSync: a new line
+		seen      <= 1'b0;
+		seen_prev <= seen;
+		vs_line   <= vs_out;
+		pl        <= seen ? pl + 9'd1 : 9'd0;
+		if (seen) np_c <= pl + 9'd1;
+		if (vs_out & ~vs_line & seen) begin         // VSync starts right after a picture line
+			vp_c <= pl + 9'd1;
+			vi_c <= 1'b1;
+		end
+		if (~seen & seen_prev) begin                // the picture ended on the line before
+			np_m <= np_c;
+			vp_m <= vp_c;
+			vi_m <= vi_c;
+			vi_c <= 1'b0;
+		end
+	end
+end
+wire vcut = vi_m && ((vp_m > {1'b0, np_m[8:1]}) ? (pl >= vp_m) : (pl < vp_m));
+
+wire str_vis = ~str_hb & ~hs_out & ~vs_out & ~vcut;
 assign r_out   = str_vis ? str_r : 8'd0;
 assign g_out   = str_vis ? str_g : 8'd0;
 assign b_out   = str_vis ? str_b : 8'd0;
