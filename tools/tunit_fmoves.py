@@ -67,7 +67,7 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tunit_secrets import Prog, X, G_MK, G_MKTURBO, G_MK2   # noqa: E402
+from tunit_secrets import Prog, X, G_MK, G_MKTURBO, G_MK2, mk_reptile   # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -293,11 +293,11 @@ def compile_prog(prog):
 
 
 # --------------------------------------------------------------------------
-# Per-set RAM addresses (ROM index 1, words 0x200-0x227)
+# Per-set RAM addresses (ROM index 1, words 0x200-0x229)
 # --------------------------------------------------------------------------
 
 CFG_BASE = 0x200
-CFG_WORDS = 40
+CFG_WORDS = 42                   # 40 for MK2 (no Reptile words)
 FORMAT = 1
 
 # Moves a revision does not have, by MAME set name: (fighter or '*', move).
@@ -458,7 +458,9 @@ def build(gid, prog_bytes, setname=None):
     pointer and process pointer, the stage and the finish flag (2-23); the
     dizzy codes 1 and 2 and the stance code (24-29, 32-bit values); x and
     resume-address offsets in words (30: {resume[15:8], x[7:0]}); the moves
-    the set lacks (32-39: bit line * 8 + slot of the OSD's moves)."""
+    the set lacks (32-39: bit line * 8 + slot of the OSD's moves); MK: the
+    word address of Reptile's flag (40-41, the top level's Reptile Fight
+    Next is used up when the game writes 1 there; 0 = no Reptile)."""
     r, notes = addresses(gid, prog_bytes)
     if not r:
         return b'', notes
@@ -477,7 +479,13 @@ def build(gid, prog_bytes, setname=None):
         w[32 + n] = gone >> (16 * n) & 0xFFFF
     if gone:
         notes.append('%d moves not in this revision' % bin(gone).count('1'))
-    return struct.pack('<%dH' % CFG_WORDS, *w), notes
+    if gid in (G_MK, G_MKTURBO):
+        rp = mk_reptile(Prog(prog_bytes), [])
+        if rp:
+            w[40], w[41] = (rp[1] >> 4) & 0xFFFF, rp[1] >> 20
+            notes.append('Reptile flag %08X' % rp[1])
+    n = CFG_WORDS if gid in (G_MK, G_MKTURBO) else 40     # words 40-41: MK only
+    return struct.pack('<%dH' % n, *w[:n]), notes
 
 
 # --------------------------------------------------------------------------
@@ -509,6 +517,10 @@ MESSAGES = [
     ('ON_ALL', "On for all players"),
     ('ON_NEXT', "On for all players from the\nnext game"),
     ('CODE_MATCHUP', "Code not taken: pick it on\nTonight's Match-Up"),
+    ('REPT_SET', "Reptile fight set: win a match\nin a 1-player game"),
+    ('REPT_CLEARED', "Reptile fight cleared"),
+    ('REPT_MOON', "Moon Silhouettes on: every\nmatch on The Pit has them"),
+    ('REPT_HINTS', "Reptile Hints on: he drops in\nbefore every round"),
 ]
 
 N_FM_MESSAGES = 13             # the move player's (rtl/tunit_fmoves.sv)
