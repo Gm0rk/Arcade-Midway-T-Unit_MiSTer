@@ -70,9 +70,10 @@ aside).
 - The hidden menus, screens and debug features the programmers left in the
   games, on an OSD page of each game (Judge Dredd: Secret Menus, Mortal
   Kombat games: Hidden Items, NBA Jam games: Cheat Codes & Hidden Items);
-  for NBA Jam and NBA Jam Tournament Edition, the power-up codes for all
-  players and the codes of the Tonight's Match-Up screen (NBA Jam's hidden
-  tank game, TE's tournament mode)
+  for Mortal Kombat, Reptile's fight, the moon silhouettes and his hints
+  on demand; for NBA Jam and NBA Jam Tournament Edition, the power-up codes
+  for all players and the codes of the Tonight's Match-Up screen (NBA Jam's
+  hidden tank game, TE's tournament mode)
 - Secret Player List window (NBA Jam, NBA Jam Tournament Edition): every
   secret player's name, initials, birthday and versions, and every cheat
   code as the players enter it, over the game's title screen
