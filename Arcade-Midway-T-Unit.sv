@@ -83,6 +83,9 @@ localparam CONF_STR = {
 	"P6-;",
 	"P6R[14],EJB Menu;",
 	"h4P6R[15],EJB Menu (Copyright Screen);",
+	"h4P6O[42],Moon Silhouettes Always,Off,On;",
+	"h4P6T[41],Reptile Fight Next;",
+	"h4P6O[43],Reptile Hints Always,Off,On;",
 	"h5P6O[17],Hitboxes,Off,On;",
 	"h5P6O[20],Jade Fight,Off,On;",
 	"h5P6O[19],Noob Saibot Fight,Off,On;",
@@ -582,10 +585,11 @@ end
 // on the controls during the attract mode; NBA Jam's tank game and TE's
 // tournament mode, entered on the Tonight's Match-Up screen and held until
 // the game takes them); the options switch its read patches through the
-// option slots of rtl/tunit_secrets.sv (MK2, O[21:16]: security screen,
-// hitboxes, Pong at battle 250, Noob Saibot, Jade and Smoke fights; NBA Jam
-// and TE, O[55:48]: the power-ups, slots in the order of
-// tools/tunit_secrets.py's NJ_* / TE_* codes). The codes and patch
+// option slots of rtl/tunit_secrets.sv (MK: Reptile Fight Next, Moon
+// Silhouettes Always and Reptile Hints Always, see Reptile below; MK2,
+// O[21:16]: security screen, hitboxes, Pong at battle 250, Noob Saibot, Jade
+// and Smoke fights; NBA Jam and TE, O[55:48]: the power-ups, slots in the
+// order of tools/tunit_secrets.py's NJ_* / TE_* codes). The codes and patch
 // addresses come with the MRA (ROM index 1), found per revision by
 // tools/tunit_secrets.py.
 // Frames are counted while the game runs, so with "Pause when OSD is open"
@@ -593,7 +597,9 @@ end
 //////////////////////////////////////////////////////////////////
 
 wire  [1:0] te_head  = status[49:48];          // TE Head Size: Normal, Big, Huge
+reg         rep_arm  = 1'b0;                   // MK: Reptile Fight Next set (Reptile below)
 wire [10:0] sec_opt  = menu_mk2 ? {5'd0, status[21:16]} :
+                       menu_mk  ? {8'd0, status[43], status[42], rep_arm} :
                        menu_nj  ? {6'd0, status[53], status[52], status[51], status[50], status[48]} :
                        menu_te  ? {3'd0, status[53], status[52], status[50], status[51], status[55],
                                    status[54], te_head == 2'd2, te_head != 2'd0} :
@@ -645,6 +651,52 @@ tunit_secrets secrets
 	.pt_data    (pt_data),
 	.pt_en      (pt_en)
 );
+
+//////////////////////////////////////////////////////////////////
+// Reptile (MK, MK Turbo)
+//
+// Three Hidden Items lines, option slots 1-3 of the secrets module: "Reptile
+// Fight Next" (T[41]) sets or clears a one-time Reptile fight after the next
+// match won in a 1-player game; it is used up when his fight starts (the
+// CPU writes 1 to his flag, whose word address the MRA gives at ROM index 1
+// words 0x228-0x229, tools/tunit_fmoves.py; other code writes other values
+// there in the attract mode). "Moon Silhouettes Always" (O[42]) and
+// "Reptile Hints Always" (O[43]) stay on. The patches are program
+// instructions: the board applies them to instruction fetches only
+// (pt_fetch), so the game's data reads of its ROM see the original.
+//////////////////////////////////////////////////////////////////
+
+reg  [27:0] rep_flag = 28'd0;    // his flag's word address (0: none)
+reg         rep_trig_d;
+reg         rep_msg_set, rep_msg_clr, rep_msg_none;
+
+always @(posedge clk_sys) begin
+	rep_trig_d   <= status[41];
+	rep_msg_set  <= 1'b0;
+	rep_msg_clr  <= 1'b0;
+	rep_msg_none <= 1'b0;
+
+	if (secrets_dl & ~secrets_dl_d)
+		rep_flag <= 28'd0;
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h450)
+		rep_flag[15:0]  <= ioctl_dout;
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h452)
+		rep_flag[27:16] <= ioctl_dout[11:0];
+
+	if (reset)
+		rep_arm <= 1'b0;
+	else if (status[41] & ~rep_trig_d & menu_mk) begin
+		if (opt_avail[0]) begin
+			rep_arm     <= ~rep_arm;
+			rep_msg_set <= ~rep_arm;
+			rep_msg_clr <= rep_arm;
+		end
+		else
+			rep_msg_none <= 1'b1;
+	end
+	else if (cpu_wr && cpu_wa == rep_flag && rep_flag != 28'd0 && cpu_wd == 16'd1)
+		rep_arm <= 1'b0;             // his fight has started (the game sets the flag to 1)
+end
 
 //////////////////////////////////////////////////////////////////
 // Finishing moves (MK, MK2)
@@ -709,12 +761,13 @@ tunit_fmoves fmoves
 // OSD messages (CONF_STR "I" line, rtl/tunit_fmoves_osd.svh)
 //
 // The finishing-move player's, the secrets' codes (their menu opened or the
-// game took them, or not; a code this revision lacks) and the hidden items'
-// and power-ups' options turned on (looked at when the OSD closes: what an
-// MK2 option does, that an NBA Jam / TE power-up is on for all players, or
-// that this revision does not have it). Main_MiSTer shows a message for
-// 2 s, and only with the OSD closed: messages wait in a set (lowest number
-// first) and go out one every 2.2 s, starting 0.3 s after the OSD closes.
+// game took them, or not; a code this revision lacks), Reptile Fight Next
+// set or cleared, and the hidden items' and power-ups' options turned on
+// (looked at when the OSD closes: what an MK / MK2 option does, that an NBA
+// Jam / TE power-up is on for all players, or that this revision does not
+// have it). Main_MiSTer shows a message for 2 s, and only with the OSD
+// closed: messages wait in a set (lowest number first) and go out one every
+// 2.2 s, starting 0.3 s after the OSD closes.
 //////////////////////////////////////////////////////////////////
 
 localparam [27:0] MSG_GAP   = 28'd211_200_000;     // 2.2 s at 96 MHz
@@ -741,6 +794,14 @@ function automatic [4:0] sec_msg_mk2(input integer slot);
 	endcase
 endfunction
 
+// MK's option slots 2 and 3 (slot 1, Reptile Fight Next, has its own messages)
+function automatic [4:0] sec_msg_mk(input integer slot);
+	case (slot)
+		1: sec_msg_mk = MSG_REPT_MOON;
+		default: sec_msg_mk = MSG_REPT_HINTS;
+	endcase
+endfunction
+
 integer mi, si;
 always @(*) begin
 	msg_num = 5'd0;
@@ -756,14 +817,18 @@ always @(posedge clk_sys) begin
 	if (OSD_STATUS & ~osd_was) sec_open <= sec_opt;
 
 	if (fm_msg_req) msg_pend[fm_msg] <= 1'b1;
+	if (rep_msg_set)  begin msg_pend[MSG_REPT_SET] <= 1'b1; msg_pend[MSG_REPT_CLEARED] <= 1'b0; end
+	if (rep_msg_clr)  begin msg_pend[MSG_REPT_CLEARED] <= 1'b1; msg_pend[MSG_REPT_SET] <= 1'b0; end
+	if (rep_msg_none) msg_pend[MSG_NOT_HERE] <= 1'b1;
 	if (code_ok)    msg_pend[MSG_CODE_OK] <= 1'b1;
 	if (code_fail)  msg_pend[(menu_nba && code_cur) ? MSG_CODE_MATCHUP : MSG_CODE_FAIL] <= 1'b1;
 	for (si = 0; si < 2; si = si + 1)
 		if (status[14 + si] & ~code_trig_d[si] & ~code_avail[si]) msg_pend[MSG_NOT_HERE] <= 1'b1;
 	if (~OSD_STATUS & osd_was) begin
 		for (si = 0; si < 11; si = si + 1)
-			if (sec_opt[si] & ~sec_open[si])
+			if (sec_opt[si] & ~sec_open[si] & ~(menu_mk && si == 0))
 				msg_pend[~opt_avail[si] ? MSG_NOT_HERE : menu_mk2 ? sec_msg_mk2(si) :
+				         menu_mk ? sec_msg_mk(si) :
 				         (si == 0 || (menu_te && si <= 2)) ? MSG_ON_NEXT : MSG_ON_ALL] <= 1'b1;
 	end
 
@@ -805,6 +870,7 @@ midway_tunit board
 	.pt_addr        (pt_addr),
 	.pt_data        (pt_data),
 	.pt_en          (pt_en),
+	.pt_fetch       (menu_mk),          // MK's patches (Reptile) are instructions
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
