@@ -52,6 +52,8 @@ module tunit_dma
 	input             reset,
 
 	input             big_rom,       // MK2: graphics offsets are not reduced by 0x2000000
+	input             fast,          // count the completion timer down by 2 this clock
+	                                 // (shorter video frames, see midway_tunit.sv)
 
 	// register file, CPU side (16-bit words 0-15)
 	input             reg_wr,
@@ -398,7 +400,9 @@ always @(posedge clk) begin
 		s2_v          <= 1'b0;
 	end
 	else begin
-		if (timer != 40'd0)
+		if (fast && (timer > 40'd1))
+			timer <= timer - 40'd2;
+		else if (timer != 40'd0)
 			timer <= timer - 40'd1;
 
 		// ---- flush handshake ----
