@@ -16,6 +16,7 @@ module sim_top
 	input             clk,
 	input             reset,
 	input             pause,
+	input       [1:0] vtiming,       // Video Timing option: 0 native, 1 57 Hz, 2 60 Hz
 
 	// game configuration (the top level's game table)
 	input       [2:0] prot_id,
@@ -159,6 +160,7 @@ midway_tunit board
 	.clk            (clk),
 	.reset          (reset),
 	.pause          (pause),
+	.vtiming        (vtiming),
 
 	.prot_id        (prot_id),
 	.mk_turbo       (mk_turbo),
