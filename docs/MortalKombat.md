@@ -74,6 +74,37 @@ attract mode moves to its next screen; the core then enters the code again
 |---|---|
 | EJB Menu | The programmers' menu ("Mortal Kombat EJB Menu"): diagnostics, coin bookkeeping, game audits, a hidden Hello page, initials entry and every character's ending |
 | EJB Menu (Copyright Screen) | The same menu, after a hidden copyright screen ("This is Mortal Kombat") |
+| Moon Silhouettes Always | Every match on The Pit has the silhouettes crossing the moon, and with them the chance: a flawless, no-Block win there finished with a fatality brings Reptile |
+| Reptile Fight Next | Reptile comes after the next match you win in a 1-player game, wherever it is and however you won. Select it again to cancel; it is used up when his fight starts |
+| Reptile Hints Always | Reptile drops in with a hint before every round |
+
+### Reptile
+
+All three versions have Reptile, the secret green ninja. In the game you
+meet him in a 1-player game, after a match on The Pit while a silhouette
+crosses the moon: win both rounds flawless, never press Block and finish
+with a fatality, and Reptile challenges you on the spikes below ("You have
+found me / Now prove yourself!!"; his energy bar reads Scorpion). The
+silhouettes come rarely: after power-up the game counts 40 won matches, the
+next match on The Pit then has them, and the count starts over. Before a
+round Reptile very rarely drops in with a hint ("Look to La Luna",
+"Blocking will get you nowhere", ...): the game counts every round the
+cabinet plays in the CMOS (the Green Ninja Counter audit) and sends him at
+2000.
+
+Messages: "Reptile fight set: win a match in a 1-player game" and "Reptile
+fight cleared"; when the OSD closes, what an Always option just turned on.
+The two Always options stay on until you turn them off. The core changes a
+few of the game's instructions as the CPU fetches them (nothing is written
+to the ROM or the CMOS, and the game's own reads of its ROM still see the
+original), so turning an option off puts the game back at once. One
+difference with the real hints: when Reptile shows up by himself the game
+also clears its audits (the EJB Menu's bookkeeping); with Reptile Hints
+Always the core skips that, so the audits are kept.
+
+Turbo Ninja changed the rules: no silhouettes and no flawless rounds are
+needed, and a match on one other stage can bring him as well as The Pit
+(Block and the fatality still count). The options work the same on it.
 
 ## Finishing Moves
 
