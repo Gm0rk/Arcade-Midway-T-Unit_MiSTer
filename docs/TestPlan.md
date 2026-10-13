@@ -16,7 +16,7 @@ it is in `config/nvram` on the SD card, named after the MRA.
 
 | Section | Tests | Passed | Done |
 |---|---|---|---|
-| [Core-wide](#core-wide) | 13 | 0 | No |
+| [Core-wide](#core-wide) | 14 | 0 | No |
 | [Mortal Kombat](#mortal-kombat) | 21 | 0 | No |
 | [Mortal Kombat II](#mortal-kombat-ii) | 18 | 0 | No |
 | [NBA Jam](#nba-jam) | 18 | 0 | No |
@@ -43,6 +43,7 @@ II).
 | C11 | Leave the attract mode running 30 minutes | No lockup or graphics corruption; sound stays at the right speed and in step with the picture | |
 | C12 | Controller mapping and a second controller | Every button maps in the OSD's button definition; a second controller plays P2 | |
 | C13 | OSD messages | A message appears about 2 seconds, only once the OSD is closed (for example after setting a finishing move) | |
+| C14 | Video Timing (Video Settings): Native 54.7Hz, 57Hz, 60Hz, on HDMI and, if you have one, a 15 kHz CRT | The picture stays whole and stable at each, also when switched while a game runs; at 57 / 60 Hz the game runs a little faster while music and voices keep their pitch; on a CRT at 60 Hz, CRT V-Shift moves the picture without parts of it wrapping to the other edge | |
 
 ## Mortal Kombat
 
