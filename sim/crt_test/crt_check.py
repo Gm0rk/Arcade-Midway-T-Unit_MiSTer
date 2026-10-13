@@ -14,6 +14,10 @@
 #            rows, the source line rising from 0 to the last.
 #   V-Shift: +5 / -5 moves the picture 5 lines up / down in every mode.
 #   V-Size 0: the picture as without CRT V-Size (lines 11-264, 400 dots).
+#   Video Timing 57 / 60 Hz (the testbench drops the board's blank lines as
+#            the 34010 does): 277 / 263 lines, every picture line once; with
+#            a V-Shift that puts VSync on the picture, the lines shown are
+#            still in order and nothing is sent during VSync.
 import os, subprocess, sys
 from concurrent.futures import ThreadPoolExecutor
 import numpy as np
@@ -24,14 +28,16 @@ OUT = os.path.join(HERE, 'out')
 DT = np.dtype([('c', '<u8'), ('r', 'u1'), ('g', 'u1'), ('b', 'u1'), ('f', 'u1')])
 FRAME = 506 * 289 * 12
 
-def run(name, vshift=0, vsize=0, mode=0):
+def run(name, vshift=0, vsize=0, mode=0, vt=0):
     p = os.path.join(OUT, name + '.bin')
-    subprocess.run([TB, p, '35', '3', '1', '0', '0', '0', str(vshift & 31), str(vsize), str(mode)], check=True)
+    subprocess.run([TB, p, '35', '3', '1', '0', '0', '0', str(vshift & 31), str(vsize), str(mode), str(vt)], check=True)
     return p
 
 def last_frame(p):
     d = np.fromfile(p, dtype=DT)
     hs = d['f'] & 1; vs = (d['f'] >> 1) & 1; de = (d['f'] >> 2) & 1
+    lit = (d['r'] | d['g'] | d['b']) != 0
+    in_vs = int(np.sum((vs == 1) & ((de == 1) | lit)))    # dots sent during VSync
     st = np.where((hs[1:] == 1) & (hs[:-1] == 0))[0] + 1
     L = []
     for i in range(len(st) - 1):
@@ -48,7 +54,7 @@ def last_frame(p):
                 nrows=len(rows), dots=sorted(set(l['den'] for _, l in rows)),
                 src=[int(np.bincount(l['r']).argmax()) for _, l in rows],
                 pure=all(l['r'].min() == l['r'].max() for _, l in rows),
-                mean=[float(l['r'].mean()) for _, l in rows])
+                mean=[float(l['r'].mean()) for _, l in rows], in_vs=in_vs)
 
 STEP = {1: 1, 3: 3, 7: 7, 14: -1, 12: -3, 8: -7}     # OSD value -> step
 cases = [('v0', 0, 0, 0), ('v0_up5', 5, 0, 0), ('v0_dn5', -5, 0, 0)]
@@ -57,6 +63,7 @@ for m in (0, 1):
         cases.append(('%s_%+d' % ('pvm' if m == 0 else 'cab', STEP[v]), 0, v, m))
     cases.append(('%s_-7_up5' % ('pvm' if m == 0 else 'cab'), 5, 8, m))
     cases.append(('%s_-7_dn5' % ('pvm' if m == 0 else 'cab'), -5, 8, m))
+cases += [('vt57', 0, 0, 0, 1), ('vt60', 0, 0, 0, 2), ('vt60_dn5', -5, 0, 0, 2), ('vt60_up10', 10, 0, 0, 2)]
 
 os.makedirs(OUT, exist_ok=True)
 with ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as ex:
@@ -93,5 +100,15 @@ for base in ('v0', 'pvm_-7', 'cab_-7'):
         r = res[n]
         check(n, r['first'] == b['first'] + sh and r['last'] == b['last'] + sh and r['nrows'] == b['nrows'],
               'rows %d-%d (V-Shift 0: %d-%d)' % (r['first'], r['last'], b['first'], b['last']))
+for n, lines, rows in (('vt57', 277, (11, 264)), ('vt60', 263, (9, 262))):
+    r = res[n]
+    check(n, r['lines'] == lines and (r['first'], r['last']) == rows and r['src'] == list(range(254)) and r['pure']
+          and r['dots'] == [400] and r['in_vs'] == 0,
+          'lines %d, rows %d-%d, every picture line once: %s' % (r['lines'], r['first'], r['last'], r['src'] == list(range(254))))
+for n in ('vt60_dn5', 'vt60_up10'):
+    r = res[n]
+    check(n, r['lines'] == 263 and r['src'] == sorted(set(r['src'])) and r['pure'] and r['in_vs'] == 0,
+          'lines %d, rows %d-%d, picture lines %d..%d in order, %d dots during VSync' % (
+              r['lines'], r['first'], r['last'], r['src'][0], r['src'][-1], r['in_vs']))
 print('%d checks failed' % len(fails) if fails else 'all checks passed')
 sys.exit(1 if fails else 0)
