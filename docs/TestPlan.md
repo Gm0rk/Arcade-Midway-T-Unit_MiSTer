@@ -17,7 +17,7 @@ it is in `config/nvram` on the SD card, named after the MRA.
 | Section | Tests | Passed | Done |
 |---|---|---|---|
 | [Core-wide](#core-wide) | 13 | 0 | No |
-| [Mortal Kombat](#mortal-kombat) | 16 | 0 | No |
+| [Mortal Kombat](#mortal-kombat) | 21 | 0 | No |
 | [Mortal Kombat II](#mortal-kombat-ii) | 18 | 0 | No |
 | [NBA Jam](#nba-jam) | 18 | 0 | No |
 | [NBA Jam Tournament Edition](#nba-jam-tournament-edition) | 18 | 0 | No |
@@ -67,6 +67,11 @@ Main MRA: Mortal Kombat (rev 5.0 T-Unit 03-19-93). See also the
 | MK14 | Finishing Moves: set Sub-Zero's Spine Rip (or any fatality) and win a fight | The move plays at FINISH HIM; at the wrong distance a message says to step closer or back | |
 | MK15 | Move List (OSD main menu): List 1, List 2, then Off | List 1 shows Cage to Sonya, List 2 Raiden to Scorpion: each fighter's special moves and fatality with its distance in words (Close, Sweep, ...) over the dimmed MK title, all readable; the game waits and goes on when Off; two moves work as shown, a fatality at its distance | |
 | MK16 | Other versions: rev 4.0 and Turbo Ninja | Each boots to the attract mode and starts a game | |
+| MK17 | Hidden Items: Reptile Fight Next, then win a match in a 1-player game | Message "Reptile fight set: win a match in a 1-player game"; after the win "You have found me", then the fight with Reptile below The Pit | |
+| MK18 | Hidden Items: Reptile Fight Next twice | Message "Reptile fight cleared"; the next win goes on as usual | |
+| MK19 | Hidden Items: Moon Silhouettes Always On, play to The Pit | The message names it when the OSD closes; silhouettes cross the moon in every round there | |
+| MK20 | Hidden Items: Reptile Hints Always On, start a match | The message names it when the OSD closes; Reptile drops in with a hint before each round's "Fight!"; the EJB Menu's game audits are not cleared | |
+| MK21 | MK17 and MK20 on rev 4.0 and Turbo Ninja | The same as on rev 5.0 | |
 
 ## Mortal Kombat II
 
