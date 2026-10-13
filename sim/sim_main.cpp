@@ -7,6 +7,7 @@
 //            [--wav out.wav] [--ddr-lat 24] [--ramclear] [--nosound]
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
 //            [--info mk_rom1.bin] [--osd "500:0:1;..."]
+//            [--vtiming 0|1|2] [--lines lines.txt]
 //
 //  --game      mk, mkturbo, mk2, nbajam, nbajamte, jdreddp (the top level's
 //              game table: protection, sound RAM window)
@@ -53,6 +54,10 @@
 //              timed like --press; item 0 and 1 are the triggers R[14] and
 //              R[15] (code 1 and 2), 2-12 the option slots 1-11 of the
 //              secrets module
+//  --vtiming   the OSD's Video Timing: 0 native 289-line frames (54.7 Hz),
+//              1 277 lines (57 Hz), 2 263 lines (60 Hz)
+//  --lines     write a line per frame: frame, lines from one VSync to the
+//              next, clocks (96 MHz) from one VSync to the next
 //
 //  The DDR3 port is a model of MiSTer's DDRAM interface: reads return
 //  their burst after a fixed latency, writes are accepted one beat per
@@ -149,6 +154,7 @@ struct Frames {
 	static const int W = 512, H = 300;
 	std::vector<uint8_t> buf = std::vector<uint8_t>(W * H * 3);
 	int x = 0, y = 0, maxx = 0, maxy = 0;
+	int last_lines = 0;                  // lines of the frame that just ended
 	bool hs_d = false, vs_d = false;
 	int frame = 0;
 	std::set<int> want;
@@ -182,6 +188,7 @@ struct Frames {
 				frame = keep;
 			}
 			std::fill(buf.begin(), buf.end(), 0);
+			last_lines = y;
 			y = 0;
 		}
 		hs_d = hs; vs_d = vs;
@@ -237,8 +244,8 @@ struct Press { int frame, port, bit, len; };
 int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
-	std::string info, osds, dcslog;
-	int frames = 100, dsw = -1;
+	std::string info, osds, dcslog, linespath;
+	int frames = 100, dsw = -1, vtiming = 0;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
 	Ddr ddr;
 	for (int i = 1; i < argc; i++) {
@@ -264,6 +271,8 @@ int main(int argc, char **argv) {
 		else if (a == "--info") info = next();
 		else if (a == "--osd") osds = next();
 		else if (a == "--dcslog") dcslog = next();
+		else if (a == "--vtiming") vtiming = atoi(next().c_str());
+		else if (a == "--lines") linespath = next();
 	}
 
 	top = new Vsim_top;
@@ -351,6 +360,7 @@ int main(int argc, char **argv) {
 	top->info_start = 0; top->info_wr = 0; top->info_addr = 0; top->info_data = 0;
 	top->osd_trig = 0; top->osd_opt = 0;
 	top->pause = 0;
+	top->vtiming = vtiming & 3;
 	top->ram_clr_req = 0;
 	top->snd_off = nosound;
 	top->reset = 1;
@@ -358,6 +368,8 @@ int main(int argc, char **argv) {
 	top->eval();
 
 	uint64_t cyc = 0;
+	FILE *linesf = linespath.empty() ? nullptr : fopen(linespath.c_str(), "w");
+	uint64_t lines_cyc = 0;
 	int wav_div = 0;
 	bool blit_d = false, vb_d = false;
 	int in_frame = -1;
@@ -428,6 +440,10 @@ int main(int argc, char **argv) {
 		cyc++;
 
 		bool newframe = ce && fr.pixel();
+		if (newframe && linesf) {
+			fprintf(linesf, "%d %d %llu\n", fr.frame - 1, fr.last_lines, (unsigned long long)(cyc - lines_cyc));
+			lines_cyc = cyc;
+		}
 		// trace markers: (0xFFFFFFFF, frame) at the start of each frame (VSync),
 		// (0xFFFFFFFE, frame) where its vertical blank starts
 		if (tf && fr.frame >= tr_a && fr.frame <= tr_b) {
@@ -510,6 +526,7 @@ int main(int argc, char **argv) {
 	w.close();
 	if (dcsf) fclose(dcsf);
 	if (tf) fclose(tf);
+	if (linesf) fclose(linesf);
 	if (wf) fclose(wf);
 	top->final();
 	delete top;
