@@ -59,6 +59,12 @@ aside).
 - Analog sync centred on a standard 15 kHz screen; CRT Adjust (H-Size,
   H-Position, V-Shift), CRT V-Size (experimental) and CRT Auto-Width for
   analog CRT output
+- Video Timing: the board's own 54.7 Hz, or 57 Hz / 60 Hz frames for TVs
+  that do not hold 54.7 Hz. Only blank lines are dropped, so the whole
+  picture is still sent; games run about 4 % (57 Hz) or 10 % (60 Hz) faster,
+  while music and voices keep their normal pitch and tempo. At 60 Hz the
+  picture fills almost the whole frame, so a CRT may hide a few lines at the
+  top or bottom; CRT V-Shift picks which
 - CMOS saved as NVRAM: settings, audits and high scores survive power-off
   (written to the SD card when the OSD is opened, if the game changed them,
   and with "Save Settings")
@@ -110,7 +116,9 @@ applied one line per frame. It works in one of two modes (CRT V-Size Mode):
 
 In PVM mode the frame has few spare lines at the larger + settings, so V-Shift
 has little room there; at the larger - settings the lines get short enough that
-the picture moves a little to the left (H-Position brings it back). Like the
+the picture moves a little to the left (H-Position brings it back). With the
+57 Hz or 60 Hz Video Timing there is even less room around the picture, so a
+taller picture is cut at the top or bottom. Like the
 rest of CRT Adjust, CRT V-Size also changes the HDMI picture; leave CRT Adjust
 off for an untouched HDMI image.
 
