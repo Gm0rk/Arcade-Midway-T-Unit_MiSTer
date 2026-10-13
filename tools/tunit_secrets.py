@@ -29,6 +29,27 @@ TE 4.0, Judge Dredd TA1, MK 5.0):
                  within 16 frames of the last (FFDD0900). Holding P1 High
                  Punch while the last press goes in shows a copyright screen
                  ("THIS IS MORTAL KOMBAT") until it is released, then the menu.
+                 Reptile: after each match the player wins, the next-stage
+                 routine advances the stage (@01051820, 3 = The Pit), counts
+                 down the moon cooldown (@010519A0: 40 matches after
+                 power-up, reloaded with 40 when it has reached 0 and the
+                 match just won was on The Pit) and calls the Reptile check
+                 (FFCB1FF0): one player, the match just won on The Pit, the
+                 cooldown just reloaded, no Block pressed (@01052950), two
+                 flawless rounds, a fatality (@01051880). Carry set: his
+                 fight (FFCB5550, which sets his flag @01052940 to 1). The
+                 Pit's background starts the silhouettes crossing the moon
+                 (FFCB8BB0) when the cooldown is 0, outside the attract mode.
+                 Before each round the GREEN NINJA COUNTER audit counts up;
+                 at 2000 Reptile drops in with one of nine hints (FFCA12C0)
+                 and the game clears all the audits. Turbo Ninja's check has
+                 no one-player, cooldown or flawless test, and takes the
+                 first stage as well as The Pit. The options patch the
+                 check's first test after the one-player one to SETC / RETS
+                 (Reptile Fight Next), the two cooldown branches to NOPs
+                 (Moon Silhouettes Always; Turbo Ninja: the moon's only),
+                 and the counter's branch to a NOP and a jump over the audit
+                 clearing (Reptile Hints Always).
   MK2            EJB menu: as MK, table 5 P1, 10 P2, 2 P1, 8 P2, 2 P1 (L2.0
                  and later) (FFA1CF60). L1.1 and L1.4 have the menu, the
                  code handler and a table (MK's) but no switch handler calls
@@ -125,11 +146,16 @@ N_PATCH = 8                      # patches 0-7 at words 2-25
 OPT_SECURITY, OPT_HITBOX, OPT_PONG = 1, 2, 3
 OPT_CODE1, OPT_CODE2 = 4, 5
 OPT_NOOB, OPT_JADE, OPT_SMOKE = 6, 7, 8           # O[19], O[20], O[21]
+# MK, MK Turbo: Reptile Fight Next (T[41], on until his fight starts), Moon
+# Silhouettes Always (O[42]), Reptile Hints Always (O[43]); program ROM
+# patches, which the board applies to instruction fetches only
+OPT_REP_NEXT, OPT_REP_MOON, OPT_REP_HINT = 1, 2, 3
 # NBA Jam / TE: option codes of the table; the top level maps each game's
 # OSD bits to the option slots (codes 1-3, 6-13)
 NJ_BIG, NJ_DEF, NJ_INT, NJ_SHOT, NJ_NOCPU = 1, 2, 3, 6, 7
 TE_BIG, TE_HUGE, TE_BABY, TE_MAX, TE_QUICK, TE_GOAL, TE_SHOT, TE_NOCPU = 1, 2, 3, 6, 7, 8, 9, 10
 NOP, JRUC = 0x0300, 0xC000
+SETC, RETS = 0x0DE0, 0x0960
 
 # OSD (rtl/tunit_secrets_osd.svh): status bits and the menu mask bits of
 # the two games; the top level maps the bits to the option slots of
@@ -163,9 +189,11 @@ class Prog:
         self.d = data
         self.w = struct.unpack('<%dH' % (len(data) // 2), data[:len(data) // 2 * 2])
 
-    def find(self, pat):
+    def find(self, pat, lo=0, hi=None):
+        """Word indexes where pat (None: any word) starts, in [lo, hi)."""
         w, n, res = self.w, len(pat), []
-        for i in range(len(w) - n):
+        hi = len(w) - n if hi is None else min(hi, len(w) - n)
+        for i in range(lo, hi):
             if w[i] != pat[0]:
                 continue
             if all(p is None or w[i + j] == p for j, p in enumerate(pat)):
@@ -267,6 +295,69 @@ def mk_codes(p, notes):
         notes.append('copyright screen check not found')
     # both codes succeed when the CPU reaches the menu code
     return [(code1, done), (code2, done) if code2 else None], None
+
+
+def s16(v):
+    return v - 0x10000 if v & 0x8000 else v
+
+
+def mk_reptile(p, notes):
+    """MK's Reptile patches (program ROM words, OPT_REP_*) and his flag's bit
+    address (the fight sets it to 1), or None if the set has no Reptile.
+    The same scan as the Y Unit core's (tools/yunit_fmoves.py)."""
+    w = p.w
+    patches = []
+    # his fight: MMFM SP,A0 / MOVI 24h,A0 / CALLA (REPTILE BATTLES audit),
+    # entered by CALLR check / JRC fight
+    chk = setup = None
+    for s in p.find([0x09AF, 0x0001, 0x09C0, 0x0024, 0x0D5F, X, X]):
+        for i in p.find([0xC800, X]):
+            if i >= 2 and i + 2 + s16(w[i + 1]) == s and w[i - 2] == 0x0D3F:
+                chk, setup = i + s16(w[i - 1]), s
+    if chk is None:
+        notes.append('Reptile fight not found')
+        return None
+    # check: CALLR one player / MOVE A0,A0 / JREQ (Turbo Ninja: NOP) /
+    # MOVE @stage,A0 ...: SETC / RETS after the one-player test
+    if not (w[chk] == 0x0D3F and w[chk + 2] == 0x4C00 and (w[chk + 3] >> 8 == 0xCA or w[chk + 3] == NOP)
+            and w[chk + 4] == 0x05A0):
+        notes.append('Reptile check not found')
+        return None
+    patches += [(bit_address(chk + 4) >> 4, OPT_REP_NEXT, SETC), (bit_address(chk + 5) >> 4, OPT_REP_NEXT, RETS)]
+    # his flag: MOVK 1,A0 / MOVE A0,@flag in the fight's setup
+    fl = p.find([0x1820, 0x0580, X, X], setup, setup + 80)
+    if not fl:
+        notes.append('Reptile flag not found')
+        return None
+    flag = p.u32(fl[0] + 2)
+    # moon: MOVE @state,A0 / CMPI 1h,A0 / JREQ / MOVE @cooldown,A0 / JRNE /
+    # MOVI 2000h,A1 / MOVI proc,A7 / CALLA: the JRNE becomes a NOP, and so
+    # does the check's MOVE @cooldown,A0 / CMPI 28h,A0 / JRNE (not in Turbo
+    # Ninja)
+    m = p.find([0x05A0, X, X, 0x0B40, 0xFFFE, X, 0x05A0, X, X, X, 0x09C1, 0x2000, 0x09E7, X, X, 0x0D5F])
+    if len(m) != 1 or w[m[0] + 9] >> 8 != 0xCB:
+        notes.append('moon silhouettes not found')
+        return None
+    patches.append((bit_address(m[0] + 9) >> 4, OPT_REP_MOON, NOP))
+    for i in p.find([0x05A0, w[m[0] + 7], w[m[0] + 8], 0x0B40, 0xFFD7, X], chk, chk + 40):
+        if w[i + 5] >> 8 == 0xCB:
+            patches.append((bit_address(i + 5) >> 4, OPT_REP_MOON, NOP))
+    # hints: CMPI 7D0h,A1 / JRC / MMFM SP,A0 / MOVE A0,-*A12 / MOVI 10h,A0 /
+    # CALLA (clear the audits) ... MOVI 201Eh,A1 (the hint process): the JRC
+    # becomes a NOP, the MOVI 10h a JRUC to the MOVI 201Eh
+    h = p.find([0x0B41, 0xF82F, X, 0x09AF, 0x0001, 0xA20C, 0x09C0, 0x0010])
+    if len(h) != 1 or w[h[0] + 2] >> 8 != 0xC8:
+        notes.append('Reptile hints not found')
+        return None
+    patches.append((bit_address(h[0] + 2) >> 4, OPT_REP_HINT, NOP))
+    t = p.find([0x09C1, 0x201E], h[0] + 6, h[0] + 30)
+    disp = t[0] - (h[0] + 7) if len(t) == 1 else 0
+    if not 0 < disp < 0x80:
+        notes.append('Reptile hint process not found')
+        return None
+    patches.append((bit_address(h[0] + 6) >> 4, OPT_REP_HINT, JRUC | disp))
+    notes.append('Reptile check %08X, flag %08X, %d patches' % (bit_address(chk), flag, len(patches)))
+    return patches, flag
 
 
 def mk2_codes(p, notes):
@@ -528,6 +619,8 @@ def build(gid, prog_bytes):
     notes = []
     if gid in (G_MK, G_MKTURBO):
         codes, patches = mk_codes(p, notes)
+        rp = mk_reptile(p, notes)
+        patches = (patches or []) + (rp[0] if rp else [])
     elif gid == G_MK2:
         codes, patches = mk2_codes(p, notes)
     elif gid in (G_NBAJAM, G_NBAJAMTE):
