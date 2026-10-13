@@ -107,7 +107,7 @@
 	"P4-,winner's FINISH HIM;", \
 	"h3-;"
 
-`define CORE_INFO "I,Finishing move set: it plays\nat the next FINISH HIM,Not this fighter's FINISH HIM:\nthe move waits for a later one,Too far: step closer,Too close: step back,Stage move: The Pit II\nand Kombat Tomb only,Stage move: The Pit II only,Dead Pool only,Stage move: The Pit only,FINISH HIM is over: the move\nwaits for the next one,Move not taken,Not taken: a Friendship or\nBabality needs a round won\nwithout punches,Finishing move cleared,Not available in this\nrevision of the game,Security Screen on: it starts\neach attract cycle,Hitboxes on: shown in fights,Pong on: it follows the first\nround of a 2-player battle,Noob Saibot on: the winner of\nthe first round of a 2-player\nbattle fights him,Jade on: the first round you\nwin in a 1-player game is\nfollowed by her fight,Smoke on: hold Down and press\nStart in a fight,Code entered,Code not taken: codes work\nin the attract mode,On for all players,On for all players from the\nnext game,Code not taken: pick it on\nTonight's Match-Up;"
+`define CORE_INFO "I,Finishing move set: it plays\nat the next FINISH HIM,Not this fighter's FINISH HIM:\nthe move waits for a later one,Too far: step closer,Too close: step back,Stage move: The Pit II\nand Kombat Tomb only,Stage move: The Pit II only,Dead Pool only,Stage move: The Pit only,FINISH HIM is over: the move\nwaits for the next one,Move not taken,Not taken: a Friendship or\nBabality needs a round won\nwithout punches,Finishing move cleared,Not available in this\nrevision of the game,Security Screen on: it starts\neach attract cycle,Hitboxes on: shown in fights,Pong on: it follows the first\nround of a 2-player battle,Noob Saibot on: the winner of\nthe first round of a 2-player\nbattle fights him,Jade on: the first round you\nwin in a 1-player game is\nfollowed by her fight,Smoke on: hold Down and press\nStart in a fight,Code entered,Code not taken: codes work\nin the attract mode,On for all players,On for all players from the\nnext game,Code not taken: pick it on\nTonight's Match-Up,Reptile fight set: win a match\nin a 1-player game,Reptile fight cleared,Moon Silhouettes on: every\nmatch on The Pit has them,Reptile Hints on: he drops in\nbefore every round;"
 
 // message numbers (the I line's fields)
 localparam [4:0] MSG_SET = 5'd1;
@@ -134,3 +134,7 @@ localparam [4:0] MSG_CODE_FAIL = 5'd21;
 localparam [4:0] MSG_ON_ALL = 5'd22;
 localparam [4:0] MSG_ON_NEXT = 5'd23;
 localparam [4:0] MSG_CODE_MATCHUP = 5'd24;
+localparam [4:0] MSG_REPT_SET = 5'd25;
+localparam [4:0] MSG_REPT_CLEARED = 5'd26;
+localparam [4:0] MSG_REPT_MOON = 5'd27;
+localparam [4:0] MSG_REPT_HINTS = 5'd28;
