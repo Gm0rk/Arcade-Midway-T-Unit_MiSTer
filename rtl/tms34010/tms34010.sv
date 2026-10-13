@@ -45,6 +45,9 @@ module tms34010
 	input             ce_cyc,       // machine-cycle tick (CLKIN / 8), asserted in a ce cycle
 	input             ce_vclk,      // video clock tick (one per 2 pixels on Y Unit), in a ce cycle
 	input             pause,        // hold at the next instruction boundary
+	input       [9:0] frame_lines,  // MiSTer option, not part of the chip: 0 = the
+	                                // game's own frame, else blank lines are dropped
+	                                // until a frame is this many lines (see below)
 
 	// local memory bus, word oriented. A request (mem_rd / mem_wr with its
 	// address and data) stays up until a ce cycle sees mem_ack; the board must
@@ -720,6 +723,61 @@ reg         seq_nmi_ack;
 wire        line_wrap = ce_vclk && (hcnt >= t_htotal);
 wire  [9:0] vcnt_next = (vcnt >= t_vtotal) ? 10'd0 : vcnt + 10'd1;
 
+//----------------------------------------------------------------------------
+// Shorter frames (MiSTer option for 15 kHz TVs, not part of the chip)
+//
+// Every T-Unit game runs a 289-line frame (54.7 Hz). With frame_lines set,
+// blank lines are dropped until a frame is frame_lines long (277: 57.1 Hz,
+// 263: 60.1 Hz); the line itself is unchanged. Lines are dropped in frame
+// order, starting right after VSBLNK and running on to the end of the frame,
+// then from VESYNC up to VEBLNK. Never dropped:
+//   - the picture (VEBLNK..VSBLNK-1);
+//   - VSBLNK, where DPYADR reloads from DPYSTRT;
+//   - the board's VSync lines (0..VESYNC-1);
+//   - the line in DPYINT. Games chain display interrupts (a handler writes
+//     the next DPYINT), so the interrupt line must come every frame.
+// So every interrupt and picture line comes in the same order and the
+// picture is untouched; only the blank time between them is shorter. The
+// board speeds the CPU and the blitter up by the same ratio (289 / lines),
+// so each frame still gets the cycles of the real board.
+//
+// When the next line is droppable, a run of droppable lines (ending before
+// DPYINT or at the end of its zone) is skipped at once, as far as this
+// frame's budget allows. The jump is worked out during the line in
+// registered steps, from values that only change at line starts (DPYINT a
+// few cycles before the end of a line would not be seen; no game writes it
+// that late before a blank line).
+//----------------------------------------------------------------------------
+
+reg   [9:0] t_drop;              // lines to drop per frame (0: native frame)
+reg   [9:0] drop_left;           // lines still to drop in this frame
+reg   [9:0] sk_n0, sk_zend, sk_dp, sk_rend, sk_run, sk_k, sk_tgt;
+reg         sk_fz, sk_bz, sk_fz2, sk_fz3, sk_ok, sk_ok2;
+always @(posedge clk) if (ce) begin
+	t_drop  <= ((frame_lines != 10'd0) && (t_vtotal + 10'd1 > frame_lines)) ?
+	           (t_vtotal + 10'd1 - frame_lines) : 10'd0;
+	// 1: the normal next line and the zone it is in
+	sk_n0   <= vcnt_next;
+	sk_fz   <= (vcnt_next > t_vsblnk) && (vcnt_next <= t_vtotal);      // after VSBLNK
+	sk_bz   <= (vcnt_next >= t_vesync) && (vcnt_next < t_veblnk);      // after VSync
+	sk_zend <= ((vcnt_next > t_vsblnk) && (vcnt_next <= t_vtotal)) ? t_vtotal : t_veblnk - 10'd1;
+	sk_dp   <= (ioreg[R_DPYINT][15:10] == 6'd0) ? ioreg[R_DPYINT][9:0] : 10'h3FF;
+	// 2: last line of the run (before the DPYINT line when it is in the run)
+	sk_rend <= ((sk_dp >= sk_n0) && (sk_dp <= sk_zend)) ? sk_dp - 10'd1 : sk_zend;
+	sk_ok   <= (sk_fz | sk_bz) && (t_drop != 10'd0);
+	sk_fz2  <= sk_fz;
+	// 3: run length (0 when the next line is the DPYINT line)
+	sk_run  <= sk_rend - sk_n0 + 10'd1;
+	sk_ok2  <= sk_ok;
+	sk_fz3  <= sk_fz2;
+	// 4: lines to skip and where the jump lands
+	sk_k    <= !sk_ok2 ? 10'd0 : (drop_left < sk_run) ? drop_left : sk_run;
+	sk_tgt  <= sk_n0 + ((drop_left < sk_run) ? drop_left : sk_run);
+end
+// the front zone ends with the frame: a jump past VTOTAL lands on line 0
+wire  [9:0] sk_land  = (sk_fz3 && (sk_tgt > t_vtotal)) ? 10'd0 : sk_tgt;
+wire  [9:0] vcnt_new = (sk_k != 10'd0) ? sk_land : vcnt_next;
+
 // DPYADR to row/column, as get_display_params() does it
 wire [15:0] dpyadr_cur = ioreg[R_DPYADR];
 wire [15:0] dpyadr_vis = r_dpyctl[10] ? dpyadr_cur : (dpyadr_cur ^ 16'hFFFC);
@@ -741,6 +799,7 @@ always @(posedge clk) if (ce) begin
 		// instructions as in MAME
 		hcnt       <= 10'd0;
 		vcnt       <= 10'd274;
+		drop_left  <= 10'd0;
 		refcnt     <= 20'd0;
 		line_vis   <= 1'b0;
 	end
@@ -753,23 +812,26 @@ always @(posedge clk) if (ce) begin
 			hcnt <= line_wrap ? 10'd0 : hcnt + 10'd1;
 
 		if (line_wrap) begin
-			vcnt <= vcnt_next;
-			ioreg[R_VCOUNT] <= {6'd0, vcnt_next};
+			vcnt <= vcnt_new;
+			ioreg[R_VCOUNT] <= {6'd0, vcnt_new};
 
-			if (r_dpyctl[15] && ({6'd0, vcnt_next} == ioreg[R_DPYINT]))
+			// shorter frames: the budget restarts at VSBLNK, where the blank begins
+			drop_left <= (vcnt_new == t_vsblnk) ? t_drop : drop_left - sk_k;
+
+			if (r_dpyctl[15] && ({6'd0, vcnt_new} == ioreg[R_DPYINT]))
 				ioreg[R_INTPEND][INT_DI] <= 1'b1;
 
 			line_start <= 1'b1;
-			line_vis   <= ({6'd0, vcnt_next} >= ioreg[R_VEBLNK]) && ({6'd0, vcnt_next} < ioreg[R_VSBLNK]);
+			line_vis   <= ({6'd0, vcnt_new} >= ioreg[R_VEBLNK]) && ({6'd0, vcnt_new} < ioreg[R_VSBLNK]);
 
-			if ({6'd0, vcnt_next} == ioreg[R_VSBLNK]) begin
+			if ({6'd0, vcnt_new} == ioreg[R_VSBLNK]) begin
 				ioreg[R_DPYADR] <= ioreg[R_DPYSTRT];
 				line_row <= r_dpyctl[10] ? ioreg[R_DPYSTRT][15:4] : (ioreg[R_DPYSTRT][15:4] ^ 12'hFFF);
 			end
 			else begin
 				line_row <= dpyadr_vis[15:4];
 				line_col <= {dpyadr_vis[6:2], 4'd0, 5'd0} | ioreg[R_DPYTAP][13:0];
-				if (({6'd0, vcnt_next} >= ioreg[R_VEBLNK]) && ({6'd0, vcnt_next} < ioreg[R_VSBLNK])) begin
+				if (({6'd0, vcnt_new} >= ioreg[R_VEBLNK]) && ({6'd0, vcnt_new} < ioreg[R_VSBLNK])) begin
 					// step to the next display line by DUDATE
 					if (dpyadr_cur[1:0] == 2'b00)
 						ioreg[R_DPYADR] <= ((dpyadr_cur & 16'hFFFC) - (r_dpyctl & 16'h03FC)) | (ioreg[R_DPYSTRT] & 16'h0003);
