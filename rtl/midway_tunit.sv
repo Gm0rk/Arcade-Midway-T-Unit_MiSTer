@@ -70,6 +70,7 @@ module midway_tunit
 	input     [223:0] pt_addr,
 	input     [127:0] pt_data,
 	input       [7:0] pt_en,
+	input             pt_fetch,      // the patches apply to instruction fetches only (MK)
 
 	// sound board
 	output reg        snd_wr,        // one pulse per write of the sound data word
@@ -298,11 +299,13 @@ reg         b_rd, b_wr, b_srt, b_stale;
 reg  [27:0] b_addr;
 reg  [21:3] b_baddr;
 reg  [15:0] b_wdata;
+reg  [31:4] b_pc;                // the CPU's PC (word address) with b_addr
 always @(posedge clk) begin
 	b_rd    <= mem_rd;
 	b_wr    <= mem_wr;
 	b_srt   <= mem_srt;
 	b_addr  <= mem_addr;
+	b_pc    <= cpu_pc[31:4];
 	b_baddr <= mem_baddr[21:3];
 	b_wdata <= mem_wdata;
 	b_stale <= cpu_ce & mem_ack;
@@ -323,6 +326,12 @@ wire [27:0] wa = b_addr;
 // address every clock, so its result is ready on the same edge as the bus
 // state machine's acknowledge for that address (which is decoded from the
 // same copy), and stays valid for as long as the CPU holds the request.
+//
+// With pt_fetch (MK: Reptile's options, all program instructions) a patch
+// applies only when the CPU fetches the word as code: the CPU's PC is the
+// address of the word it fetches, opcode and immediate words alike (b_pc is
+// registered with b_addr), so data reads of the program ROM (a ROM
+// checksum) still see the original.
 //----------------------------------------------------------------------------
 
 reg         pt_hit;
@@ -331,7 +340,7 @@ integer     pt_i;
 always @(posedge clk) begin
 	pt_hit <= 1'b0;
 	for (pt_i = 0; pt_i < 8; pt_i = pt_i + 1)
-		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28]) begin
+		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28] && (!pt_fetch || b_pc == wa)) begin
 			pt_hit <= 1'b1;
 			pt_q   <= pt_data[16 * pt_i +: 16];
 		end
