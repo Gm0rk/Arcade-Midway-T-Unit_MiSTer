@@ -52,6 +52,8 @@ module midway_tunit
 	input             clk,           // 96 MHz
 	input             reset,
 	input             pause,
+	input       [1:0] vtiming,       // MiSTer option: 0 native frame (54.7 Hz), 1 277 lines
+	                                 // (57.1 Hz), 2 263 lines (60.1 Hz); see "Video timing"
 
 	// game configuration
 	input       [2:0] prot_id,       // protection (P_* below)
@@ -150,7 +152,7 @@ localparam [24:0] RAM_BASE = 25'h100_0000;
 //    paths are constrained as two-cycle paths in the SDC.
 //  - ce_cyc is the 34010 machine cycle, 50 MHz / 8 = 6.25 MHz, from a
 //    fractional divider stepped at 48 MHz, so it always falls in a cpu_ce
-//    cycle.
+//    cycle (faster with the shorter video frames, see "Video timing").
 //  - VCLK is 4 MHz (96 / 24) and the pixel clock 8 MHz, both aligned to
 //    cpu_ce cycles.
 // Each enable is registered from the phase it will be high in.
@@ -166,7 +168,48 @@ always @(posedge clk) begin
 end
 assign ce_pix = ce_pix_r;
 
-// 6250 kHz steps out of 48000 kHz: acc + 6250 >= 48000 is acc >= 41750
+//----------------------------------------------------------------------------
+// Video timing (MiSTer option for 15 kHz TVs)
+//
+// Every game runs a 289-line frame at 15.81 kHz: 54.7 Hz, which some TVs do
+// not hold well. The shorter frames drop blank lines in the 34010's CRT
+// controller (see tms34010.sv): 277 lines for 57.1 Hz or 263 for 60.1 Hz.
+// The games count time in frames, so they run 289/277 (+4.3 %) or 289/263
+// (+9.9 %) faster either way; the CPU's machine cycle and the blitter's
+// completion time are sped up by the same ratio, so a frame still gets the
+// real board's cycles. The sound boards keep their own clocks.
+//----------------------------------------------------------------------------
+
+wire  [1:0] vt = (vtiming == 2'd3) ? 2'd0 : vtiming;   // 3 is not used: native
+
+reg   [9:0] frame_lines;
+always @(posedge clk)
+	frame_lines <= (vt == 2'd1) ? 10'd277 : (vt == 2'd2) ? 10'd263 : 10'd0;
+
+// step (6.25 MHz in kHz, times 289/277 or 289/263 for the shorter frames)
+// and the level at which a step wraps, so the accumulator update is one add
+// or subtract and one compare
+reg  [16:0] cyc_step, cyc_thr;
+always @(posedge clk) begin
+	case (vt)
+		2'd1:    cyc_step <= 17'd6521;   // 57 Hz
+		2'd2:    cyc_step <= 17'd6868;   // 60 Hz
+		default: cyc_step <= 17'd6250;   // native
+	endcase
+	cyc_thr <= 17'd48000 - cyc_step;
+end
+
+// blitter completion time: one extra count off its timer at 289/277 - 1 or
+// 289/263 - 1 of the clocks (16-bit fraction)
+reg  [15:0] dma_frac, dma_fstep;
+reg         dma_fast;
+always @(posedge clk) begin
+	dma_fstep <= (vt == 2'd1) ? 16'd2839 : (vt == 2'd2) ? 16'd6479 : 16'd0;
+	{dma_fast, dma_frac} <= {1'b0, dma_frac} + {1'b0, dma_fstep};
+end
+
+// steps of 6.25 MHz out of 48 MHz: acc + step >= 48000 is acc >= 48000 - step,
+// and acc + step - 48000 is acc - (48000 - step)
 reg  [16:0] cyc_acc;
 reg         ce_cyc;
 always @(posedge clk) begin
@@ -174,12 +217,12 @@ always @(posedge clk) begin
 	if (reset)
 		cyc_acc <= 17'd0;
 	else if (ph[0]) begin
-		if (cyc_acc >= 17'd41750) begin
-			cyc_acc <= cyc_acc - 17'd41750;
+		if (cyc_acc >= cyc_thr) begin
+			cyc_acc <= cyc_acc - cyc_thr;
 			ce_cyc  <= ~pause;
 		end
 		else
-			cyc_acc <= cyc_acc + 17'd6250;
+			cyc_acc <= cyc_acc + cyc_step;
 	end
 end
 
@@ -234,6 +277,7 @@ tms34010 cpu
 	.ce_cyc     (ce_cyc),
 	.ce_vclk    (ce_vclk),
 	.pause      (pause),
+	.frame_lines(frame_lines),
 
 	.mem_addr   (mem_addr),
 	.mem_baddr  (mem_baddr),
@@ -621,6 +665,7 @@ tunit_dma dma
 	.clk         (clk),
 	.reset       (cpu_reset),
 	.big_rom     (big_rom),
+	.fast        (dma_fast),
 
 	.reg_wr      (dma_reg_wr),
 	.reg_idx     (wa[3:0]),
