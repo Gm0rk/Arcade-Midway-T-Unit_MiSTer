@@ -68,7 +68,9 @@ aside).
 - CMOS saved as NVRAM: settings, audits and high scores survive power-off
   (written to the SD card when the OSD is opened, if the game changed them,
   and with "Save Settings")
-- DIP switches in the OSD, taken from MAME, in alphabetical order
+- DIP switches in the OSD, taken from MAME, in alphabetical order; switches
+  a version does not use (its own DIP switch screen marks them unused) are
+  left out
 - Start, Coin, Test (service mode) and Pause (button or OSD) in every game;
   Service Credit and Tilt on the OSD's DIP Switches page (selecting the
   line adds a credit or slams the tilt switch), Service Mode in the OSD's
