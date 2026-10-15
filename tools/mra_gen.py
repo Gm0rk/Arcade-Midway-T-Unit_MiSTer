@@ -15,9 +15,9 @@ mra/_alternatives/_<Game>/. Each MRA carries
     own program ROM,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
-  - MAME's DIP switches for the set and the core's Service Credit and Tilt
-    (OSD DIP Switches page, in alphabetical order), button names, NVRAM
-    (16 KB).
+  - MAME's DIP switches for the set (less the ones the set does not use,
+    UNUSED_DIPS) and the core's Service Credit and Tilt (OSD DIP Switches
+    page, in alphabetical order), button names, NVRAM (16 KB).
 
 Merged sets: every <rom> names "set.zip|parent.zip" and every part carries
 its CRC, so Main_MiSTer finds files in a merged or split zip.
@@ -122,6 +122,26 @@ def dip_xml(d):
     return '\t\t<dip bits="%s" name="%s" ids="%s" values="%s"/>' % (
         bit_attr, escape(d.name), escape(ids), ','.join(map(str, vals)))
 
+# MAME's DIP switches that a set does not use: its own DIP switch screen
+# (diagnostics, DIP Switch Test) marks the switch UNUSED and setting it
+# changes nothing. They are left off the OSD; the bit keeps MAME's default.
+#   - MK (all three sets): MAME's Skip Post Test (bit 8); toggling it does
+#     not change the power-up either.
+#   - MK2 L1.1 and L1.4: Bill Validator, Powerup Test, Circuit Boards (bits
+#     10, 9, 8); L2.0 and L2.1: Powerup Test, Circuit Boards. L3.0 and later
+#     use all three.
+#   - NBA Jam rev 2.00, rev 1.00 and both prototypes: Players, Video Clips,
+#     Powerup Test (bits 7, 5, 1); their power-up ROM test runs whatever
+#     bit 1 says. Rev 3.01 uses all three.
+_MK2_OLD = ['Bill Validator', 'Powerup Test', 'Circuit Boards']
+_NJ_OLD = ['Players', 'Video Clips', 'Powerup Test']
+UNUSED_DIPS = {
+    'mk': ['Skip Post Test'], 'mkr4': ['Skip Post Test'], 'mktturbo': ['Skip Post Test'],
+    'mk2r11': _MK2_OLD, 'mk2r14': _MK2_OLD,
+    'mk2r20': ['Powerup Test', 'Circuit Boards'], 'mk2r21': ['Powerup Test', 'Circuit Boards'],
+    'nbajamr2': _NJ_OLD, 'nbajamr1': _NJ_OLD, 'nbajamp2': _NJ_OLD, 'nbajamp1': _NJ_OLD,
+}
+
 # The core's own lines of the DIP Switches page: switches bits 16 and 17
 # (the game's DIP switches are 0-15). The top level adds a service credit or
 # slams the tilt switch each time the bit flips, so both settings read the
@@ -198,6 +218,11 @@ def main():
         cat, players, bnames, bdef = GAME_INFO[gid]
         top = parents[g.parent] if g.parent else g
         dips = [d for d in inputs[g.inputs]['DSW'] if d.name != 'Unused']
+        unused = UNUSED_DIPS.get(g.name, [])
+        missing = set(unused) - {d.name for d in dips}
+        if missing:
+            raise ValueError('%s: UNUSED_DIPS names not among its DIP switches: %s' % (g.name, sorted(missing)))
+        dips = [d for d in dips if d.name not in unused]
         zipattr = '%s.zip|%s.zip' % (g.name, g.parent) if g.parent else '%s.zip' % g.name
 
         st = L.streams(g.romset)
