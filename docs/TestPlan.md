@@ -39,7 +39,7 @@ II).
 | C7 | Pause button, and "Pause when OSD is open" On and Off | The game freezes and resumes with sound; with the option Off it keeps running behind the OSD | |
 | C8 | OSD Reset, then Reset and close OSD | Both restart the game from its start-up screens; the first leaves the OSD open, the second closes it | |
 | C9 | Service Mode (OSD main menu) On, then Off | The game's diagnostics open, and the game returns when Off | |
-| C10 | DIP Switches page: Service Credit, then Tilt (select each line, close the OSD) | The switches are in alphabetical order with Service Credit and Tilt among them; each select adds one credit / the game registers the tilt (message or tilt count in its audits); loading the game again adds neither | |
+| C10 | DIP Switches page: Service Credit, then Tilt (select each line, close the OSD) | The switches are in alphabetical order with Service Credit and Tilt among them, and none that the game's own DIP switch screen calls unused; each select adds one credit / the game registers the tilt (message or tilt count in its audits); loading the game again adds neither | |
 | C11 | Leave the attract mode running 30 minutes | No lockup or graphics corruption; sound stays at the right speed and in step with the picture | |
 | C12 | Controller mapping and a second controller | Every button maps in the OSD's button definition; a second controller plays P2 | |
 | C13 | OSD messages | A message appears about 2 seconds, only once the OSD is closed (for example after setting a finishing move) | |
