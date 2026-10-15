@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat (rev 4.0 T-Unit 02/11/93)</name>
-	<mratimestamp>20261011</mratimestamp>
+	<mratimestamp>20261015</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mkr4</setname>
 	<year>1992</year>
@@ -17,7 +17,6 @@
 		<dip bits="1" name="Counters" ids="One,Two" values="1,0"/>
 		<dip bits="13" name="Low Blows" ids="Off,On"/>
 		<dip bits="16" name="Service Credit" ids="Add credit,Add credit"/>
-		<dip bits="8" name="Skip Post Test" ids="Off,On" values="1,0"/>
 		<dip bits="0" name="Test Switch" ids="Off,On" values="1,0"/>
 		<dip bits="17" name="Tilt" ids="Slam tilt,Slam tilt"/>
 		<dip bits="15" name="Violence" ids="Off,On"/>
