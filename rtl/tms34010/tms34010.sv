@@ -830,7 +830,8 @@ always @(posedge clk) if (ce) begin
 			end
 			else begin
 				line_row <= dpyadr_vis[15:4];
-				line_col <= {dpyadr_vis[6:2], 4'd0, 5'd0} | ioreg[R_DPYTAP][13:0];
+				// MAME get_display_params: coladdr = ((dpyadr & 0x7c) << 4) | DPYTAP
+				line_col <= {3'd0, dpyadr_vis[6:2], 6'd0} | ioreg[R_DPYTAP][13:0];
 				if (({6'd0, vcnt_new} >= ioreg[R_VEBLNK]) && ({6'd0, vcnt_new} < ioreg[R_VSBLNK])) begin
 					// step to the next display line by DUDATE
 					if (dpyadr_cur[1:0] == 2'b00)
@@ -842,8 +843,12 @@ always @(posedge clk) if (ce) begin
 		end
 
 		// ---- sequencer side effects ----
-		if (seq_set_intpend)
-			ioreg[R_INTPEND] <= ioreg[R_INTPEND] | seq_intpend_or;
+		// bit by bit, as MAME's IOREG(REG_INTPEND) |= ...: a whole-register
+		// write here would undo the display interrupt the line wrap above
+		// sets in the same cycle
+		for (k = 0; k < 16; k = k + 1)
+			if (seq_set_intpend && seq_intpend_or[k])
+				ioreg[R_INTPEND][k] <= 1'b1;
 		if (seq_nmi_ack)
 			ioreg[R_HSTCTLH][8] <= 1'b0;
 
