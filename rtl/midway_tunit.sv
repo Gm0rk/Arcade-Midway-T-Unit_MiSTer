@@ -72,7 +72,7 @@ module midway_tunit
 	input     [223:0] pt_addr,
 	input     [127:0] pt_data,
 	input       [7:0] pt_en,
-	input             pt_fetch,      // the patches apply to instruction fetches only (MK)
+	input       [7:0] pt_fetch,      // entry applies to instruction fetches only (program code)
 
 	// sound board
 	output reg        snd_wr,        // one pulse per write of the sound data word
@@ -267,6 +267,7 @@ wire [11:0] line_row;
 wire [13:0] line_col;
 wire        dma_irq;
 wire [31:0] cpu_pc;
+wire [31:0] cpu_st;
 wire        cpu_retire;
 
 tms34010 cpu
@@ -307,7 +308,7 @@ tms34010 cpu
 	.line_col   (line_col),
 
 	.dbg_pc     (cpu_pc),
-	.dbg_st     (),
+	.dbg_st     (cpu_st),
 	.dbg_retire (cpu_retire),
 	.dbg_cycles ()
 );
@@ -344,12 +345,14 @@ reg  [27:0] b_addr;
 reg  [21:3] b_baddr;
 reg  [15:0] b_wdata;
 reg  [31:4] b_pc;                // the CPU's PC (word address) with b_addr
+reg         b_ie;                // and its interrupt enable (ST bit 21)
 always @(posedge clk) begin
 	b_rd    <= mem_rd;
 	b_wr    <= mem_wr;
 	b_srt   <= mem_srt;
 	b_addr  <= mem_addr;
 	b_pc    <= cpu_pc[31:4];
+	b_ie    <= cpu_st[21];
 	b_baddr <= mem_baddr[21:3];
 	b_wdata <= mem_wdata;
 	b_stale <= cpu_ce & mem_ack;
@@ -371,11 +374,16 @@ wire [27:0] wa = b_addr;
 // state machine's acknowledge for that address (which is decoded from the
 // same copy), and stays valid for as long as the CPU holds the request.
 //
-// With pt_fetch (MK: Reptile's options, all program instructions) a patch
-// applies only when the CPU fetches the word as code: the CPU's PC is the
-// address of the word it fetches, opcode and immediate words alike (b_pc is
-// registered with b_addr), so data reads of the program ROM (a ROM
-// checksum) still see the original.
+// An entry marked pt_fetch (a program ROM patch: an instruction or one of
+// its parameter words) applies only when the CPU fetches the word as code:
+// the CPU's PC is the address of the word it fetches, opcode and immediate
+// words alike (b_pc is registered with b_addr), so data reads of the
+// program ROM (the games' power-up and diagnostics ROM tests) still see the
+// original. A main RAM entry (a game variable) applies only while the CPU
+// has interrupts enabled: the games read these variables from their
+// processes (all reads seen in MAME: ST.IE 1), while the RAM tests (NBA Jam
+// 2.00's at every power-up, the diagnostics') run with interrupts off and
+// so read back what they wrote.
 //----------------------------------------------------------------------------
 
 reg         pt_hit;
@@ -384,7 +392,8 @@ integer     pt_i;
 always @(posedge clk) begin
 	pt_hit <= 1'b0;
 	for (pt_i = 0; pt_i < 8; pt_i = pt_i + 1)
-		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28] && (!pt_fetch || b_pc == wa)) begin
+		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28] &&
+		    (pt_fetch[pt_i] ? (b_pc == wa) : ((wa[27:18] != 10'h004) || b_ie))) begin   // 0x004: main RAM
 			pt_hit <= 1'b1;
 			pt_q   <= pt_data[16 * pt_i +: 16];
 		end
@@ -551,20 +560,18 @@ end
 //----------------------------------------------------------------------------
 
 reg  [33:0] wq [0:3];                   // {word address, data}
-reg   [1:0] wq_rd, wq_wr;
-reg   [2:0] wq_n;
+reg   [1:0] wq_rd = 2'd0, wq_wr = 2'd0;
+reg   [2:0] wq_n = 3'd0;
 reg         wq_push;
 reg  [33:0] wq_in;
 wire        wq_full  = (wq_n == 3'd4);
 wire        wq_idle  = (wq_n == 3'd0) && (ram_wr_req == ram_wr_ack);
 
+// The queue is not reset: the CPU cannot push while in reset, so it only
+// drains. (Resetting it threw away the RAM clear's last writes, which end
+// while the board is still held in reset after a ROM load.)
 always @(posedge clk) begin
-	if (cpu_reset && !clr_busy) begin
-		wq_rd <= 2'd0;
-		wq_wr <= 2'd0;
-		wq_n  <= 3'd0;
-	end
-	else begin
+	begin
 		// pop into the SDRAM write port when it is free
 		if (wq_n != 3'd0 && ram_wr_req == ram_wr_ack) begin
 			ram_wr_addr <= RAM_BASE[24:1] + {6'd0, wq[wq_rd][33:16]};
@@ -875,7 +882,7 @@ wire        req = (b_rd | b_wr) & ~mem_ack & ~b_stale;
 always @(*) begin
 	wq_push = clr_push;
 	wq_in   = {clr_addr - 18'd1, 16'h0000};   // clr_addr has already moved on
-	if (bstate == S_IDLE && req && !c_clr && !b_srt && b_wr && sel_ram && !sel_prot && !wq_full && !clr_busy) begin
+	if (bstate == S_IDLE && req && !c_clr && !b_srt && b_wr && sel_ram && !sel_prot && !wq_full && !clr_busy && !clr_push) begin
 		wq_push = 1'b1;
 		wq_in   = {wa[17:0], b_wdata};
 	end
