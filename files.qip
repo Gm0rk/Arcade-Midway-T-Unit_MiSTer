@@ -13,7 +13,6 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/williams_adpcm.sv
 set_global_assignment -name VERILOG_FILE rtl/mc6809/mc6809is.v
 set_global_assignment -name QIP_FILE rtl/jt51/jt51.qip
 set_global_assignment -name QIP_FILE rtl/jt6295/jt6295.qip
-set_global_assignment -name SYSTEMVERILOG_FILE rtl/dcs/dcs_mem.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/dcs/adsp2105.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/tunit_dcs.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sdram.sv
