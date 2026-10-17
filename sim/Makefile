@@ -19,7 +19,7 @@ SRC = altsyncram.v \
       $(RTL)/tms34010/tms34010_gfx.sv $(RTL)/tms34010/tms34010.sv \
       $(RTL)/tunit_dma.sv $(RTL)/tunit_vram.sv $(RTL)/tunit_video.sv $(RTL)/midway_tunit.sv $(RTL)/tunit_secrets.sv \
       $(RTL)/sound/williams_adpcm.sv $(RTL)/mc6809/mc6809is.v \
-      $(RTL)/dcs/dcs_mem.sv $(RTL)/dcs/adsp2105.sv $(RTL)/sound/tunit_dcs.sv \
+      $(RTL)/dcs/adsp2105.sv $(RTL)/sound/tunit_dcs.sv \
       $(wildcard $(RTL)/jt51/*.v) $(filter-out $(RTL)/jt6295/jt12_%,$(wildcard $(RTL)/jt6295/*.v)) \
       $(RTL)/jt6295/jt12_comb.v $(RTL)/jt6295/jt12_interpol.v \
       $(RTL)/sdram.sv sdram_model.sv sim_top.sv
@@ -27,7 +27,7 @@ SRC = altsyncram.v \
 VFLAGS = --cc --exe --build -j 2 -O3 $(THREADS) --x-assign fast --x-initial fast --noassert \
          -Wno-fatal -Wno-WIDTH -Wno-CASEINCOMPLETE -Wno-UNOPTFLAT -Wno-TIMESCALEMOD \
          -Wno-MULTIDRIVEN -Wno-SYNCASYNCNET -Wno-BLKANDNBLK \
-         -DSDRAM_SIM -DKI_DCS_SIMULATION -I$(RTL) -I$(RTL)/tms34010 -I$(RTL)/jt51 -I$(RTL)/jt6295 \
+         -DSDRAM_SIM -I$(RTL) -I$(RTL)/tms34010 -I$(RTL)/jt51 -I$(RTL)/jt6295 \
          --top-module sim_top -o sim_tunit \
          -CFLAGS "-O2 -march=native" 
 
