@@ -27,10 +27,11 @@
 //    flags of all four players (big heads, interceptions, quick hands, max
 //    power, baby size, shot percentage, no computer assistance) and the
 //    counter checks of power-up defense, goaltending and huge heads. MK:
-//    Reptile's fight, the moon silhouettes and his hints (program
-//    instructions, which the board applies to instruction fetches only). The
-//    board compares every CPU read with the table (midway_tunit.sv, "Read
-//    patches").
+//    Reptile's fight, the moon silhouettes and his hints. The board compares
+//    every CPU read with the table (midway_tunit.sv, "Read patches"); a
+//    program ROM word (an instruction or its parameter, pt_fetch) only when
+//    the CPU fetches it as code, a main RAM variable only while the CPU has
+//    interrupts enabled, so the games' ROM and RAM tests see the original.
 //
 //  Table (16-bit words, little endian in the MRA; ROM index 1):
 //    0x000        game id (low byte; the top level keeps its own copy)
@@ -102,7 +103,8 @@ module tunit_secrets
 	// read patches for the board: 8 entries
 	output    [223:0] pt_addr,       // 8 x 28-bit word addresses
 	output    [127:0] pt_data,       // 8 x 16-bit values
-	output reg  [7:0] pt_en          // entry valid and its option on
+	output reg  [7:0] pt_en,         // entry valid and its option on
+	output reg  [7:0] pt_fetch       // entry is program code: applies to instruction fetches only
 );
 
 //----------------------------------------------------------------------------
@@ -183,6 +185,16 @@ generate
 	for (g = 0; g < 8; g = g + 1) begin : pt
 		assign pt_addr[28 * g +: 28] = p_addr[g];
 		assign pt_data[16 * g +: 16] = p_val[g];
+		// a patch of the program ROM (0xFF800000 up, or MK's mirror at
+		// 0x1F800000) is an instruction or one of its parameter words, so the
+		// board applies it only when the CPU fetches the word as code: the
+		// game's own reads of its ROM (power-up and diagnostics ROM tests)
+		// see the original. The code options' patches (4, 5: MK2 L1.x's
+		// switch tables) are data the game reads, and RAM patches are
+		// variables: those apply to every read.
+		always @(posedge clk)
+			pt_fetch[g] <= ((p_addr[g][27:19] == 9'h1FF) || (p_addr[g][27:19] == 9'h03F)) &&
+			               (p_opt[g] != 4'd4) && (p_opt[g] != 4'd5);
 		always @(posedge clk)
 			pt_en[g] <= (p_opt[g] == 4'd1  && opt[0]) ||
 			            (p_opt[g] == 4'd2  && opt[1]) ||
