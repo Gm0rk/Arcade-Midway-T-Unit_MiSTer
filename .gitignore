@@ -34,7 +34,6 @@ c5_pin_model_dump.txt
 *.spd
 *.bsf
 *~
-*.zip
 *.xml
 *_netlist
 *.cdf
@@ -48,4 +47,6 @@ sim/crt_test/obj_dir/
 sim/crt_test/out/
 sim/fmoves_test/obj_dir/
 sim/window_test/obj_dir/
+sim/vram_test/*.vvp
 sim/window_test/out/
+sim/dcs_test/obj_cpu/
