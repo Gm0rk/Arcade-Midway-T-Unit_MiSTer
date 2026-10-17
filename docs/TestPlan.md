@@ -16,7 +16,7 @@ it is in `config/nvram` on the SD card, named after the MRA.
 
 | Section | Tests | Passed | Done |
 |---|---|---|---|
-| [Core-wide](#core-wide) | 14 | 0 | No |
+| [Core-wide](#core-wide) | 16 | 0 | No |
 | [Mortal Kombat](#mortal-kombat) | 21 | 0 | No |
 | [Mortal Kombat II](#mortal-kombat-ii) | 18 | 0 | No |
 | [NBA Jam](#nba-jam) | 18 | 0 | No |
@@ -36,14 +36,16 @@ II).
 | C4 | Scandoubler Fx: HQ2x and the CRT scanline settings | The effect shows on the output | |
 | C5 | Analog 15 kHz output *(optional)* | Picture centred and stable on a CRT; CRT Adjust H-Size, H-Position and V-Shift change it; Auto-Width fits the width | |
 | C6 | CRT V-Size, PVM and Cabinet modes *(optional)* | Each step makes the picture taller (+) or shorter (-); V-Shift recentres it; no rolling | |
-| C7 | Pause button, and "Pause when OSD is open" On and Off | The game freezes and resumes with sound; with the option Off it keeps running behind the OSD | |
-| C8 | OSD Reset, then Reset and close OSD | Both restart the game from its start-up screens; the first leaves the OSD open, the second closes it | |
+| C7 | Pause button, and "Pause when OSD is open" On and Off | The game freezes and resumes with sound (the sound stops while paused, Mortal Kombat II too); with the option Off it keeps running behind the OSD | |
+| C8 | OSD Reset, then Reset and close OSD; also a few times in the middle of a fight or a game | Both restart the game from its start-up screens every time (never a black or frozen screen); the first leaves the OSD open, the second closes it | |
 | C9 | Service Mode (OSD main menu) On, then Off | The game's diagnostics open, and the game returns when Off | |
 | C10 | DIP Switches page: Service Credit, then Tilt (select each line, close the OSD) | The switches are in alphabetical order with Service Credit and Tilt among them, and none that the game's own DIP switch screen calls unused; each select adds one credit / the game registers the tilt (message or tilt count in its audits); loading the game again adds neither | |
-| C11 | Leave the attract mode running 30 minutes | No lockup or graphics corruption; sound stays at the right speed and in step with the picture | |
+| C11 | Leave the attract mode running 30 minutes | No lockup or graphics corruption; sound stays at the right speed and in step with the picture, and no note keeps droning when the music stops between scenes | |
 | C12 | Controller mapping and a second controller | Every button maps in the OSD's button definition; a second controller plays P2 | |
 | C13 | OSD messages | A message appears about 2 seconds, only once the OSD is closed (for example after setting a finishing move) | |
 | C14 | Video Timing (Video Settings): Native 54.7Hz, 57Hz, 60Hz, on HDMI and, if you have one, a 15 kHz CRT | The picture stays whole and stable at each, also when switched while a game runs; at 57 / 60 Hz the game runs a little faster while music and voices keep their pitch; on a CRT at 60 Hz, CRT V-Shift moves the picture without parts of it wrapping to the other edge | |
+| C15 | Change a game DIP switch on the OSD's DIP Switches page while the game runs | The game keeps running (no restart); the new setting shows after a reset | |
+| C16 | Turn on every Hidden Items / power-up option of a game, then run its RAM and ROM tests (NBA Jam rev 2.00 does them at every power-up; the others: diagnostics, CPU Board Test, or the Powerup Test DIP switch) | Every RAM and ROM chip passes (green); the options still work in a game afterwards | |
 
 ## Mortal Kombat
 
@@ -83,7 +85,7 @@ Main MRA: Mortal Kombat II (rev L3.1). See also the
 |---|---|---|---|
 | MK2-1 | First boot with no NVRAM file | Start-up checks run; after the factory-settings prompt the attract mode starts | |
 | MK2-2 | Attract mode, one full loop | Logos, story, bios and demo fights look right | |
-| MK2-3 | Attract and fight music (DCS) | Music at the right speed and pitch (compare with a recording of the arcade game), no breaks or crackle | |
+| MK2-3 | Attract and fight music, speech and effects (DCS) | Music at the right speed and pitch (compare with a recording of the arcade game or MAME), speech and hit sounds clean, no breaks, crackle or clicks between tunes | |
 | MK2-4 | Diagnostics (Test button): ROM/RAM, switch and sound tests | ROM and RAM pass; every control shows (Block 2 is not mapped); the sound test plays every channel | |
 | MK2-5 | Diagnostics: monitor patterns | Crosshatch and colour bars right | |
 | MK2-6 | Coin, 1-player start, fighter select and the tower | Select screen, portraits and battle tower right | |
