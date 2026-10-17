@@ -201,11 +201,14 @@ always @(posedge clk_sys) begin
 end
 
 // The NVRAM file follows the ROMs in a separate transfer. Hold the board in
-// reset for half a second after any download so the game never boots on an
-// empty CMOS that is about to be replaced.
+// reset for half a second after a download so the game never boots on an
+// empty CMOS that is about to be replaced. Not for the DIP switches (index
+// 254): Main_MiSTer sends them again each time one changes on the OSD, and
+// the game goes on (it reads most of them at power-up; Service Credit and
+// Tilt act at once).
 reg  [25:0] boot_hold;
 always @(posedge clk_sys) begin
-	if (ioctl_download)
+	if (ioctl_download && ioctl_index != 16'd254)
 		boot_hold <= 26'd48_000_000;
 	else if (boot_hold != 26'd0)
 		boot_hold <= boot_hold - 26'd1;
@@ -557,14 +560,15 @@ wire        core_hs, core_vs, core_hb, core_vb;
 reg        osd_vb_d;
 wire       osd_frame = core_vb & ~osd_vb_d & ~pause;   // start of a running frame
 
-reg        dsw_seen = 1'b0;      // the switches' second word has come once
+reg        dsw_seen = 1'b0;      // the switches' second word has come once since the ROMs
 wire       dsw_w1   = ioctl_wr && ioctl_index == 16'd254 && ioctl_addr[26:1] == 26'd1;
 wire       svc_flip  = dsw_w1 && dsw_seen && (ioctl_dout[0] ^ dsw[16]);
 wire       tilt_flip = dsw_w1 && dsw_seen && (ioctl_dout[1] ^ dsw[17]);
 
 always @(posedge clk_sys) begin
 	osd_vb_d <= core_vb;
-	if (dsw_w1) dsw_seen <= 1'b1;
+	if (rom_download)  dsw_seen <= 1'b0;     // a new game: its saved switches come next
+	else if (dsw_w1)   dsw_seen <= 1'b1;
 
 	if (reset) begin
 		svc_cnt  <= 4'd0;
@@ -610,6 +614,7 @@ wire [10:0] opt_avail;
 wire [223:0] pt_addr;
 wire [127:0] pt_data;
 wire   [7:0] pt_en;
+wire   [7:0] pt_fetch;           // entry is program code: instruction fetches only
 wire         cpu_rd;             // the board's completed CPU reads (a code's success)
 wire         cpu_wr;             // and writes (the finishing-move player follows the fight)
 wire  [27:0] cpu_wa;
@@ -650,7 +655,8 @@ tunit_secrets secrets
 
 	.pt_addr    (pt_addr),
 	.pt_data    (pt_data),
-	.pt_en      (pt_en)
+	.pt_en      (pt_en),
+	.pt_fetch   (pt_fetch)
 );
 
 //////////////////////////////////////////////////////////////////
@@ -664,7 +670,8 @@ tunit_secrets secrets
 // there in the attract mode). "Moon Silhouettes Always" (O[42]) and
 // "Reptile Hints Always" (O[43]) stay on. The patches are program
 // instructions: the board applies them to instruction fetches only
-// (pt_fetch), so the game's data reads of its ROM see the original.
+// (pt_fetch, as every program ROM patch), so the game's data reads of its
+// ROM see the original.
 //////////////////////////////////////////////////////////////////
 
 reg  [27:0] rep_flag = 28'd0;    // his flag's word address (0: none)
@@ -872,7 +879,7 @@ midway_tunit board
 	.pt_addr        (pt_addr),
 	.pt_data        (pt_data),
 	.pt_en          (pt_en),
-	.pt_fetch       (menu_mk),          // MK's patches (Reptile) are instructions
+	.pt_fetch       (pt_fetch),         // program code patches: instruction fetches only
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
@@ -980,6 +987,7 @@ tunit_dcs dcs
 (
 	.clk        (clk_sys),
 	.reset      (reset | ~cfg_dcs),
+	.pause      (pause),
 
 	.cmd_wr     (snd_wr & cfg_dcs),
 	.cmd_data   (snd_data),
