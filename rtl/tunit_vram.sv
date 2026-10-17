@@ -25,6 +25,16 @@
 //  accepts a beat, so the next beat's data is on DDRAM_DIN the following cycle
 //  and a burst streams at one beat per cycle.
 //
+//  Reset waits for the operation in progress: a DDR3 command once raised
+//  and a burst once started are carried through (an Avalon master may not
+//  withdraw them, and a write burst cut short can leave the HPS bridge in a
+//  state only an HPS reset clears). The reset then holds the sequencer idle.
+//  Each client resets its own request toggle to the acknowledge (the
+//  blitter, the CPU and shift-register side share this reset, and both ends
+//  copying each other would swap them and leave a request pending); only
+//  the display's acknowledge is resynced here, as its fetcher has its own
+//  reset.
+//
 //  Derived from the Y Unit core's yunit_vram (autoerase removed, 1 MB, the
 //  blitter's 256-beat window).
 //
@@ -119,7 +129,7 @@ localparam D_SRT  = 2'd1;
 localparam D_BLT  = 2'd2;
 localparam D_CPU  = 2'd3;
 
-reg   [2:0] vstate;
+reg   [2:0] vstate = 3'd0;        // V_IDLE
 reg   [1:0] op;                  // which client is being served
 reg   [7:0] beats;               // beats in this burst
 reg   [7:0] bi;                  // beat counter
@@ -131,6 +141,23 @@ reg   [7:0] next_beats;
 reg   [7:0] blt_base;            // first window beat of the current blitter burst
 
 wire        wr_accept = ddr_we & ~ddr_busy;
+
+// the acknowledges start equal to the requests' power-up value (each client
+// then resyncs its request to them in reset)
+initial begin
+	disp_ack = 1'b0;
+	srt_ack  = 1'b0;
+	blt_ack  = 1'b0;
+	cpu_ack  = 1'b0;
+end
+
+// reset only between operations (see the header); an operation still not
+// done after 4095 clocks of reset (the DDR3 port never answering) is dropped
+// so the reset can still take hold (the board's reset lasts at least 4096)
+reg  [11:0] rst_wait = 12'd0;
+always @(posedge clk) rst_wait <= (reset && vstate != V_IDLE && rst_wait != 12'hFFF) ? rst_wait + 12'd1 :
+                                  reset ? rst_wait : 12'd0;
+wire        rst_now   = reset && (vstate == V_IDLE || rst_wait == 12'hFFF);
 
 // source RAM address runs one beat ahead when a beat is accepted
 wire  [7:0] src_next = src_idx + (wr_accept ? 8'd1 : 8'd0);
@@ -150,14 +177,11 @@ always @(posedge clk) begin
 	lb_we <= 1'b0;
 	sb_we <= 1'b0;
 
-	if (reset) begin
+	if (rst_now) begin
 		vstate    <= V_IDLE;
 		ddr_rd    <= 1'b0;
 		ddr_we    <= 1'b0;
 		disp_ack  <= disp_req;
-		srt_ack   <= srt_req;
-		blt_ack   <= blt_req;
-		cpu_ack   <= cpu_req;
 	end
 	else begin
 		case (vstate)
