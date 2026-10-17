@@ -281,7 +281,14 @@ end
 // Peripherals
 //----------------------------------------------------------------------------
 
-reg        ym_wr;
+// A write to the YM2151 is held until the chip's register clock (fm_cen_p1,
+// 1.79 MHz): jt51 sets its busy flag only on that clock, and the games'
+// sound code polls busy between writes (its stop-all routine keys off the
+// eight channels back to back). A one-clock write left busy clear, the
+// writes came faster than the chip takes them and notes stayed on.
+reg        ym_wr;                // write pending until fm_cen_p1
+reg        ym_a0;
+reg  [7:0] ym_din;
 wire [7:0] ym_dout;
 wire signed [15:0] ym_l, ym_r;
 
@@ -293,8 +300,8 @@ jt51 ym
 	.cen_p1  (fm_cen_p1),
 	.cs_n    (~ym_wr),
 	.wr_n    (~ym_wr),
-	.a0      (cpu_addr[0]),
-	.din     (cpu_dout),
+	.a0      (ym_a0),
+	.din     (ym_din),
 	.dout    (ym_dout),
 	.ct1     (),
 	.ct2     (),
@@ -349,7 +356,7 @@ wire       din_take = !din_ok && mem_ready && (ecnt > A_SETTLE) &&
                       ({1'b0, ecnt} + {3'd0, D_SETTLE} >= {1'b0, cyc_end});
 
 always @(posedge clk) begin
-	ym_wr      <= 1'b0;
+	if (fm_cen_p1) ym_wr <= 1'b0;   // the chip has taken it (a new write below wins)
 	ram_we     <= 1'b0;
 	pram_we    <= 1'b0;
 	oki_wr     <= 1'b0;
@@ -359,6 +366,7 @@ always @(posedge clk) begin
 		rom_pending <= 1'b0;
 		mem_ready   <= 1'b1;
 		din_ok      <= 1'b0;
+		ym_wr       <= 1'b0;
 		rom_req     <= rom_ack;
 		bank        <= 3'd0;
 		oki_bank    <= 3'd0;
@@ -403,7 +411,11 @@ always @(posedge clk) begin
 					pram_we <= 1'b1;
 				else if (a_ram)
 					ram_we <= 1'b1;
-				if (a_ym)    ym_wr    <= 1'b1;
+				if (a_ym) begin
+					ym_wr  <= 1'b1;
+					ym_a0  <= cpu_addr[0];
+					ym_din <= cpu_dout;
+				end
 				if (a_oki)   oki_wr   <= 1'b1;
 				if (a_dac)   dac      <= cpu_dout;
 				if (a_bank)  bank     <= cpu_dout[2:0];
