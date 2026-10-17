@@ -203,6 +203,12 @@ def test_move(game, line, slot, mv, cid, p2_wins=False):
         s.frames(60)
         s.x(500 + n - 5, 500 + d)
         s.frames(80)
+    elif kind == T.K_MKPIT:
+        # MK's Pit sets no flag: the uppercut ends FINISH HIM at once (the
+        # round state leaves 3 within 2 frames in MAME)
+        s.frames(len(model(prog)) + 2)
+        s.var('state', 1)
+        s.frames(18)
     else:
         s.frames(len(model(prog)) + 20)
     frames, msgs = s.run()
@@ -277,6 +283,17 @@ def test_messages():
     s.finish(2)
     s.frames(50)
     check(msgs_of(s) == [MSG['SET'], MSG['MKPIT']], 'MK Pit message')
+    # MK's Pit missed: FINISH HIM runs on and ends later (its timer): not taken
+    fname, cid, moves = T.fighters('mk')[5]
+    s = Script('mk')
+    s.fight(cid, other_char(cid), 500, 530, 3)
+    s.pick(5, 1)
+    s.frames(2)
+    s.finish(2)
+    s.frames(len(model(moves[1][3])) + 40)
+    s.var('state', 1)
+    s.frames(20)
+    check(msgs_of(s) == [MSG['SET'], MSG['NOT_TAKEN']], 'MK Pit missed: not taken %s' % msgs_of(s))
     # too far, then the player steps in: the move plays
     s = Script('mk2')
     s.fight(1, 9, 500, 700, 2)
