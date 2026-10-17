@@ -73,13 +73,14 @@ module sim_top
 	output            dbg_blit_busy,
 	output            dbg_snd_wr,
 	output     [15:0] dbg_snd_data,
-	output            dbg_dcs_we,      // DCS: a sample drained into the output FIFO
+	output            dbg_dcs_we,      // DCS: a sample copied into the DAC queue
 	output     [15:0] dbg_dcs_smp,
-	output            dbg_dcs_slot,    // DCS: DAC slot pulse into the DSP
-	output            dbg_dcs_ce,      // DCS: DSP clock enable
-	output            dbg_dcs_valid,   // DCS: DSP retired an instruction
+	output            dbg_dcs_ce,      // DCS: board step
+	output            dbg_dcs_valid,   // DCS: the DSP retired an instruction (with ce)
 	output     [13:0] dbg_dcs_pc,
-	output     [15:0] dbg_dcs_slotctr,
+	output     [31:0] dbg_dcs_cyc,     // DCS: 10 MHz cycles
+	output     [15:0] dbg_dcs_debt,
+	output            dbg_dcs_irq,     // DCS: the DSP took an interrupt (with ce)
 	output            dbg_wr,
 	output            dbg_rd,
 	output     [27:0] dbg_wa,
@@ -108,13 +109,14 @@ assign audio = dcs ? dcs_audio : adpcm_audio;
 
 assign dbg_snd_wr   = snd_wr;
 assign dbg_snd_data = snd_data;
-assign dbg_dcs_we   = dcs_board.dac_we;
-assign dbg_dcs_smp  = dcs_board.dac_sample;
-assign dbg_dcs_slot = dcs_board.dac_slot;
-assign dbg_dcs_ce   = dcs_board.dcs_ce;
-assign dbg_dcs_valid = dcs_board.dsp.o_valid;
-assign dbg_dcs_pc   = dcs_board.dsp.o_ppc;
-assign dbg_dcs_slotctr = dcs_board.dsp.dac_slot_ctr;
+assign dbg_dcs_we    = dcs_board.board.f_push & dcs_board.board.ce;
+assign dbg_dcs_smp   = dcs_board.board.f_pd;
+assign dbg_dcs_ce    = dcs_board.board.ce;
+assign dbg_dcs_valid = dcs_board.board.cpu_retire & dcs_board.board.ce;
+assign dbg_dcs_pc    = dcs_board.board.cpu_ppc;
+assign dbg_dcs_cyc   = dcs_board.board.cyc;
+assign dbg_dcs_debt  = dcs_board.board.debt;
+assign dbg_dcs_irq   = dcs_board.board.cpu_irq & dcs_board.board.ce;
 
 // secrets, as the top level: frames counted at the start of each running
 // vertical blank; a playing code replaces IN0 and holds its start buttons
@@ -124,6 +126,7 @@ wire  [1:0] code_start;
 wire [223:0] pt_addr;
 wire [127:0] pt_data;
 wire   [7:0] pt_en;
+wire   [7:0] pt_fetch;
 reg         vb_d;
 always @(posedge clk) vb_d <= vid_vb;
 
@@ -145,7 +148,8 @@ tunit_secrets secrets
 	.code_start (code_start),
 	.pt_addr    (pt_addr),
 	.pt_data    (pt_data),
-	.pt_en      (pt_en)
+	.pt_en      (pt_en),
+	.pt_fetch   (pt_fetch)
 );
 
 wire [63:0] ports = {in_ports[63:22],
@@ -175,7 +179,7 @@ midway_tunit board
 	.pt_addr        (pt_addr),
 	.pt_data        (pt_data),
 	.pt_en          (pt_en),
-	.pt_fetch       (prot_id == 3'd1),  // MK (the top level's menu_mk): patches on instruction fetches only
+	.pt_fetch       (pt_fetch),         // program code patches: instruction fetches only
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
@@ -263,6 +267,7 @@ tunit_dcs dcs_board
 (
 	.clk        (clk),
 	.reset      (reset | ~dcs | snd_off),
+	.pause      (pause),
 
 	.cmd_wr     (snd_wr & dcs),
 	.cmd_data   (snd_data),

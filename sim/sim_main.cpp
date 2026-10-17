@@ -8,6 +8,8 @@
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
 //            [--info mk_rom1.bin] [--osd "500:0:1;..."]
 //            [--vtiming 0|1|2] [--lines lines.txt]
+//            [--dcslog samples.bin] [--dcstrace dsp.txt:A:B]
+//            [--dcsstate regs.bin:A:B]
 //
 //  --game      mk, mkturbo, mk2, nbajam, nbajamte, jdreddp (the top level's
 //              game table: protection, sound RAM window)
@@ -45,11 +47,15 @@
 //  --info      the ROM index 1 stream (game id and secrets table, written by
 //              tools/mra_check.py --out), loaded into the secrets module
 //              during reset
-//  --dcslog    write every sample the DCS DSP drains into its output FIFO,
-//              with the clock count (DSP real-time margin, stale buffers),
-//              and to <file>.slots one record per DAC slot: clock, DSP
-//              enable, the DSP's slot counter, instructions retired since
-//              the last slot, PC (drain period, how busy the DSP is)
+//  --dcslog    write every sample the DCS board copies into its DAC queue,
+//              with the clock count (64-bit clock, 16-bit sample)
+//  --dcstrace  file:A:B - each instruction the DCS DSP retires in frames
+//              A..B: the board's 10 MHz cycle count, the PC, the DSP's
+//              cycle debt (tools: compare with a MAME trace of :dcs:dcs)
+//  --dcsstate  file:A:B - DSP instructions A..B (counted from the start):
+//              PC and registers after each (sim/dcs_test/state_cmp.py)
+//  DCS_DUMP    (environment) file: the DCS board's external RAM, bits
+//              23-8, at the end of the run
 //  --osd       frame:item:length, ';' separated: OSD Secrets page items,
 //              timed like --press; item 0 and 1 are the triggers R[14] and
 //              R[15] (code 1 and 2), 2-12 the option slots 1-11 of the
@@ -244,7 +250,7 @@ struct Press { int frame, port, bit, len; };
 int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
-	std::string info, osds, dcslog, linespath;
+	std::string info, osds, dcslog, linespath, dcstrace, dcsstate;
 	int frames = 100, dsw = -1, vtiming = 0;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
 	Ddr ddr;
@@ -271,6 +277,8 @@ int main(int argc, char **argv) {
 		else if (a == "--info") info = next();
 		else if (a == "--osd") osds = next();
 		else if (a == "--dcslog") dcslog = next();
+		else if (a == "--dcstrace") dcstrace = next();
+		else if (a == "--dcsstate") dcsstate = next();
 		else if (a == "--vtiming") vtiming = atoi(next().c_str());
 		else if (a == "--lines") linespath = next();
 	}
@@ -378,9 +386,25 @@ int main(int argc, char **argv) {
 	uint64_t retired = 0;
 	double charged = 0;
 	FILE *lagf = lagpath.empty() ? nullptr : fopen(lagpath.c_str(), "w");
-	// --dcslog: every sample the DSP drains into the DCS output FIFO, as
+	// --dcslog: every sample the DCS board copies into its DAC queue, as
 	// (clock count, sample) pairs (64-bit, 16-bit, little endian)
 	FILE *dcsf = dcslog.empty() ? nullptr : fopen(dcslog.c_str(), "wb");
+	FILE *dcstf = nullptr;
+	int dt_a = 0, dt_b = 0;
+	FILE *dcssf = nullptr;
+	uint64_t ds_a = 0, ds_b = 0, dcs_n = 0;
+	if (!dcsstate.empty()) {
+		char fn[512] = {0};
+		unsigned long long a = 0, b = 0;
+		sscanf(dcsstate.c_str(), "%511[^:]:%llu:%llu", fn, &a, &b);
+		ds_a = a; ds_b = b;
+		dcssf = fopen(fn, "wb");
+	}
+	if (!dcstrace.empty()) {
+		char fn[512] = {0};
+		sscanf(dcstrace.c_str(), "%511[^:]:%d:%d", fn, &dt_a, &dt_b);
+		dcstf = fopen(fn, "w");
+	}
 	int lag_max = 0;                         // 34010 machine cycles of retired instructions
 	int last_report = -1;
 	while (fr.frame <= frames) {
@@ -485,25 +509,42 @@ int main(int argc, char **argv) {
 			uint64_t c = cyc; int16_t v = (int16_t)top->dbg_dcs_smp;
 			fwrite(&c, 8, 1, dcsf); fwrite(&v, 2, 1, dcsf);
 		}
-		// DSP diagnostics (DCS log file + ".slots"): per DAC slot pulse, the
-		// clock, whether the DSP's enable was up, its slot counter, the
-		// instructions retired since the last slot and the last PC
-		static FILE *slotf = nullptr;
-		static uint32_t dsp_instr = 0;
-		static bool slot_d = false;
-		if (dcsf && !slotf) slotf = fopen((dcslog + ".slots").c_str(), "wb");
-		if (slotf) {
-			if (top->dbg_dcs_valid && top->dbg_dcs_ce) dsp_instr++;
-			bool sl = top->dbg_dcs_slot;
-			if (sl && !slot_d) {
-				uint64_t c = cyc;
-				uint16_t ce = top->dbg_dcs_ce, ctr = top->dbg_dcs_slotctr, pc = top->dbg_dcs_pc;
-				fwrite(&c, 8, 1, slotf); fwrite(&ce, 2, 1, slotf); fwrite(&ctr, 2, 1, slotf);
-				fwrite(&dsp_instr, 4, 1, slotf); fwrite(&pc, 2, 1, slotf);
-				dsp_instr = 0;
+		// --dcstrace: each instruction the DCS DSP retires in frames A..B, with
+		// the board's 10 MHz cycle count and the DSP's cycle debt
+		if (dcstf && top->dbg_dcs_valid && fr.frame >= dt_a && fr.frame <= dt_b)
+			fprintf(dcstf, "%u %04X %d\n", top->dbg_dcs_cyc, top->dbg_dcs_pc, (int16_t)top->dbg_dcs_debt);
+		if (dcstf && top->dbg_dcs_irq && fr.frame >= dt_a && fr.frame <= dt_b)
+			fprintf(dcstf, "%u IRQ\n", top->dbg_dcs_cyc);
+		// --dcsstate: per retired instruction its PC and the registers after it
+		// (32 16-bit words, MAME's ADSP_LOG layout: pc, AX0 AX1 AY0 AY1 AR AF
+		// MX0 MX1 MY0 MY1 MR0 MR1 MR2 MF SI SE SB SR0 SR1, ASTAT PX CNTR,
+		// I0-I7, MSTAT)
+		if (dcssf && top->dbg_dcs_valid && dcs_n >= ds_a && dcs_n < ds_b) {
+			auto *rp = top->rootp;
+			int bank = rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__mstat & 1;
+			const auto &rf = bank ? rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__rf1
+			                      : rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__rf0;
+			auto f16 = [&](int k) { return (uint16_t)((rf[(k * 16) >> 5] >> ((k * 16) & 31)) & 0xffff); };
+			// rf order: AX0 AX1 MX0 MX1 AY0 AY1 MY0 MY1 SI SE AR MR0 MR1 MR2 SR0 SR1 AF MF SB
+			uint16_t r[32];
+			r[0] = top->dbg_dcs_pc;
+			r[1] = f16(0); r[2] = f16(1); r[3] = f16(4); r[4] = f16(5); r[5] = f16(10); r[6] = f16(16);
+			r[7] = f16(2); r[8] = f16(3); r[9] = f16(6); r[10] = f16(7); r[11] = f16(11); r[12] = f16(12);
+			r[13] = f16(13); r[14] = f16(17); r[15] = f16(8); r[16] = f16(9); r[17] = f16(18); r[18] = f16(14);
+			r[19] = f16(15);
+			r[20] = rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__astat;
+			r[21] = rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__px;
+			r[22] = rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__cntr;
+			const auto &ir = rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__ir;
+			for (int k = 0; k < 8; k++) {
+				uint32_t v = 0;
+				for (int b = 0; b < 15; b++) { int bit = k * 15 + b; v |= ((ir[bit >> 5] >> (bit & 31)) & 1) << b; }
+				r[23 + k] = v;
 			}
-			slot_d = sl;
+			r[31] = rp->sim_top->dcs_board__DOT__board__DOT__dsp__DOT__mstat;
+			fwrite(r, 2, 32, dcssf);
 		}
+		if (top->dbg_dcs_valid) dcs_n++;
 		if (debtlog) {
 			// the 34010's cycle debt (rtl/tms34010): below zero the CPU is behind
 			// MAME's instruction timing (memory slower than the cycle counts)
@@ -525,6 +566,17 @@ int main(int argc, char **argv) {
 	}
 	w.close();
 	if (dcsf) fclose(dcsf);
+	if (dcstf) fclose(dcstf);
+	if (dcssf) fclose(dcssf);
+	if (getenv("DCS_DUMP")) {
+		// the DCS board's external RAM (bits 23-8) at the end of the run
+		FILE *f = fopen(getenv("DCS_DUMP"), "wb");
+		for (int a = 0; a < 2048; a++) {
+			uint16_t v = top->rootp->sim_top->dcs_board__DOT__board__DOT__eph__DOT__mem[a];
+			fwrite(&v, 2, 1, f);
+		}
+		fclose(f);
+	}
 	if (tf) fclose(tf);
 	if (linesf) fclose(linesf);
 	if (wf) fclose(wf);
