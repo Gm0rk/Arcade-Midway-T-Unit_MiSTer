@@ -70,7 +70,7 @@ aside).
   and with "Save Settings")
 - DIP switches in the OSD, taken from MAME, in alphabetical order; switches
   a version does not use (its own DIP switch screen marks them unused) are
-  left out
+  left out. The games read most of them at power-up: reset after a change
 - Start, Coin, Test (service mode) and Pause (button or OSD) in every game;
   Service Credit and Tilt on the OSD's DIP Switches page (selecting the
   line adds a credit or slams the tilt switch), Service Mode in the OSD's
@@ -147,10 +147,9 @@ in `_Arcade/_alternatives`), the core in `_Arcade/cores`.
 - MAME T-Unit driver and video: Alex Pasadyn, Zsolt Vasvari, Ernesto Corvi,
   Aaron Giles (thanks to Kurt Mahan); MAME TMS34010 core, Williams ADPCM
   sound board, DCS sound board and ADSP-21xx core - the reference for this
-  core's behaviour
+  core's behaviour (the ADSP-2105 and the DCS board are ports of MAME's ADSP-21xx
+  core and DCS board, Aaron Giles)
 - Texas Instruments TMS34010 User's Guide
-- ADSP-2105 and DCS board: from the Killer Instinct MiSTer core
-  ([Arcade-KillerInstinct_MiSTer](https://github.com/MiSTer-devel/Arcade-KillerInstinct_MiSTer))
 - mc6809 core: Greg Miller (synchronous version by Sorgelig)
 - jt51 (YM2151) and jt6295 (OKI M6295): Jose Tejada (jotego)
 - SDRAM controller and MiSTer framework: Sorgelig and the MiSTer-devel team
@@ -162,5 +161,5 @@ in `_Arcade/_alternatives`), the core in `_Arcade/cores`.
 ## License
 
 GPL-3.0-or-later. Third-party modules keep their own licenses (see `rtl/mc6809`,
-`rtl/jt51`, `rtl/jt6295`, `rtl/crt_adjust`); the DCS files in `rtl/dcs`, from
-the Killer Instinct core, are GPL-3.0-only.
+`rtl/jt51`, `rtl/jt6295`, `rtl/crt_adjust`). The ADSP-2105 and DCS board ports
+follow MAME code under BSD-3-Clause.
