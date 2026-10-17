@@ -132,6 +132,7 @@ always @(posedge clk) begin
 end
 
 reg   [7:0] gen [0:1];                  // current generation of each bank
+reg   [8:0] rst_clr = 9'd0;             // row buffer entry being cleared during reset
 assign blt_q  = rb_q[63:0];
 assign blt_be = (rb_q[79:72] == gen[flush_bank]) ? rb_q[71:64] : 8'h00;
 
@@ -381,6 +382,13 @@ always @(posedge clk) begin
 	div_go <= 1'b0;
 
 	if (reset) begin
+		// the row buffer is cleared (generation 0, no bytes) while in reset
+		// (it lasts at least 4096 clocks), so no entry left from before can
+		// match the generations, which restart at 1
+		rb_we    <= 1'b1;
+		rb_waddr <= rst_clr;
+		rb_wdata <= 80'd0;
+		rst_clr  <= rst_clr + 9'd1;
 		for (i = 0; i < 18; i = i + 1)
 			r[i] <= 16'd0;
 		bstate        <= B_IDLE;
@@ -793,7 +801,8 @@ always @(posedge clk) begin
 			end
 
 			B_NEXT: begin
-				// a fill bank whose generation wrapped to 0 is cleared first
+				// a fill bank whose generation wrapped to 0 is cleared first,
+				// once: the clear sets it to 1
 				clr_a  <= 9'd0;
 				bstate <= (gen[fill_bank] == 8'd0) ? B_CLR : B_ROW;
 			end
@@ -803,8 +812,10 @@ always @(posedge clk) begin
 				rb_waddr <= {fill_bank, clr_a[7:0]};
 				rb_wdata <= 80'd0;
 				clr_a    <= clr_a + 9'd1;
-				if (clr_a[7:0] == 8'hFF)
+				if (clr_a[7:0] == 8'hFF) begin
+					gen[fill_bank] <= 8'd1;   // cleared entries (generation 0) stay invalid
 					bstate <= B_ROW;
+				end
 			end
 
 			B_DRAIN: if (!flush_busy && !fetching)
