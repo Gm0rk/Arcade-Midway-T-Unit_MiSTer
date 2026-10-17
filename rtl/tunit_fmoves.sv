@@ -95,6 +95,10 @@ localparam OP_END = 3'd0, OP_TAP = 3'd1, OP_PRESS = 3'd2, OP_RELEASE = 3'd3, OP_
            OP_READY = 3'd5, OP_WALK = 3'd6;
 localparam [12:0] GAP = 13'd3;            // frames up after a tap or a release
 localparam [7:0] CHECK_FRAMES = 8'd192;
+// MK's Pit sets no flag; it ends FINISH HIM at once (round state leaves 3
+// within 2 frames of the uppercut, MAME). The state also leaves 3 when
+// FINISH HIM runs out, so the Pit counts as taken only that soon.
+localparam [7:0] PIT_FRAMES = 8'd12;
 localparam [2:0] SETTLE = 3'd4;
 
 //----------------------------------------------------------------------------
@@ -262,7 +266,7 @@ reg   [9:0] ptr;
 reg  [15:0] stp;
 reg  [12:0] wait_n;
 reg   [3:0] tap_n;
-reg   [7:0] walk_n;
+reg   [7:0] walk_n = 8'd0;
 reg   [7:0] chk_n;
 reg   [8:0] held, tap;           // relative keys {BL, LK, HK, LP, HP, B, F, D, U}
 reg         pwho;                // whose controls
@@ -343,6 +347,7 @@ always @(posedge clk) begin
 						st     <= S_RUN;
 						ptr    <= m_start;
 						pwho   <= who;
+						walk_n <= 8'd0;          // a walk cut short last time starts over
 						wait_n <= 13'd0;
 						tap_n  <= 4'd0;
 						held   <= 9'd0;
@@ -469,7 +474,7 @@ always @(posedge clk) begin
 			S_CHECK: begin
 				if (taken)
 					st <= S_IDLE;
-				else if (chk_n == 8'd0) begin
+				else if (chk_n == 8'd0 || (m_kind == K_MKPIT && chk_n == CHECK_FRAMES - PIT_FRAMES)) begin
 					msg_req <= 1'b1;
 					msg     <= (m_kind == K_FRIEND || m_kind == K_BABY) ? MSG_NOT_TAKEN_FB : MSG_NOT_TAKEN;
 					st <= S_IDLE;
