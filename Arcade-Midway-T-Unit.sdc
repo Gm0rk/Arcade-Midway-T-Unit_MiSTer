@@ -26,11 +26,10 @@ set_multicycle_path -hold  -end 7 -from [get_registers {*|williams_adpcm:*|din_r
 set_multicycle_path -setup -end 2 -to [get_registers {*|jt51_pg:u_pg|keycode_II[*]}]
 set_multicycle_path -hold  -end 1 -to [get_registers {*|jt51_pg:u_pg|keycode_II[*]}]
 
-# DCS ADSP-2105 (rtl/dcs/adsp2105.sv, run by rtl/sound/tunit_dcs.sv): its
-# logic advances on core_ce, which only falls on every second clk_sys cycle,
-# and tunit_dcs lines up every input it samples on other clocks (DAC slots,
-# mailbox strobes, ROM ready, resets) with those same cycles. Every register
-# inside it therefore changes at most once every two clocks, as on the
-# Killer Instinct core where the same logic runs at 50 MHz.
-set_multicycle_path -setup -end 2 -from [get_registers {*|adsp2105:dsp|*}] -to [get_registers {*|adsp2105:dsp|*}]
-set_multicycle_path -hold  -end 1 -from [get_registers {*|adsp2105:dsp|*}] -to [get_registers {*|adsp2105:dsp|*}]
+# DCS board (rtl/sound/tunit_dcs.sv, module dcs_board, with the ADSP-2105 of
+# rtl/dcs/adsp2105.sv inside): every register and RAM in it changes only on
+# ce, every second clk_sys cycle (ph = 1), and its inputs from the 96 MHz side
+# are first captured on those edges, so paths from one of its registers to
+# another have two clocks. Paths into it and out of it keep the normal check.
+set_multicycle_path -setup -end 2 -from [get_registers {*|dcs_board:board|*}] -to [get_registers {*|dcs_board:board|*}]
+set_multicycle_path -hold  -end 1 -from [get_registers {*|dcs_board:board|*}] -to [get_registers {*|dcs_board:board|*}]
