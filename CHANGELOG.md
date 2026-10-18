@@ -4,6 +4,12 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 28 (2026-10-18)
+
+**Docs & tools**
+- `docs/ExtraContent.md`: everything the core adds, core-wide and per game, linked from the README.
+- Each game page has an Extra content overview taken from it. `tools/extra_content.py` copies the sections, so the pages and the list stay in step; it is run whenever a feature is added or removed.
+
 ## Build 27 (2026-10-17)
 
 **Docs & tools**
