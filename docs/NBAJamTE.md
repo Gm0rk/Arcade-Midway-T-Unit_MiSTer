@@ -28,6 +28,26 @@ they all load from `nbajamte.zip`.
 Up to four players: Turbo, Shoot / Block, Pass / Steal, plus Start, Coin,
 Test (service mode) and Pause.
 
+<!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
+## Extra content
+
+Ten extras on all nine versions: one hidden menu, seven cheat options, Tournament Mode, and a six-page Secret Player List window. Every version has all the cheat codes.
+
+| Feature | What it adds | OSD page |
+| --- | --- | --- |
+| Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics. Attract mode only | Cheat Codes & Hidden Items |
+| Baby Size Players | Small players, from the next game | Cheat Codes & Hidden Items |
+| Head Size | Big or huge heads for all players, from the next game | Cheat Codes & Hidden Items |
+| Max Power | The MAX POWER code for all players | Cheat Codes & Hidden Items |
+| No CPU Assistance | Turns off the computer assistance that keeps games close | Cheat Codes & Hidden Items |
+| Power-Up Goaltending | The POWERUP G.T. code for all players | Cheat Codes & Hidden Items |
+| Quick Hands | The QUICK HANDS code for all players | Cheat Codes & Hidden Items |
+| Shot Percentage | The shot percentage display | Cheat Codes & Hidden Items |
+| Tournament Mode | Pick it on Tonight's Match-Up: the core enters the code, and the game is played without power-ups, CPU assistance or other secrets ("TOURNAMENT MODE" at the tip-off) | Cheat Codes & Hidden Items |
+| Secret Player List window | Pages 1-4 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 5-6 list every cheat code as the players enter it. The game waits while it is shown | View Secret Players (main menu) |
+
+<!-- extra-content:end -->
+
 ## Secrets
 
 View Secret Players (OSD main menu: Off, Page 1, ...) shows a window over

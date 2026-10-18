@@ -7,6 +7,7 @@ board. The earlier Y Unit revisions are not part of this core.
 
 - [Versions](#versions)
 - [Controls](#controls)
+- [Extra content](#extra-content)
 - [Move List](#move-list)
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
@@ -29,6 +30,23 @@ Two players. The buttons, in the order MiSTer's Define joystick buttons asks
 for them: High Punch, Low Punch, High Kick, Low Kick, Block, Start, Coin, Test
 (service mode) and Pause. The game's second Block input (Block 2) is not
 mapped; Block does the same.
+
+<!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
+## Extra content
+
+Seven extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, three Reptile options, Finishing Moves, and a Move List window.
+
+| Feature | What it adds | OSD page |
+| --- | --- | --- |
+| EJB Menu | The programmers' menu: diagnostics, coin bookkeeping, game audits, a hidden Hello page, initials entry and every character's ending | Hidden Items |
+| EJB Menu (Copyright Screen) | The same menu, reached through the hidden "This is Mortal Kombat" copyright screen | Hidden Items |
+| Reptile Fight Next | Reptile fights after the next match you win in a 1-player game. Select again to cancel; used up when his fight starts | Hidden Items |
+| Moon Silhouettes Always | Every match on The Pit has the silhouettes crossing the moon, and with them the chance to win flawless, never Block, finish with a fatality, and meet Reptile | Hidden Items |
+| Reptile Hints Always | Reptile drops in with a hint before every round | Hidden Items |
+| Finishing Moves | Pick a fighter's fatality or The Pit (7 fighters). At the next FINISH HIM that fighter wins, the core takes the winner's controls and enters the move, waiting for the right distance. A message says when it is too far or too close, on the wrong stage, or not taken | Finishing Moves |
+| Move List window | Every fighter's special moves, fatality and the distance each needs, over the game's paused title screen: List 1 (Johnny Cage, Kano, Sub-Zero, Sonya), List 2 (Raiden, Liu Kang, Scorpion). Distances are given as Close, Sweep, Jump, Half screen, Full screen | Move List |
+
+<!-- extra-content:end -->
 
 ## Move List
 

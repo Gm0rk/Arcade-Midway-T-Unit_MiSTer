@@ -6,6 +6,7 @@ Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 
 - [Versions](#versions)
 - [Controls](#controls)
+- [Extra content](#extra-content)
 - [Move List](#move-list)
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
@@ -35,6 +36,25 @@ Two players. The buttons, in the order MiSTer's Define joystick buttons asks
 for them: High Punch, Low Punch, High Kick, Low Kick, Block, Start, Coin, Test
 (service mode) and Pause. The game's second Block input (Block 2) is not
 mapped; Block does the same.
+
+<!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
+## Extra content
+
+Nine extras across the 11 versions: seven hidden items, Finishing Moves for all 12 fighters, and a Move List window. Revision limits are noted per row.
+
+| Feature | What it adds | OSD page |
+| --- | --- | --- |
+| EJB Menu | The programmers' menu: diagnostics, coin bookkeeping, game audits, a hidden Hello page, initials entry and every character's ending. L1.1 and L1.4 have the menu but never check for its code, so the core connects it while the code plays | Hidden Items |
+| Hitboxes | A debug feature left in the game: every attack's hit box is drawn in green during fights | Hidden Items |
+| Security Screen | Each attract cycle starts with a hidden "This version passed the security test" screen | Hidden Items |
+| Pong at Battle 250 | Every two-player battle counts as battle 250: the VS screen shows "Kombat Zone: Back in Time" and both players face a game of Pong after the first round (L2.0 and later) | Hidden Items |
+| Jade Fight | In a one-player game the first round you win is followed by the Jade fight, which normally takes winning a round with Low Kicks only before the "?" on the tower (L2.0 and later) | Hidden Items |
+| Noob Saibot Fight | In a two-player battle the winner of the first round fights Noob Saibot, as after a 50-win streak (L3.0 and later) | Hidden Items |
+| Smoke Fight | Hold Down and press Start in any fight to fight Smoke next, instead of only on The Portal while "Toasty!" shows (L2.0 and later) | Hidden Items |
+| Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
+| Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too | Move List |
+
+<!-- extra-content:end -->
 
 ## Move List
 

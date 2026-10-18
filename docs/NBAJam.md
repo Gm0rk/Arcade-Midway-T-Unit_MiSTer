@@ -22,6 +22,24 @@ With a merged ROM set they all load from `nbajam.zip`.
 Up to four players: Turbo, Shoot / Block, Pass / Steal, plus Start, Coin,
 Test (service mode) and Pause.
 
+<!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
+## Extra content
+
+Eight extras across the five versions: one hidden menu, five cheat options, the tank game, and a Secret Player List window with 13 secret players and the cheat codes. Revision limits are noted per row.
+
+| Feature | What it adds | OSD page |
+| --- | --- | --- |
+| Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on 1.00, 2.00 and the prototypes). Attract mode only | Cheat Codes & Hidden Items |
+| Big Heads | Big heads for all players, from the next game. The only power-up in 1.00 and the prototypes | Cheat Codes & Hidden Items |
+| No CPU Assistance | Turns off the computer assistance that keeps games close (3.01) | Cheat Codes & Hidden Items |
+| Power-Up Defense | The POWERUP DEF code for all players (3.01 and 2.00) | Cheat Codes & Hidden Items |
+| Power-Up Interceptions | The POWERUP INT code for all players (3.01 and 2.00) | Cheat Codes & Hidden Items |
+| Shot Percentage | The shot percentage display (3.01 and 2.00) | Cheat Codes & Hidden Items |
+| Tank Game | Pick it on Tonight's Match-Up: the core holds the code until the game takes it, and the hidden 3D tank game ("YOU ARE DEAD!") is played instead of the tip-off (1.00, 2.00 and 3.01; 3.01 once a game) | Cheat Codes & Hidden Items |
+| Secret Player List window | Page 1 lists the 13 secret players with name, initials, birthday and versions; Page 2 lists every cheat code as the players enter it. The game waits while it is shown | View Secret Players (main menu) |
+
+<!-- extra-content:end -->
+
 ## Secrets
 
 View Secret Players (OSD main menu: Off, Page 1, ...) shows a window over
