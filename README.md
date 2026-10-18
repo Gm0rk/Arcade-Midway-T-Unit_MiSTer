@@ -9,7 +9,7 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 
 > **Status:** the core is currently undergoing testing. It can be compiled and is playable in its
 > current state, but bugs are expected. Issues and pull requests are not
-> accepted at the moment.
+> accepted at the moment. No "releases" until testing is complete.
 
 ## Contents
 
