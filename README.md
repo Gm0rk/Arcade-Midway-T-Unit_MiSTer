@@ -39,6 +39,8 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 Each game has its own page: its versions, controls, Secrets (for the NBA
 Jam games with the secret players) and, for the Mortal Kombat games, the
 Move List and Finishing Moves.
+Everything the core adds on top of the games is listed in
+[Extra content](docs/ExtraContent.md), core-wide and per game.
 
 | Game | Sound | Players | Status |
 |---|---|---|---|
