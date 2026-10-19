@@ -4,6 +4,19 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 31 (2026-10-19)
+
+**Fixed**
+- Loading a core: the background behind the "Sending ROM" box is now black. Build 30's fix did not reach it: the board sends no video while a ROM set loads, so the scaler kept the last frame it had (the MiSTer menu's coloured or patterned background). The core now sends its own black frames, with the board's timing, from the first byte of a download until the game starts.
+
+## Build 30 (2026-10-19)
+
+**Fixed**
+- Loading a core: the screen behind the "Sending ROM" box is always black. It sometimes showed a solid colour or a scrambled pattern (the last game's palette and picture, or power-up noise).
+
+**Docs & tools**
+- TestPlan.md: C17 (the black loading screen).
+
 ## Build 29 (2026-10-19)
 
 **Docs & tools**
