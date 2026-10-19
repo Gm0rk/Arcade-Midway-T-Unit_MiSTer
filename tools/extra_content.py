@@ -15,7 +15,8 @@
 #                                           (exit 1 if any)
 #
 # A page without the markers gets its section inserted after "## Controls"
-# (and a line in its table of contents, if it has one).
+# (and a line in its table of contents, if it has one). A page's line ends
+# (LF or CRLF) are kept.
 #
 # --------------------------------------------------------------------------
 
@@ -54,8 +55,8 @@ def block(body):
     return f"{START}\n## Extra content\n\n{body}\n\n{END}\n"
 
 
-def update(page, body):
-    text = page.read_text()
+def update(text, body):
+    """The page text (LF line ends) with its Extra content section in place."""
     new_block = block(body)
     if START in text:
         text = re.sub(re.escape(START) + r".*?" + re.escape(END) + r"\n",
@@ -63,7 +64,7 @@ def update(page, body):
     else:
         m = re.search(r"^## Controls\n.*?(?=^## )", text, flags=re.M | re.S)
         if not m:
-            raise SystemExit(f"{page.name}: no '## Controls' section")
+            raise SystemExit("no '## Controls' section")
         text = text[:m.end()] + new_block + "\n" + text[m.end():]
     if "- [Controls](#controls)" in text and TOC_LINE not in text:
         text = text.replace("- [Controls](#controls)\n",
@@ -79,11 +80,15 @@ def main():
         if heading not in secs:
             raise SystemExit(f"ExtraContent.md has no section '{heading}'")
         page = DOCS / name
-        new = update(page, secs[heading])
-        if new != page.read_text():
+        raw = page.read_bytes().decode("utf-8")
+        crlf = "\r\n" in raw                  # keep the page's line ends
+        new = update(raw.replace("\r\n", "\n"), secs[heading])
+        if crlf:
+            new = new.replace("\n", "\r\n")
+        if new != raw:
             stale.append(name)
             if not check:
-                page.write_text(new)
+                page.write_bytes(new.encode("utf-8"))
     if check:
         for name in stale:
             print(f"out of date: docs/{name}")
