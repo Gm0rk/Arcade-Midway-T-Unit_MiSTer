@@ -216,6 +216,14 @@ end
 
 wire reset = RESET | status[0] | buttons[1] | rom_download | ~rom_loaded | (boot_hold != 26'd0);
 
+// The picture is black while a ROM set loads (the "Sending ROM" box then sits
+// on black). Black from the first byte of a download (not the DIP switches'
+// index 254, re-sent while a game runs) until the board's half-second boot
+// hold ends, and from power-up until the first ROM set is complete. The
+// board's picture is gated to black and its stopped raster is replaced by
+// the core's own black frames (see "video while a ROM set loads" below).
+wire load_black = (ioctl_download && ioctl_index != 16'd254) | ~rom_loaded | (boot_hold != 26'd0);
+
 //////////////////////////////////////////////////////////////////
 // Game configuration
 //
@@ -541,8 +549,39 @@ wire [15:0] snd_status, snd_rdata;
 
 wire        ce_pix;
 wire  [7:0] brd_r, brd_g, brd_b;          // the board's picture
+wire        brd_hs, brd_vs, brd_hb, brd_vb;    // and its sync and blanking
 wire  [7:0] core_r, core_g, core_b;       // with the information window
 wire        core_hs, core_vs, core_hb, core_vb;
+
+// ---- video while a ROM set loads ----
+//
+// The board holds the 34010 in reset while a ROM set loads, and the 34010's
+// raster counters stop with it: the board sends no frames at all, and the
+// scaler goes on showing the last frame it had (the MiSTer menu's coloured
+// or patterned background behind the "Sending ROM" box). So while load_black
+// the core sends its own frames instead: black, with the timing the 34010
+// starts from (253 VCLKs of 2 dots x 289 lines, the same blanking and sync;
+// 15.81 kHz, 54.7 Hz), so the output stays locked and the scaler shows black.
+reg   [8:0] idl_x = 9'd0;       // dot in the line, 0-505
+reg   [8:0] idl_y = 9'd0;       // line in the frame, 0-288
+always @(posedge clk_sys) if (ce_pix) begin
+	if (idl_x == 9'd505) begin
+		idl_x <= 9'd0;
+		idl_y <= (idl_y == 9'd288) ? 9'd0 : idl_y + 9'd1;
+	end
+	else
+		idl_x <= idl_x + 9'd1;
+end
+
+wire idl_hs = (idl_x < 9'd36);                           // HESYNC 18 VCLKs
+wire idl_hb = (idl_x < 9'd90) | (idl_x >= 9'd500);       // HEBLNK 45, HSBLNK 250
+wire idl_vs = (idl_y < 9'd3);                            // VESYNC 3
+wire idl_vb = (idl_y < 9'd20) | (idl_y >= 9'd274);       // VEBLNK 20, VSBLNK 274
+
+assign core_hs = load_black ? idl_hs : brd_hs;
+assign core_vs = load_black ? idl_vs : brd_vs;
+assign core_hb = load_black ? idl_hb : brd_hb;
+assign core_vb = load_black ? idl_vb : brd_vb;
 
 //////////////////////////////////////////////////////////////////
 // Service credit and tilt (OSD DIP Switches page)
@@ -558,7 +597,7 @@ wire        core_hs, core_vs, core_hb, core_vb;
 //////////////////////////////////////////////////////////////////
 
 reg        osd_vb_d;
-wire       osd_frame = core_vb & ~osd_vb_d & ~pause;   // start of a running frame
+wire       osd_frame = brd_vb & ~osd_vb_d & ~pause;    // start of a running frame
 
 reg        dsw_seen = 1'b0;      // the switches' second word has come once since the ROMs
 wire       dsw_w1   = ioctl_wr && ioctl_index == 16'd254 && ioctl_addr[26:1] == 26'd1;
@@ -566,7 +605,7 @@ wire       svc_flip  = dsw_w1 && dsw_seen && (ioctl_dout[0] ^ dsw[16]);
 wire       tilt_flip = dsw_w1 && dsw_seen && (ioctl_dout[1] ^ dsw[17]);
 
 always @(posedge clk_sys) begin
-	osd_vb_d <= core_vb;
+	osd_vb_d <= brd_vb;
 	if (rom_download)  dsw_seen <= 1'b0;     // a new game: its saved switches come next
 	else if (dsw_w1)   dsw_seen <= 1'b1;
 
@@ -922,10 +961,10 @@ midway_tunit board
 	.vid_r          (brd_r),
 	.vid_g          (brd_g),
 	.vid_b          (brd_b),
-	.vid_hs         (core_hs),
-	.vid_vs         (core_vs),
-	.vid_hb         (core_hb),
-	.vid_vb         (core_vb),
+	.vid_hs         (brd_hs),
+	.vid_vs         (brd_vs),
+	.vid_hb         (brd_hb),
+	.vid_vb         (brd_vb),
 
 	.dbg_pc         (),
 	.dbg_retire     (),
@@ -1114,13 +1153,13 @@ tunit_window tunit_window
 (
 	.clk     (clk_sys),
 	.ce_pix  (ce_pix),
-	.enable  (splist_on | movelist_on),
+	.enable  ((splist_on | movelist_on) & ~load_black),
 	.page    (win_page),
 	.game    (win_game),
 
-	.r_in    (brd_r),
-	.g_in    (brd_g),
-	.b_in    (brd_b),
+	.r_in    (load_black ? 8'd0 : brd_r),
+	.g_in    (load_black ? 8'd0 : brd_g),
+	.b_in    (load_black ? 8'd0 : brd_b),
 	.hb_in   (core_hb),
 	.vb_in   (core_vb),
 
