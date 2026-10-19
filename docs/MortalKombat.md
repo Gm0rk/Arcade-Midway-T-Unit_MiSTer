@@ -5,6 +5,8 @@
 Mortal Kombat (Midway, 1992) in its T-Unit revisions, with the ADPCM sound
 board. The earlier Y Unit revisions are not part of this core.
 
+<img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat.png" width="400"> <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_2.png" width="400">
+
 - [Versions](#versions)
 - [Controls](#controls)
 - [Extra content](#extra-content)
