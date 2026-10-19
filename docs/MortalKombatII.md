@@ -4,6 +4,8 @@
 
 Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 
+<img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II.png" width="400"> <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II_2.png" width="400">
+
 - [Versions](#versions)
 - [Controls](#controls)
 - [Extra content](#extra-content)
