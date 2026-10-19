@@ -42,13 +42,13 @@ Move List and Finishing Moves.
 Everything the core adds on top of the games is listed in
 [Extra content](docs/ExtraContent.md), core-wide and per game.
 
-| Game | Sound | Players | Status |
-|---|---|---|---|
-| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat) |
-| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat-ii) |
-| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam) |
-| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam-tournament-edition) |
-| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | [Awaiting hardware test](docs/TestPlan.md#judge-dredd) |
+| Game | Sound | Players | Status | Title Screen | Gameplay |
+|---|---|---|---|---|---|
+| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | [Awaiting hardware test](docs/TestPlan.md#judge-dredd) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="300">
+| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_2.png" width="300">|
+| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat-ii) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II_2.png" width="300">
+| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_2.png" width="300">
+| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam-tournament-edition) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE_2.png" width="300">
 
 Verified on hardware: `[░░░░░░░░░░░░░░░░░░░░]` 0 / 5
 
