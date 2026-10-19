@@ -5,7 +5,7 @@
 Judge Dredd (Midway, 1992), the location-test version, on the T-Unit board
 with the ADPCM sound board.
 
-<img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="400" alt="High Impact Football title screen"> <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="400" alt="High Impact Football gameplay">
+<img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="400"> <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="400">
 
 ## Versions
 
