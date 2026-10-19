@@ -4,6 +4,12 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 29 (2026-10-19)
+
+**Docs & tools**
+- Title screen and gameplay screenshots in the README's games table (now in alphabetical order) and on each game page.
+- `tools/extra_content.py` keeps a page's line endings when it writes the Extra content sections.
+
 ## Build 28 (2026-10-18)
 
 **Docs & tools**
