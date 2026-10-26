@@ -3,7 +3,7 @@
 mra_gen.py - write the core's MRA files from MAME's T-Unit driver source
 
     python3 tools/mra_gen.py <mame>/src/mame/williams/midtunit.cpp mra/ \
-        [--zips DIR] [--date YYYYMMDD]
+        [--zips DIR] [--hbmame DIR] [--date YYYYMMDD]
 
 One MRA per MAME set: parents in mra/, clones in
 mra/_alternatives/_<Game>/. Each MRA carries
@@ -12,7 +12,9 @@ mra/_alternatives/_<Game>/. Each MRA carries
     Secrets and cheats, tools/tunit_secrets.py) and, for MK and MK2 at byte
     0x400, the fight variables the finishing-move player follows
     (tools/tunit_fmoves.py); both need --zips: they are found in the set's
-    own program ROM,
+    own program ROM. A set that hides the extras (hbmame_sets.py
+    hide_extras) has the game id with the hide flag instead: no table, and
+    the OSD shows no Move List, Finishing Moves or Hidden Items,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
   - MAME's DIP switches for the set (less the ones the set does not use,
@@ -21,6 +23,12 @@ mra/_alternatives/_<Game>/. Each MRA carries
 
 Merged sets: every <rom> names "set.zip|parent.zip" and every part carries
 its CRC, so Main_MiSTer finds files in a merged or split zip.
+
+HBMAME hacks (tools/hbmame_sets.py) are not in MAME's driver. With --hbmame
+(a folder holding their zips, named as in games/hbmame) each one is written
+too, as a clone of its MAME parent with its own files; its <rom> names
+"/hbmame/<zip>", the path Main_MiSTer takes below games/ (a name starting
+with '/' leaves out the 'mame' folder). Without --hbmame they are skipped.
 
 md5: with --zips (a folder holding the MAME zips), each <rom> gets the md5
 Main_MiSTer computes while loading: all part data in read order, repeats
@@ -42,6 +50,7 @@ from xml.sax.saxutils import escape
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import mame_src
+import hbmame_sets
 import tunit_layout as L
 import tunit_secrets
 import tunit_fmoves
@@ -201,6 +210,7 @@ def main():
     ap.add_argument('driver')
     ap.add_argument('outdir')
     ap.add_argument('--zips', help='folder with MAME zips (for md5)')
+    ap.add_argument('--hbmame', help='folder with the HBMAME hack zips (tools/hbmame_sets.py)')
     ap.add_argument('--date', default=datetime.date.today().strftime('%Y%m%d'))
     a = ap.parse_args()
 
@@ -212,8 +222,20 @@ def main():
             FILE_LENGTHS[crc] = info.file_size
 
     parents = {g.name: g for g in games}
+    hack_zips = {}
+    if a.hbmame:
+        hacks = hbmame_sets.hack_games(games)
+        hack_zips = hbmame_sets.hack_zips(a.hbmame)
+        for z in hack_zips.values():
+            for crc, (_, info) in z.by_crc.items():
+                FILE_LENGTHS.setdefault(crc, info.file_size)
+        games = games + hacks
+    else:
+        print('skipping the HBMAME hacks (%s): no --hbmame folder'
+              % ', '.join(h['name'] for h in hbmame_sets.HACKS), file=sys.stderr)
     written = []
     for g in games:
+        gz = hack_zips.get(g.name, zips)     # a hack reads its own zip
         gid = L.game_id(g)
         cat, players, bnames, bdef = GAME_INFO[gid]
         top = parents[g.parent] if g.parent else g
@@ -223,7 +245,10 @@ def main():
         if missing:
             raise ValueError('%s: UNUSED_DIPS names not among its DIP switches: %s' % (g.name, sorted(missing)))
         dips = [d for d in dips if d.name not in unused]
-        zipattr = '%s.zip|%s.zip' % (g.name, g.parent) if g.parent else '%s.zip' % g.name
+        if g.name in hack_zips:
+            zipattr = g.zipattr
+        else:
+            zipattr = '%s.zip|%s.zip' % (g.name, g.parent) if g.parent else '%s.zip' % g.name
 
         st = L.streams(g.romset)
         out = []
@@ -258,8 +283,17 @@ def main():
         out.append('\t</romstruct>')
 
         out.append('\t<rom index="1">')
-        if zips:
-            prog = mame_src.build_region(g.romset.regions['maincpu'], zips)
+        if getattr(g, 'hide_extras', False):
+            # the OSD shows no Move List, Finishing Moves or Hidden Items:
+            # the game id with the hide flag, no secrets table, no fight
+            # variables
+            table, notes = tunit_secrets.hidden_table(gid)
+            out.append('\t\t<!-- game id (rtl/tunit_secrets.sv): %s -->' % escape('; '.join(notes)))
+            out.append('\t\t<part>')
+            out += tunit_secrets.part_hex(table)
+            out.append('\t\t</part>')
+        elif gz:
+            prog = mame_src.build_region(g.romset.regions['maincpu'], gz)
             table, notes = tunit_secrets.build(gid, prog)
             out.append('\t\t<!-- game id and secrets table (rtl/tunit_secrets.sv): %s -->'
                        % escape('; '.join(notes)))
@@ -283,7 +317,7 @@ def main():
 
         for idx in (0, 3):
             pieces = st[idx][0]
-            md5 = L.render(pieces, zips)[1] if zips else 'None'
+            md5 = L.render(pieces, gz)[1] if gz else 'None'
             if idx == 0:
                 n_prog = len(L.interleaved_pieces(g.romset.regions['maincpu'], 2,
                                                   g.romset.regions['maincpu'].size)[0])
