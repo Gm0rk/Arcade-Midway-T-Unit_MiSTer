@@ -2,19 +2,26 @@
 """
 mra_check.py - load MRA files the way Main_MiSTer does and check them
 
-    python3 tools/mra_check.py --zips DIR [--regions DIR] [--out DIR] mra/...
+    python3 tools/mra_check.py --zips DIR [--hbmame DIR] [--regions DIR] [--out DIR] mra/...
 
 For every MRA: each <rom> is assembled from the zips with a port of
 Main_MiSTer's loader (support/arcade/mra_loader.cpp: rom_data, rom_file;
 <interleave> maps, part offset/length/repeat, inline hex data) and its md5
 is computed the same way (every byte read, in order, before interleaving).
-The md5 must match the MRA's.
+The md5 must match the MRA's. A <rom> whose zip is "/hbmame/<zip>" (an HBMAME
+hack, tools/hbmame_sets.py) is read from --hbmame's <zip> alone, as
+Main_MiSTer reads <games>/hbmame/<zip>; MAME has no region dump for such a
+set, so the region comparison is left out.
 
 With --regions (a folder of MAME region dumps written by
 tools/mame/region_dump.lua, one folder per set: <set>/<region>.bin), the
 loaded streams are also compared with what MAME itself loaded, region by
 region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
+
+ROM index 1's first word must hold only the game id and the hide flag (bit 8,
+the OSD hides the Move List, Finishing Moves and Hidden Items), and a set with
+the flag has no table after the format word.
 
 With --out, the loaded streams are written as <set>_rom0.bin / _rom3.bin
 for the simulator, and the game id / secrets table as <set>_rom1.bin
@@ -151,6 +158,7 @@ def region_checks(setname, streams, regions_dir):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--zips', required=True)
+    ap.add_argument('--hbmame', help='folder with the HBMAME hack zips (for "/hbmame/..." MRAs)')
     ap.add_argument('--regions')
     ap.add_argument('--out')
     ap.add_argument('mras', nargs='+')
@@ -162,8 +170,19 @@ def main():
         root = ET.parse(path).getroot()
         setname = root.findtext('setname')
         streams, msgs = {}, []
+        hb = None          # the HBMAME zip this MRA names, if any
+        for rom in root.findall('rom'):
+            zattr = rom.get('zip') or ''
+            if zattr.startswith('/hbmame/'):
+                if '|' in zattr or not a.hbmame:
+                    msgs.append('%s: needs --hbmame (one zip)' % zattr)
+                    continue
+                hb = hb or mame_src.RomZips([os.path.join(a.hbmame, zattr[len('/hbmame/'):])])
         for rom in root.findall('rom'):
             idx = int(rom.get('index'))
+            zips_rom = hb if (rom.get('zip') or '').startswith('/hbmame/') else zips
+            if zips_rom is None:
+                continue
             if idx == 1:
                 data = load_rom(rom, zips)[0]
                 streams[1] = data
@@ -173,20 +192,32 @@ def main():
                 continue
             if idx not in (0, 3):
                 continue
-            data, md5 = load_rom(rom, zips)
+            data, md5 = load_rom(rom, zips_rom)
             streams[idx] = data
             if md5 != rom.get('md5'):
                 msgs.append('rom %d md5 %s, MRA says %s' % (idx, md5, rom.get('md5')))
             if a.out:
                 os.makedirs(a.out, exist_ok=True)
                 open(os.path.join(a.out, '%s_rom%d.bin' % (setname, idx)), 'wb').write(data)
-        if a.regions:
+        if a.regions and hb is None:
             msgs += region_checks(setname, streams, a.regions)
+        # ROM index 1, word 0: the game id (bits 2:0) and, for a set that hides
+        # the OSD's Move List, Finishing Moves and Hidden Items, bit 8; that
+        # set's table is the two words (game id and format), nothing else
+        t = streams.get(1, b'')
+        hides = False
+        if len(t) >= 2:
+            w0 = t[0] | t[1] << 8
+            hides = bool(w0 & 0x100)
+            if w0 & ~0x107:
+                msgs.append('rom 1 word 0 is %04X: bits other than the game id and the hide flag' % w0)
+            if hides and len(t) != 4:
+                msgs.append('rom 1 hides the extras but is %d bytes, not the 4 of game id and format' % len(t))
         status = 'OK' if not msgs else 'FAIL'
         bad += bool(msgs)
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
                                                              len(streams.get(3, b'')), len(streams.get(1, b'')),
-                                                             '; '.join(msgs)))
+                                                             '; '.join(msgs + (['hides Move List, Finishing Moves, Hidden Items'] if hides else []))))
     sys.exit(1 if bad else 0)
 
 
