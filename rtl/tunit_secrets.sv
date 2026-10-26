@@ -34,7 +34,9 @@
 //    interrupts enabled, so the games' ROM and RAM tests see the original.
 //
 //  Table (16-bit words, little endian in the MRA; ROM index 1):
-//    0x000        game id (low byte; the top level keeps its own copy)
+//    0x000        game id (low byte; the top level keeps its own copy); bit 8:
+//                 the set hides the OSD's Move List, Finishing Moves and Hidden
+//                 items (the top level keeps it too; MK2 Plus)
 //    0x001        format, 1
 //    0x002-0x019  read patches, 8 x 3 words:
 //                   address[15:0], {option[3:0], address[27:16]}, value
