@@ -109,8 +109,11 @@ localparam CONF_STR = {
 // OSD menu mask bits (assigned in "Game configuration"): which secrets the
 // loaded game has; bits 8-11 the fighter picked on the Finishing Moves and
 // Move List pages; bits 12 and 13 NBA Jam and TE (their own Secrets lines,
-// rtl/tunit_secrets_osd.svh)
+// rtl/tunit_secrets_osd.svh). osd_ejb and osd_mk2 are menu_ejb and menu_mk2
+// less a set whose MRA hides the extras (hide_ext): they show or hide the
+// Move List, the Finishing Moves page and the Hidden Items page.
 wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te;
+wire        osd_ejb, osd_mk2;
 wire  [3:0] fm_line;
 wire        info_req;
 wire  [7:0] info;
@@ -145,7 +148,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({2'd0, menu_te, menu_nj, fm_line, menu_jd, menu_nba, menu_mk2, menu_mk, menu_ejb, menu_secrets, ~status[101], 1'b0}),
+	.status_menumask     ({2'd0, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], 1'b0}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -241,6 +244,7 @@ localparam G_JDREDDP  = 3'd5;    // Judge Dredd (location test)
 localparam L_MK = 2'd0, L_MK2 = 2'd1, L_NBA = 2'd2, L_JD = 2'd3;
 
 reg   [2:0] game_id;
+reg         hide_ext = 1'b0;    // the set hides the Move List, Finishing Moves and Hidden Items (index 1, word 0 bit 8)
 reg   [2:0] cfg_prot;
 reg         cfg_turbo;
 reg         cfg_dcs;
@@ -296,6 +300,8 @@ assign menu_nba     = (game_id == G_NBAJAM) || (game_id == G_NBAJAMTE);
 assign menu_nj      = (game_id == G_NBAJAM);
 assign menu_te      = (game_id == G_NBAJAMTE);
 assign menu_jd      = (game_id == G_JDREDDP);
+assign osd_ejb      = menu_ejb & ~hide_ext;
+assign osd_mk2      = menu_mk2 & ~hide_ext;
 
 //////////////////////////////////////////////////////////////////
 // Downloads: ROMs (index 0 and 3), game id and secrets table (1), NVRAM (2),
@@ -317,8 +323,10 @@ reg  [63:0] dsw;
 reg  [26:0] rom0_end;           // last byte address of the index 0 download
 
 always @(posedge clk_sys) begin
-	if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'd0)
-		game_id <= ioctl_dout[2:0];
+	if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'd0) begin
+		game_id  <= ioctl_dout[2:0];
+		hide_ext <= ioctl_dout[8];
+	end
 	if (ioctl_wr && ioctl_index == 16'd254 && ioctl_addr[26:3] == 24'd0)
 		dsw[{ioctl_addr[2:1], 4'b0000} +: 16] <= ioctl_dout;
 	if (ioctl_download && ioctl_index == 16'd0 && !rom_was_dl)
@@ -524,7 +532,7 @@ end
 wire [3:0] list_sel    = menu_nba ? {1'b0, status[67:65]} : status[64:61];
 wire [4:0] list_n      = menu_te ? WIN_NBAJAMTE_N : menu_nj ? WIN_NBAJAM_N : menu_mk2 ? WIN_MK2_N : WIN_MK_N;
 wire       list_valid  = list_sel != 4'd0 && {1'b0, list_sel} <= list_n;
-wire       movelist_on = menu_ejb & list_valid;
+wire       movelist_on = osd_ejb & list_valid;
 wire       splist_on   = menu_nba & list_valid;
 wire pause = pause_toggle | (OSD_STATUS & ~status[8]) | movelist_on | splist_on;
 
@@ -642,7 +650,8 @@ end
 
 wire  [1:0] te_head  = status[49:48];          // TE Head Size: Normal, Big, Huge
 reg         rep_arm  = 1'b0;                   // MK: Reptile Fight Next set (Reptile below)
-wire [10:0] sec_opt  = menu_mk2 ? {5'd0, status[21:16]} :
+wire [10:0] sec_opt  = hide_ext ? 11'd0 :
+                       menu_mk2 ? {5'd0, status[21:16]} :
                        menu_mk  ? {8'd0, status[43], status[42], rep_arm} :
                        menu_nj  ? {6'd0, status[53], status[52], status[51], status[50], status[48]} :
                        menu_te  ? {3'd0, status[53], status[52], status[50], status[51], status[55],
@@ -782,7 +791,7 @@ tunit_fmoves fmoves
 	.clk       (clk_sys),
 	.reset     (reset),
 	.game_mk   (menu_mk),
-	.game_mk2  (menu_mk2),
+	.game_mk2  (osd_mk2),
 
 	.dl_start  (secrets_dl & ~secrets_dl_d),
 	.dl_wr     (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr[26:7] == 20'h8),
