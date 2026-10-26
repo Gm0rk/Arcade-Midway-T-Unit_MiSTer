@@ -21,7 +21,7 @@ Beyond the arcade board itself, the core adds 12 core-wide features and a set of
 | Secrets pages | The hidden menus, screens and debug features the programmers left in each game, as OSD items. The core enters the control codes for you |
 | Information windows | Pages drawn over the game's dimmed title screen while the game waits: the Move List (Mortal Kombat games) and the Secret Player List (NBA Jam games) |
 | OSD messages | When the OSD closes, a message says whether a code was taken, what a set finishing move is waiting for, what an option just turned on does, or that the loaded version does not have it |
-| MRAs | 29 MRAs for the five games (5 parents, 24 alternatives), each carrying its own table of patches and code positions, built for MAME 0.289 |
+| MRAs | 30 MRAs for the five games (5 parents, 25 alternatives), each carrying its own table of patches and code positions, built for MAME 0.289. One is for a hack that is not in MAME, Mortal Kombat II Plus, whose OSD has no Move List, Finishing Moves or Hidden Items and whose zip goes in `games/hbmame` |
 
 ## Mortal Kombat
 
@@ -39,7 +39,7 @@ Seven extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, thr
 
 ## Mortal Kombat II
 
-Nine extras across the 11 versions: seven hidden items, Finishing Moves for all 12 fighters, and a Move List window. Revision limits are noted per row.
+Nine extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, and a Move List window. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has none of them: it changes the fighters, their moves and the code these extras are built on, so its OSD shows no Move List, Finishing Moves or Hidden Items.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -51,7 +51,7 @@ Nine extras across the 11 versions: seven hidden items, Finishing Moves for all 
 | Noob Saibot Fight | In a two-player battle the winner of the first round fights Noob Saibot, as after a 50-win streak (L3.0 and later) | Hidden Items |
 | Smoke Fight | Hold Down and press Start in any fight to fight Smoke next, instead of only on The Portal while "Toasty!" shows (L2.0 and later) | Hidden Items |
 | Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
-| Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too | Move List |
+| Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
 
 ## NBA Jam
 
