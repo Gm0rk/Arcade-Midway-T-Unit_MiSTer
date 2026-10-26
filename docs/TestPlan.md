@@ -2,11 +2,12 @@
 
 [Back to the core's README](../README.md)
 
-Hardware tests for the core. Run them with the newest core release and mark
+Hardware tests for the core, run on MiSTer hardware (not on an original
+T-Unit arcade PCB). Run them with the newest core release and mark
 each row **Pass** or **Fail** in the Result column (blank: not tested yet).
 A game counts as verified when every row of its section and every core-wide
-row passes; the core is done when all six sections pass. Rows marked
-*(optional)* need equipment not everyone has (a 15 kHz CRT, four
+row passes on the MiSTer; the core is done when all six sections pass. Rows
+marked *(optional)* need equipment not everyone has (a 15 kHz CRT, four
 controllers) and do not hold a game back.
 
 For a clean start, delete the game's NVRAM file before the first boot test:
@@ -18,7 +19,7 @@ it is in `config/nvram` on the SD card, named after the MRA.
 |---|---|---|---|
 | [Core-wide](#core-wide) | 17 | 0 | No |
 | [Mortal Kombat](#mortal-kombat) | 21 | 0 | No |
-| [Mortal Kombat II](#mortal-kombat-ii) | 18 | 0 | No |
+| [Mortal Kombat II](#mortal-kombat-ii) | 20 | 0 | No |
 | [NBA Jam](#nba-jam) | 18 | 0 | No |
 | [NBA Jam Tournament Edition](#nba-jam-tournament-edition) | 18 | 0 | No |
 | [Judge Dredd](#judge-dredd) | 13 | 0 | No |
@@ -102,6 +103,8 @@ Main MRA: Mortal Kombat II (rev L3.1). See also the
 | MK2-16 | Move List (OSD main menu): a few fighters (including Shang Tsung), then Off | The window shows the fighter's special and finishing moves with the distance in words (Close, Sweep, Jump, ...) over the dimmed MK II title, all readable; the game waits and goes on when Off; a few moves work as shown, a fatality at its distance | |
 | MK2-17 | Other versions: L3.2 and L3.1 European, L3.0, L2.1, L2.0, L1.4, L1.1 | Each boots to the attract mode and starts a game | |
 | MK2-18 | Hacks: L4.2, L9.1, Challenger | Each boots to the attract mode and starts a game | |
+| MK2-19 | Mortal Kombat II Plus (Beta 2, hack): put its complete `mk2.zip` in `games/hbmame` (MAME's `mk2.zip` stays in `games/mame`) and load its MRA from `_alternatives` | It boots to the attract mode and starts a game; play a few fights, including new fighters or moves if you know them: graphics and sound right (DCS music and speech clean), no lockup; its settings are kept apart from rev L3.1's (change one in Plus, load rev L3.1: unchanged) | |
+| MK2-20 | Mortal Kombat II Plus: open the OSD, then load rev L3.1 and open it again | On Plus the main menu has no Move List, Finishing Moves or Hidden Items, and Video Settings, DIP Switches, Service Mode, Pause when OSD is open and Reset work; on rev L3.1 all three are there | |
 
 ## NBA Jam
 
