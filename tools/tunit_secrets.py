@@ -613,6 +613,17 @@ def jd_codes(p, notes):
 # Table
 # --------------------------------------------------------------------------
 
+HIDE_EXTRAS = 0x100      # word 0, bit 8: the OSD hides the Move List, Finishing Moves and Hidden Items
+
+
+def hidden_table(gid):
+    """Table bytes and notes for a set that hides the secrets, finishing moves
+    and Move List (tools/hbmame_sets.py): the game id with HIDE_EXTRAS and the
+    format word, no patches, no codes."""
+    return (struct.pack('<2H', gid | HIDE_EXTRAS, FORMAT),
+            ['the OSD hides the Move List, Finishing Moves and Hidden Items for this set: no patches or codes'])
+
+
 def build(gid, prog_bytes):
     """Table bytes and notes for a set: game id gid, its maincpu region."""
     p = Prog(prog_bytes)
