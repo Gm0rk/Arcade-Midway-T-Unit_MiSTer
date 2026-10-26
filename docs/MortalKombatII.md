@@ -28,9 +28,18 @@ Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 | Mortal Kombat II (rev L4.2, hack) | mk2r42 |
 | Mortal Kombat II (rev L9.1, hack) | mk2r91 |
 | Mortal Kombat II Challenger (hack) | mk2chal |
+| Mortal Kombat II Plus (Beta 2, hack) | mk2p (HBMAME) |
 
 The first is in `_Arcade`, the others in `_Arcade/_alternatives/_Mortal Kombat II`.
-With a merged ROM set they all load from `mk2.zip`.
+With a merged ROM set they all load from `mk2.zip`, except Mortal Kombat II Plus.
+
+Mortal Kombat II Plus is a hack that is not in MAME; it comes from HBMAME. Its
+own complete `mk2.zip` (every file, including those that did not change from
+rev L3.1) goes in `games/hbmame`, while MAME's `mk2.zip` stays in `games/mame`
+for the other versions. The hack changes the fighters, their moves and the
+service menu. Its settings are kept apart from rev L3.1's. The core adds
+nothing of its own to it: the OSD has no Move List, Finishing Moves or Hidden
+Items, because the hack changes the moves and the code those are built on.
 
 ## Controls
 
@@ -42,7 +51,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Nine extras across the 11 versions: seven hidden items, Finishing Moves for all 12 fighters, and a Move List window. Revision limits are noted per row.
+Nine extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, and a Move List window. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has none of them: it changes the fighters, their moves and the code these extras are built on, so its OSD shows no Move List, Finishing Moves or Hidden Items.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -54,7 +63,7 @@ Nine extras across the 11 versions: seven hidden items, Finishing Moves for all 
 | Noob Saibot Fight | In a two-player battle the winner of the first round fights Noob Saibot, as after a 50-win streak (L3.0 and later) | Hidden Items |
 | Smoke Fight | Hold Down and press Start in any fight to fight Smoke next, instead of only on The Portal while "Toasty!" shows (L2.0 and later) | Hidden Items |
 | Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
-| Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too | Move List |
+| Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
 
 <!-- extra-content:end -->
 
@@ -71,7 +80,8 @@ Commands as the game reads them: F toward the opponent, B away. In
 (BL U U) LK, Block keeps the fighter from jumping on U and is let go
 before LK; (HP 1 s) means High Punch held for about a second, then let
 go; X+Y pressed together; "in air" during a jump. The list is the one of
-rev L3.1; other revisions and the hacks may differ.
+rev L3.1; other revisions and the hacks may differ. The OSD of Mortal Kombat
+II Plus has no Move List option.
 
 | Fighter | Move | Command |
 |---|---|---|
@@ -147,7 +157,8 @@ the EJB code again (three tries at most).
 | Smoke Fight | Hold Down and press Start during any fight to fight Smoke next ("You have found the passage from the Outworld to the Earth Realm"). Normally that only works on The Portal while the "Toasty!" man is on screen (rev L2.0 and later) |
 
 When the OSD closes, a message says what an option just turned on does, or
-that the loaded revision does not have it.
+that the loaded revision does not have it. Mortal Kombat II Plus has no Hidden
+Items page.
 
 ## Finishing Moves
 
@@ -165,6 +176,9 @@ out and it goes as soon as the distance fits. Messages also say when a stage
 move is set on another stage, when FINISH HIM ends before the move could
 start (the move stays set for the next one) and when the game did not take
 the move. A move is used once; "Clear the set move" drops a set move.
+
+Mortal Kombat II Plus has no Finishing Moves page: its moves differ from rev
+L3.1's, so the OSD leaves the page out.
 
 Commands as the game reads them: F toward the opponent, B away, U up, D
 down; HP / LP / HK / LK / BL High Punch, Low Punch, High Kick, Low Kick,
