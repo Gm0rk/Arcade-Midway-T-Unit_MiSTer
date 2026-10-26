@@ -44,17 +44,18 @@ Everything the core adds on top of the games is listed in
 
 | Game | Sound | Players | Status | Title Screen | Gameplay |
 |---|---|---|---|---|---|
-| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | [Awaiting hardware test](docs/TestPlan.md#judge-dredd) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="300">
-| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_2.png" width="300">|
-| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | [Awaiting hardware test](docs/TestPlan.md#mortal-kombat-ii) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II_2.png" width="300">
-| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_2.png" width="300">
-| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | [Awaiting hardware test](docs/TestPlan.md#nba-jam-tournament-edition) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE_2.png" width="300">
+| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | [Awaiting MiSTer hardware test](docs/TestPlan.md#judge-dredd) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="300">
+| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | [Awaiting MiSTer hardware test](docs/TestPlan.md#mortal-kombat) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_2.png" width="300">|
+| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | [Awaiting MiSTer hardware test](docs/TestPlan.md#mortal-kombat-ii) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II_2.png" width="300">
+| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | [Awaiting MiSTer hardware test](docs/TestPlan.md#nba-jam) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_2.png" width="300">
+| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | [Awaiting MiSTer hardware test](docs/TestPlan.md#nba-jam-tournament-edition) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE_2.png" width="300">
 
-Verified on hardware: `[░░░░░░░░░░░░░░░░░░░░]` 0 / 5
+Verified on MiSTer hardware: `[░░░░░░░░░░░░░░░░░░░░]` 0 / 5
 
 Progress is tracked in the [test plan](docs/TestPlan.md): a game counts as
 verified when its section and the core-wide tests pass (optional tests
-aside).
+aside). The tests are run on MiSTer hardware, not on an original T-Unit
+arcade PCB.
 
 ## Features
 
@@ -143,6 +144,11 @@ holds every version, and each MRA finds its files there.
 
 Put the zips in `games/mame`. The MRA files go in `_Arcade` (other versions
 in `_Arcade/_alternatives`), the core in `_Arcade/cores`.
+
+Mortal Kombat II Plus (Beta 2, hack) is not in MAME; it comes from HBMAME. Its
+own complete `mk2.zip` goes in `games/hbmame`, next to MAME's `mk2.zip` in
+`games/mame` (which the other Mortal Kombat II versions use). Its OSD has no
+Move List, Finishing Moves or Hidden Items.
 
 ## Credits and references
 
