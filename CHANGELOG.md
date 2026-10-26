@@ -1,8 +1,34 @@
 # Changelog
 
-What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's changes are grouped by type: **Added**, **Changed**, **Fixed**, **Removed**, **Docs & tools**. Per-file detail for every build is in [COMMIT.md](COMMIT.md); hardware test results are tracked in [docs/TestPlan.md](docs/TestPlan.md).
+What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's changes are grouped by type: **Added**, **Changed**, **Fixed**, **Removed**, **Docs & tools**. Per-file detail for every build is in [COMMIT.md](COMMIT.md); test results on MiSTer hardware (not an original arcade PCB) are tracked in [docs/TestPlan.md](docs/TestPlan.md).
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
+
+## Build 34 (2026-10-25)
+
+**Changed**
+- Mortal Kombat II Plus (Beta 2, hack): the OSD no longer shows the Move List, the Finishing Moves page or the Hidden Items page for it. The hack changes the moves and the code those are built on, so the core offers none of them for it. The other eleven Mortal Kombat II versions, Mortal Kombat and the other games keep their OSD as it was.
+- The MRA for the hack sends only the game id (with a flag that hides the three) and the table format: no patches, codes or fight variables. This is the one RTL change, in the top level (a flag read from the MRA's first table word, bit 8); it needs a new RBF.
+
+**Docs & tools**
+- `tools/hbmame_sets.py`: `hide_extras` marks a hack whose OSD hides the three; `tools/mra_gen.py` writes its game id word with the flag (`tools/tunit_secrets.py` `hidden_table`). Build 33's `NO_FINISHING_MOVES` in `tools/tunit_fmoves.py` is gone.
+- `tools/mra_check.py` checks ROM index 1's first word (only the game id and the flag) and that a set with the flag has no table after the format word.
+- README, the Mortal Kombat II page, ExtraContent.md and TestPlan.md (MK2-20 now covers the OSD; Mortal Kombat II has 20 tests) say the hack has none of the three.
+
+## Build 33 (2026-10-24)
+
+**Added**
+- Mortal Kombat II Plus (Beta 2, hack), a rev L3.1 hack from HBMAME (set mk2p): a new MRA in `_alternatives/_Mortal Kombat II` (30 MRAs now) that loads a complete `mk2.zip` from `games/hbmame`. Its settings are kept apart from rev L3.1's.
+- For this hack the core has no Hitboxes, Jade Fight or Finishing Moves (the OSD says "Not available in this revision"); the Move List shows rev L3.1's moves, and the other hidden items run rev L3.1's code.
+
+**Docs & tools**
+- `tools/hbmame_sets.py`: hacks that are not in MAME, each a clone of a MAME set with some files replaced. `tools/mra_gen.py --hbmame DIR` writes their MRAs, with the zip named "/hbmame/<zip>" (the path Main_MiSTer takes below `games/`); `tools/mra_check.py --hbmame DIR` checks them. `tools/tunit_fmoves.py` can mark every move of a set as missing.
+- README (where the zip goes), the Mortal Kombat II page, ExtraContent.md and TestPlan.md (MK2-19 to MK2-21) cover the hack.
+
+## Build 32 (2026-10-23)
+
+**Docs & tools**
+- README and `docs/TestPlan.md`: verification is on MiSTer hardware, not on an original T-Unit arcade PCB. The games table reads "Awaiting MiSTer hardware test".
 
 ## Build 31 (2026-10-19)
 
@@ -166,7 +192,7 @@ Build numbers count the core's development builds in order. Released RBF files a
 ## Build 13 (2026-10-09)
 
 **Docs & tools**
-- `docs/TestPlan.md`: the hardware test plan (core-wide and per-game tests, Result column, progress table), linked from the README.
+- `docs/TestPlan.md`: the test plan for MiSTer hardware (core-wide and per-game tests, Result column, progress table), linked from the README.
 
 ## Build 12 (2026-10-09)
 
