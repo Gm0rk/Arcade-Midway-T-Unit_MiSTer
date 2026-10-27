@@ -16,7 +16,7 @@ module sim_top
 	input             clk,
 	input             reset,
 	input             pause,
-	input       [1:0] vtiming,       // Video Timing option: 0 native, 1 57 Hz, 2 60 Hz
+	input             vtiming,       // Video Timing option: 0 native, 1 57 Hz
 
 	// game configuration (the top level's game table)
 	input       [2:0] prot_id,

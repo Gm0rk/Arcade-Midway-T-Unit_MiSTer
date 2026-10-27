@@ -7,7 +7,7 @@
 //            [--wav out.wav] [--ddr-lat 24] [--ramclear] [--nosound]
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
 //            [--info mk_rom1.bin] [--osd "500:0:1;..."]
-//            [--vtiming 0|1|2] [--lines lines.txt] [--level ADDR:N] [--lvlwatch ADDR]
+//            [--vtiming 0|1] [--lines lines.txt] [--level ADDR:N] [--lvlwatch ADDR]
 //            [--dcslog samples.bin] [--dcstrace dsp.txt:A:B]
 //            [--dcsstate regs.bin:A:B]
 //
@@ -67,7 +67,7 @@
 //              (hex; with --level, its address): frame, R or W, value read
 //              or written, to stderr (the first 400), and a summary at the end
 //  --vtiming   the OSD's Video Timing: 0 native 289-line frames (54.7 Hz),
-//              1 277 lines (57 Hz), 2 263 lines (60 Hz)
+//              1 277 lines (57 Hz)
 //  --lines     write a line per frame: frame, lines from one VSync to the
 //              next, clocks (96 MHz) from one VSync to the next
 //
@@ -383,7 +383,7 @@ int main(int argc, char **argv) {
 	top->info_start = 0; top->info_wr = 0; top->info_addr = 0; top->info_data = 0;
 	top->osd_trig = 0; top->osd_opt = 0;
 	top->pause = 0;
-	top->vtiming = vtiming & 3;
+	top->vtiming = vtiming & 1;
 	top->lvl_on = lvl_on; top->lvl_addr = lvl_addr; top->lvl_val = lvl_val & 15;
 	top->ram_clr_req = 0;
 	top->snd_off = nosound;
