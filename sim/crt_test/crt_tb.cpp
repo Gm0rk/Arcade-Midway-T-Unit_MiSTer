@@ -5,7 +5,7 @@
 // usage: crt_tb out.bin frames rec_frames crt_en autow hsize hpos vshift vsize vsmode [vtiming]
 //   (OSD values as the status bits hold them: hsize 0-31, hpos 0-96,
 //   vshift 0-31, vsize 0-14, vsmode 0 PVM / 1 Cabinet, vtiming 0 54.7 Hz /
-//   1 57 Hz / 2 60 Hz)
+//   1 57 Hz)
 // Writes one 12-byte record per output dot (CE_PIXEL) of the last rec_frames
 // frames: clock (u64), R, G, B, flags (bit 0 HSync, 1 VSync, 2 DE, 3 CRT
 // Adjust on). crt_check.py reads them.
@@ -33,7 +33,7 @@ int main(int argc, char **argv) {
 	t->vshift_osd = atoi(argv[8]) & 31;
 	t->vsize_osd  = atoi(argv[9]) & 15;
 	t->vsmode_osd = atoi(argv[10]) & 1;
-	t->vtiming    = (argc > 11) ? (atoi(argv[11]) & 3) : 0;
+	t->vtiming    = (argc > 11) ? (atoi(argv[11]) & 1) : 0;
 	const uint64_t FR = 506ull * 289 * 12;      // clocks per board frame
 	uint64_t total = FR * frames, start = FR * (frames - rec);
 	for (uint64_t c = 0; c < total; c++) {
