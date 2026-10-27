@@ -52,8 +52,8 @@ module midway_tunit
 	input             clk,           // 96 MHz
 	input             reset,
 	input             pause,
-	input       [1:0] vtiming,       // MiSTer option: 0 native frame (54.7 Hz), 1 277 lines
-	                                 // (57.1 Hz), 2 263 lines (60.1 Hz); see "Video timing"
+	input             vtiming,       // MiSTer option: 0 native frame (54.7 Hz), 1 277 lines
+	                                 // (57.1 Hz); see "Video timing"
 
 	// game configuration
 	input       [2:0] prot_id,       // protection (P_* below)
@@ -178,39 +178,33 @@ assign ce_pix = ce_pix_r;
 // Video timing (MiSTer option for 15 kHz TVs)
 //
 // Every game runs a 289-line frame at 15.81 kHz: 54.7 Hz, which some TVs do
-// not hold well. The shorter frames drop blank lines in the 34010's CRT
-// controller (see tms34010.sv): 277 lines for 57.1 Hz or 263 for 60.1 Hz.
-// The games count time in frames, so they run 289/277 (+4.3 %) or 289/263
-// (+9.9 %) faster either way; the CPU's machine cycle and the blitter's
-// completion time are sped up by the same ratio, so a frame still gets the
-// real board's cycles. The sound boards keep their own clocks.
+// not hold well. The shorter frame drops blank lines in the 34010's CRT
+// controller (see tms34010.sv): 277 lines for 57.1 Hz. The games count time
+// in frames, so they run 289/277 (+4.3 %) faster; the CPU's machine cycle
+// and the blitter's completion time are sped up by the same ratio, so a
+// frame still gets the real board's cycles. The sound boards keep their own
+// clocks.
 //----------------------------------------------------------------------------
-
-wire  [1:0] vt = (vtiming == 2'd3) ? 2'd0 : vtiming;   // 3 is not used: native
 
 reg   [9:0] frame_lines;
 always @(posedge clk)
-	frame_lines <= (vt == 2'd1) ? 10'd277 : (vt == 2'd2) ? 10'd263 : 10'd0;
+	frame_lines <= vtiming ? 10'd277 : 10'd0;
 
-// step (6.25 MHz in kHz, times 289/277 or 289/263 for the shorter frames)
-// and the level at which a step wraps, so the accumulator update is one add
-// or subtract and one compare
+// step (6.25 MHz in kHz, times 289/277 for the shorter frame) and the level
+// at which a step wraps, so the accumulator update is one add or subtract
+// and one compare
 reg  [16:0] cyc_step, cyc_thr;
 always @(posedge clk) begin
-	case (vt)
-		2'd1:    cyc_step <= 17'd6521;   // 57 Hz
-		2'd2:    cyc_step <= 17'd6868;   // 60 Hz
-		default: cyc_step <= 17'd6250;   // native
-	endcase
-	cyc_thr <= 17'd48000 - cyc_step;
+	cyc_step <= vtiming ? 17'd6521 : 17'd6250;   // 57 Hz : native
+	cyc_thr  <= 17'd48000 - cyc_step;
 end
 
-// blitter completion time: one extra count off its timer at 289/277 - 1 or
-// 289/263 - 1 of the clocks (16-bit fraction)
+// blitter completion time: one extra count off its timer at 289/277 - 1 of
+// the clocks (16-bit fraction)
 reg  [15:0] dma_frac, dma_fstep;
 reg         dma_fast;
 always @(posedge clk) begin
-	dma_fstep <= (vt == 2'd1) ? 16'd2839 : (vt == 2'd2) ? 16'd6479 : 16'd0;
+	dma_fstep <= vtiming ? 16'd2839 : 16'd0;
 	{dma_fast, dma_frac} <= {1'b0, dma_frac} + {1'b0, dma_fstep};
 end
 
