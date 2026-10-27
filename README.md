@@ -99,7 +99,8 @@ The tests behind the status above are run on MiSTer hardware, with this setup
 - Video Timing: the board's own 54.7 Hz, or 57 Hz frames for TVs that do
   not hold 54.7 Hz. Only blank lines are dropped, so the whole picture is
   still sent; games run about 4 % faster, while music and voices keep their
-  normal pitch and tempo
+  normal pitch and tempo. The black screen shown while a game loads uses the
+  same frame, so the picture does not change rate when the game starts
 - CMOS saved as NVRAM: settings, audits and high scores survive power-off
   (written to the SD card when the OSD is opened, if the game changed them,
   and with "Save Settings")
