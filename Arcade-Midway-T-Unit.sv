@@ -75,6 +75,7 @@ localparam CONF_STR = {
 	"hEO[113:110],Fixed AI Difficulty,Off,0,1,2,3,4,5,6,7,8,9;",
 	"DIP;",
 	`NBA_OSD,
+	`PLUS_OSD,
 	"h7P3,Secret Menus;",
 	"P3-;",
 	"P3R[14],Secret Audit Menu;",
@@ -108,14 +109,16 @@ localparam CONF_STR = {
 };
 
 // OSD menu mask bits (assigned in "Game configuration"): which secrets the
-// loaded game has; bits 8-11 the fighter picked on the Finishing Moves and
-// Move List pages; bits 12 and 13 NBA Jam and TE (their own Secrets lines,
+// loaded game has; bits 8-11 the fighter picked on the Finishing Moves page;
+// bits 12 and 13 NBA Jam and TE (their own Secrets lines,
 // rtl/tunit_secrets_osd.svh); bit 14 the Fixed AI Difficulty line (MK and
-// MK2, see below). osd_ejb and osd_mk2 are menu_ejb and menu_mk2 less a set
-// whose MRA hides the extras (hide_ext): they show or hide the Move List, the
-// Finishing Moves page and the Hidden Items page.
+// MK2, see below); bit 15 Mortal Kombat II Plus (menu_plus). osd_ejb and
+// osd_mk2 are menu_ejb and menu_mk2 less a set whose MRA hides the extras
+// (hide_ext, Mortal Kombat II Plus): they show or hide the Move List, the
+// Finishing Moves page and the Hidden Items page. The Plus set has a Move
+// List and a View Secrets list of its own (menu_plus).
 wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te;
-wire        osd_ejb, osd_mk2;
+wire        osd_ejb, osd_mk2, menu_plus;
 wire        lvl_items;
 wire  [3:0] fm_line;
 wire        info_req;
@@ -151,7 +154,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({1'b0, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], 1'b0}),
+	.status_menumask     ({menu_plus, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], 1'b0}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -247,7 +250,7 @@ localparam G_JDREDDP  = 3'd5;    // Judge Dredd (location test)
 localparam L_MK = 2'd0, L_MK2 = 2'd1, L_NBA = 2'd2, L_JD = 2'd3;
 
 reg   [2:0] game_id;
-reg         hide_ext = 1'b0;    // the set hides the Move List, Finishing Moves and Hidden Items (index 1, word 0 bit 8)
+reg         hide_ext = 1'b0;    // Mortal Kombat II Plus: the set has no Finishing Moves, Hidden Items or MK2 Move List, and its own Move List and View Secrets (index 1, word 0 bit 8)
 reg   [2:0] cfg_prot;
 reg         cfg_turbo;
 reg         cfg_dcs;
@@ -294,7 +297,7 @@ always @(posedge clk_sys) begin
 	endcase
 end
 
-// OSD lines and pages of the loaded game (status_menumask bits 2-7, 12, 13)
+// OSD lines and pages of the loaded game (status_menumask bits 2-7, 12, 13, 15)
 assign menu_secrets = (game_id <= G_JDREDDP);
 assign menu_ejb     = (game_id == G_MK) || (game_id == G_MKTURBO) || (game_id == G_MK2);
 assign menu_mk      = (game_id == G_MK) || (game_id == G_MKTURBO);
@@ -305,6 +308,7 @@ assign menu_te      = (game_id == G_NBAJAMTE);
 assign menu_jd      = (game_id == G_JDREDDP);
 assign osd_ejb      = menu_ejb & ~hide_ext;
 assign osd_mk2      = menu_mk2 & ~hide_ext;
+assign menu_plus    = menu_mk2 & hide_ext;
 
 //////////////////////////////////////////////////////////////////
 // Downloads: ROMs (index 0 and 3), game id and secrets table (1), NVRAM (2),
@@ -530,14 +534,34 @@ always @(posedge clk_sys) begin
 	else if ((joy0[13] | joy1[13]) & ~pause_btn_d) pause_toggle <= ~pause_toggle;
 end
 
-// the information windows (see Video) hold the game too: the OSD option
-// picks the page (0 Off, n page n), a value past the list's pages is Off
-wire [3:0] list_sel    = menu_nba ? {1'b0, status[67:65]} : status[64:61];
-wire [4:0] list_n      = menu_te ? WIN_NBAJAMTE_N : menu_nj ? WIN_NBAJAM_N : menu_mk2 ? WIN_MK2_N : WIN_MK_N;
-wire       list_valid  = list_sel != 4'd0 && {1'b0, list_sel} <= list_n;
-wire       movelist_on = osd_ejb & list_valid;
-wire       splist_on   = menu_nba & list_valid;
-wire pause = pause_toggle | (OSD_STATUS & ~status[8]) | movelist_on | splist_on;
+// the information windows (see Video) hold the game too. View Secret Players
+// (NBA Jam, TE; O[115]), Move List (MK, MK2, MK2 Plus; O[114]) and View
+// Secrets (MK2 Plus; O[116]) are Off or On: while one is On, the page is
+// turned with the controller's Left and Right (any player) with the OSD
+// closed (rtl/tunit_mlpage.sv). The Plus set has two lists; with both On the
+// one switched on last is shown.
+wire [4:0] list_n      = menu_te ? WIN_NBAJAMTE_N : menu_nj ? WIN_NBAJAM_N :
+                         menu_plus ? WIN_MK2PLUS_N : menu_mk2 ? WIN_MK2_N : WIN_MK_N;
+wire       splist_on   = menu_nba & status[115];
+wire       movelist_on = (osd_ejb | menu_plus) & status[114];
+wire       secrets_on  = menu_plus & status[116];
+wire       win_b;
+wire [4:0] ml_page;
+
+tunit_mlpage mlpage
+(
+	.clk      (clk_sys),
+	.on_a     (movelist_on | splist_on),
+	.on_b     (secrets_on),
+	.pages_a  (list_n),
+	.pages_b  (WIN_MK2PLUS_SECRETS_N),
+	.osd_open (OSD_STATUS),
+	.left     (joy0[1] | joy1[1]),
+	.right    (joy0[0] | joy1[0]),
+	.show_b   (win_b),
+	.page     (ml_page)
+);
+wire pause = pause_toggle | (OSD_STATUS & ~status[8]) | movelist_on | splist_on | secrets_on;
 
 //////////////////////////////////////////////////////////////////
 // T-Unit board
@@ -795,7 +819,7 @@ wire [3:0] lvl_val  = (lvl_sel > 4'd10) ? 4'd9 : (lvl_sel - 4'd1);
 // The Finishing Moves page picks a character (O[30:28] MK, O[27:24] MK2;
 // the menu mask's bits 8-11 show that character's lines) and one of its
 // moves (R[32]-R[39], the character's lines in order; R[40] clears the set
-// move). (The main menu's Move List option, O[64:61], only shows the moves
+// move). (The main menu's Move List option, O[114], only shows the moves
 // in the window, see Video.)
 // rtl/tunit_fmoves.sv plays it at the winner's next FINISH HIM, following
 // the fight through the CPU's writes to the variables the MRA gives (ROM
@@ -1186,22 +1210,26 @@ sdram sdram
 
 // ---- Information window (rtl/tunit_window.sv) ----
 //
-// View Secret Players (NBA Jam, TE; O[67:65]: Off, Page 1-n: the players,
-// then the cheat codes) and Move List (MK, MK2; O[64:61]: Off, MK List 1 /
-// List 2 with several fighters to a page, MK2 a fighter) draw a page over
-// the game's dimmed title screen in place of the picture; the game waits
-// meanwhile (pause above). The first page and page count of each list:
-// rtl/tunit_window_pages.svh.
+// View Secret Players (NBA Jam, TE; O[115]: Off, On; the pages: the players,
+// then the cheat codes), Move List (MK, MK2, MK2 Plus; O[114]: Off, On; the
+// pages: MK two lists with several fighters to a page, MK2 and Plus a page
+// per fighter) and View Secrets (MK2 Plus; O[116]: Off, On; the pages: the
+// secret characters, the bosses, the Kombat Kodes, the other secrets) draw a
+// page over the game's dimmed title screen in place of the picture, Left /
+// Right turning the page; the game waits meanwhile (pause above). The first
+// page and page count of each list: rtl/tunit_window_pages.svh.
 
-wire [4:0] list_p0  = menu_te ? WIN_NBAJAMTE : menu_nj ? WIN_NBAJAM : menu_mk2 ? WIN_MK2 : WIN_MK;
-wire [4:0] win_page = list_p0 + {1'b0, list_sel} - 5'd1;
+wire [5:0] list_p0  = win_b ? WIN_MK2PLUS_SECRETS :
+                      menu_te ? WIN_NBAJAMTE : menu_nj ? WIN_NBAJAM :
+                      menu_plus ? WIN_MK2PLUS : menu_mk2 ? WIN_MK2 : WIN_MK;
+wire [5:0] win_page = list_p0 + {1'b0, ml_page};
 wire [1:0] win_game = menu_nj ? 2'd0 : menu_te ? 2'd1 : menu_mk2 ? 2'd3 : 2'd2;
 
 tunit_window tunit_window
 (
 	.clk     (clk_sys),
 	.ce_pix  (ce_pix),
-	.enable  ((splist_on | movelist_on) & ~load_black),
+	.enable  ((splist_on | movelist_on | secrets_on) & ~load_black),
 	.page    (win_page),
 	.game    (win_game),
 
