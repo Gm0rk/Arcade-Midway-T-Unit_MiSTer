@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II Plus (Beta 2, hack)</name>
-	<mratimestamp>20261025</mratimestamp>
+	<mratimestamp>20261026</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2p</setname>
 	<year>1993</year>
@@ -36,6 +36,11 @@ rom index 3 (SDRAM 0xD00000):
 		<!-- game id (rtl/tunit_secrets.sv): the OSD hides the Move List, Finishing Moves and Hidden Items for this set: no patches or codes -->
 		<part>
 		02 01 01 00
+		</part>
+		<!-- AI level word 01061AD0 (Fixed AI Difficulty) -->
+		<part repeat="1104">00</part>
+		<part>
+		AD 61 10 00
 		</part>
 	</rom>
 	<rom index="0" zip="/hbmame/mk2.zip" md5="f27539dc97987541eddfe6af46ae557f" type="merged">
