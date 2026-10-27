@@ -72,6 +72,7 @@ localparam CONF_STR = {
 	"H1P1O[108],CRT V-Size Mode,PVM,Cabinet;",
 	"-;",
 	`FMOVES_OSD,
+	"hEO[113:110],Fixed AI Difficulty,Off,0,1,2,3,4,5,6,7,8,9;",
 	"DIP;",
 	`NBA_OSD,
 	"h7P3,Secret Menus;",
@@ -109,11 +110,13 @@ localparam CONF_STR = {
 // OSD menu mask bits (assigned in "Game configuration"): which secrets the
 // loaded game has; bits 8-11 the fighter picked on the Finishing Moves and
 // Move List pages; bits 12 and 13 NBA Jam and TE (their own Secrets lines,
-// rtl/tunit_secrets_osd.svh). osd_ejb and osd_mk2 are menu_ejb and menu_mk2
-// less a set whose MRA hides the extras (hide_ext): they show or hide the
-// Move List, the Finishing Moves page and the Hidden Items page.
+// rtl/tunit_secrets_osd.svh); bit 14 the Fixed AI Difficulty line (MK and
+// MK2, see below). osd_ejb and osd_mk2 are menu_ejb and menu_mk2 less a set
+// whose MRA hides the extras (hide_ext): they show or hide the Move List, the
+// Finishing Moves page and the Hidden Items page.
 wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te;
 wire        osd_ejb, osd_mk2;
+wire        lvl_items;
 wire  [3:0] fm_line;
 wire        info_req;
 wire  [7:0] info;
@@ -148,7 +151,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({2'd0, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], 1'b0}),
+	.status_menumask     ({1'b0, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], 1'b0}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -755,6 +758,38 @@ always @(posedge clk_sys) begin
 end
 
 //////////////////////////////////////////////////////////////////
+// Fixed AI Difficulty (MK, MK2)
+//
+// MK and MK2 keep the CPU opponent's level (0 easiest to 9) in one main RAM
+// word: the AI picks entries of its 10-entry tables with it, the game raises
+// it after matches won and lowers it after matches lost. The MRA gives the
+// word's address (ROM index 1, bytes 0x454-0x457, tools/tunit_fmoves.py;
+// 0: none, and the OSD line is hidden). While O[113:110] is not Off, the
+// board returns the chosen level for the CPU's reads of that word (with
+// interrupts enabled, rtl/midway_tunit.sv "Read patches"): the game's own
+// writes go on as before, so Off hands its own value back at once. It is off
+// while the test menu is selected (the Service Mode option, a test button or
+// the Test Switch DIP), so the diagnostics see the game's RAM as it is.
+//////////////////////////////////////////////////////////////////
+
+reg  [27:0] lvl_wa = 28'd0;     // the AI level word's word address (0: none)
+
+always @(posedge clk_sys) begin
+	if (secrets_dl & ~secrets_dl_d)
+		lvl_wa <= 28'd0;
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h454)
+		lvl_wa[15:0]  <= ioctl_dout;
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h456)
+		lvl_wa[27:16] <= ioctl_dout[11:0];
+end
+
+wire [3:0] lvl_sel  = status[113:110];                    // Off, then levels 0-9
+wire       lvl_test = test_sw | ~dsw[0];                  // the test menu is selected
+assign lvl_items    = (menu_mk | menu_mk2) & (lvl_wa != 28'd0);
+wire       lvl_on   = lvl_items & (lvl_sel != 4'd0) & ~lvl_test;
+wire [3:0] lvl_val  = (lvl_sel > 4'd10) ? 4'd9 : (lvl_sel - 4'd1);
+
+//////////////////////////////////////////////////////////////////
 // Finishing moves (MK, MK2)
 //
 // The Finishing Moves page picks a character (O[30:28] MK, O[27:24] MK2;
@@ -928,6 +963,10 @@ midway_tunit board
 	.pt_data        (pt_data),
 	.pt_en          (pt_en),
 	.pt_fetch       (pt_fetch),         // program code patches: instruction fetches only
+
+	.lvl_on         (lvl_on),           // Fixed AI Difficulty
+	.lvl_addr       (lvl_wa),
+	.lvl_val        (lvl_val),
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
