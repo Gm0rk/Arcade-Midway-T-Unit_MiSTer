@@ -47,7 +47,7 @@ II).
 | C14 | Video Timing (Video Settings): Native 54.7Hz and 57Hz, on HDMI and, if you have one, a 15 kHz CRT | The picture stays whole and stable at each, also when switched while a game runs; at 57 Hz the game runs a little faster while music and voices keep their pitch; on a CRT at 57 Hz, CRT V-Shift moves the picture without parts of it wrapping to the other edge | |
 | C15 | Change a game DIP switch on the OSD's DIP Switches page while the game runs | The game keeps running (no restart); the new setting shows after a reset | |
 | C16 | Turn on every Hidden Items / power-up option of a game, then run its RAM and ROM tests (NBA Jam rev 2.00 does them at every power-up; the others: diagnostics, CPU Board Test, or the Powerup Test DIP switch) | Every RAM and ROM chip passes (green); the options still work in a game afterwards | |
-| C17 | Load a game through its MRA while another game is running, then load the core again from the menu; do it a few times | The screen behind the "Sending ROM" box is black every time (no solid colour, no scrambled picture), on HDMI and, if you have one, a 15 kHz CRT; the game then starts normally | |
+| C17 | Load a game through its MRA while another game is running, then load the core again from the menu; do it a few times, with Video Timing on Native 54.7Hz and again on 57Hz | The screen behind the "Sending ROM" box is black every time (no solid colour, no scrambled picture), on HDMI and, if you have one, a 15 kHz CRT; the game then starts normally; at 57Hz the loading screen already has the game's refresh rate (what your TV, capture device or the MiSTer's video info reports does not change when the game starts), and the same at 54.7Hz | |
 
 ## Mortal Kombat
 
