@@ -3,19 +3,23 @@
 > **AI disclosure:** this core was developed using AI and MAME as a reference.
 > (Claude, by Anthropic - Opus 5.5 & Sonnet 5.5).
 
-An FPGA implementation of the Midway T-Unit arcade board (1993-1994), the
-TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
+An FPGA implementation of the Williams/Midway T-Unit arcade board (1993-1994),
+the TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
 Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 
-## Contents
+## Table of Contents
 
 - [Hardware](#hardware)
 - [Games](#games)
+- [Testing setup](#testing-setup)
 - [Features](#features)
-- [CRT V-Size (experimental)](#crt-v-size-experimental)
+- [OSD](#osd)
+- [Controls](#controls)
 - [ROMs](#roms)
 - [Credits and references](#credits-and-references)
 - [License](#license)
+- [Extra content](docs/ExtraContent.md)
+- [Test plan](docs/TestPlan.md)
 
 ## Hardware
 
@@ -27,36 +31,37 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 | Palette | 32768 colours, 15-bit RGB |
 | Display | 8 MHz pixel clock, 400 x 254 visible, 54.7 Hz |
 | Sound (ADPCM board) | MC6809E @ 2 MHz, YM2151, OKI M6295, 8-bit DAC |
-| Sound (DCS board, MK2) | ADSP-2105 @ 10 MHz, banked sound ROMs, 16-bit DAC at 31.25 kHz |
+| Sound (DCS board, Mortal Kombat II) | ADSP-2105 @ 10 MHz, banked sound ROMs, 16-bit DAC at 31.25 kHz |
 | Protection | Per-game security chips on the 34010 bus and hidden RAM on the ADPCM board, as in MAME |
 
 ## Games
 
-Each game has its own page: its versions, controls, Secrets (for the NBA
-Jam games with the secret players) and, for the Mortal Kombat games, the
-Move List, Finishing Moves and Fixed AI Difficulty.
-Everything the core adds on top of the games is listed in
-[Extra content](docs/ExtraContent.md), core-wide and per game.
+Each game has its own page in [`docs`](docs) with its versions, controls and
+game-specific features. Everything the core adds, core-wide and per game, is
+listed in [Extra content](docs/ExtraContent.md).
 
-| Game | Sound | Players | Status | Title Screen | Gameplay |
-|---|---|---|---|---|---|
-| [Judge Dredd (location test)](docs/JudgeDredd.md) | ADPCM | 3 | [Awaiting MiSTer hardware test](docs/TestPlan.md#judge-dredd) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="300">
-| [Mortal Kombat](docs/MortalKombat.md) | ADPCM | 2 | [Awaiting MiSTer hardware test](docs/TestPlan.md#mortal-kombat) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_2.png" width="300">|
-| [Mortal Kombat II](docs/MortalKombatII.md) | DCS | 2 | [Awaiting MiSTer hardware test](docs/TestPlan.md#mortal-kombat-ii) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II_2.png" width="300">
-| [NBA Jam](docs/NBAJam.md) | ADPCM | 4 | [Awaiting MiSTer hardware test](docs/TestPlan.md#nba-jam) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_2.png" width="300">
-| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | ADPCM | 4 | [Awaiting MiSTer hardware test](docs/TestPlan.md#nba-jam-tournament-edition) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE.png" width="300"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE_2.png" width="300">
+| Game | Main set | Status | Title Screen | Gameplay |
+|---|---|---|---|---|
+| [Judge Dredd (location test)](docs/JudgeDredd.md) | jdreddp (rev TA1) | [Awaiting MiSTer hardware test](docs/TestPlan.md#judge-dredd) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd.png" width="300" alt="Judge Dredd title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Judge_Dredd_2.png" width="300" alt="Judge Dredd gameplay"> |
+| [Mortal Kombat](docs/MortalKombat.md) | mk (rev 5.0) | [Awaiting MiSTer hardware test](docs/TestPlan.md#mortal-kombat) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat.png" width="300" alt="Mortal Kombat title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_2.png" width="300" alt="Mortal Kombat gameplay"> |
+| [Mortal Kombat II](docs/MortalKombatII.md) | mk2 (rev L3.1) | [Awaiting MiSTer hardware test](docs/TestPlan.md#mortal-kombat-ii) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II.png" width="300" alt="Mortal Kombat II title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/Mortal_Kombat_II_2.png" width="300" alt="Mortal Kombat II gameplay"> |
+| [NBA Jam](docs/NBAJam.md) | nbajam (rev 3.01) | [Awaiting MiSTer hardware test](docs/TestPlan.md#nba-jam) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam.png" width="300" alt="NBA Jam title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_2.png" width="300" alt="NBA Jam gameplay"> |
+| [NBA Jam Tournament Edition](docs/NBAJamTE.md) | nbajamte (rev 4.0) | [Awaiting MiSTer hardware test](docs/TestPlan.md#nba-jam-tournament-edition) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE.png" width="300" alt="NBA Jam Tournament Edition title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE_2.png" width="300" alt="NBA Jam Tournament Edition gameplay"> |
 
 Verified on MiSTer hardware: `[░░░░░░░░░░░░░░░░░░░░]` 0 / 5
 
-Progress is tracked in the [test plan](docs/TestPlan.md): a game counts as
-verified when its section and the core-wide tests pass (optional tests
-aside). The tests are run on MiSTer hardware, not on an original T-Unit
-arcade PCB.
+A game is verified when it passes its section of the
+[test plan](docs/TestPlan.md) and the core-wide tests (optional tests aside);
+the test plan tracks the progress. The tests are run on MiSTer hardware (see
+[Testing setup](#testing-setup)), not on an original T-Unit arcade PCB.
+
+Other versions, prototypes and hacks are in the `_alternatives` folder of the
+MRAs.
 
 ## Testing setup
 
 The tests behind the status above are run on MiSTer hardware, with this setup
-(the core has not been verified against an original Y Unit board):
+(the core has not been verified against an original T-Unit board):
 
 | | |
 |---|---|
@@ -72,8 +77,25 @@ The tests behind the status above are run on MiSTer hardware, with this setup
 
 ## Features
 
-- CRT Adjust (H-Size, H-Position, V-Shift), CRT V-Size (experimental) and CRT Auto-Width for
-  analog CRT output
+- CRT Adjust by rmonic79 (H-Size, H-Position, V-Shift and Auto-Width) for
+  analog CRT output. CRT V-Size (experimental), part of CRT Adjust, makes the
+  picture taller ("+") or shorter ("-"), up to 7 steps of 3 lines (about 1 %
+  each), applied one line per frame, in one of two modes:
+  - PVM: retimes the frame (fewer, longer lines for a taller picture, more,
+    shorter lines for a shorter one), so every picture line is shown once and
+    nothing is blended, but the line rate moves about 0.4 % per line. For
+    monitors that hold a wide range of line rates (PVM/BVM and similar)
+  - Cabinet: keeps the board's exact timing and spreads each picture line's
+    light over the screen's fixed lines, as a monitor's own V-Size control
+    would (a very slight vertical softness). For arcade monitors and TVs that
+    will not follow a change of line rate
+  - Limits: in PVM mode the frame has few spare lines at the larger +
+    settings, so V-Shift has little room there; at the larger - settings the
+    lines get short enough that the picture moves a little to the left
+    (H-Position brings it back). With the 57 Hz Video Timing there is even
+    less room around the picture, so a taller picture is cut at the top or
+    bottom. Like the rest of CRT Adjust, CRT V-Size also changes the HDMI
+    picture; leave CRT Adjust off for an untouched HDMI image
 - Video Timing: the board's own 54.7 Hz, or 57 Hz frames for TVs that do
   not hold 54.7 Hz. Only blank lines are dropped, so the whole picture is
   still sent; games run about 4 % faster, while music and voices keep their
@@ -84,30 +106,43 @@ The tests behind the status above are run on MiSTer hardware, with this setup
 - DIP switches in the OSD, taken from MAME, in alphabetical order; switches
   a version does not use (its own DIP switch screen marks them unused) are
   left out. The games read most of them at power-up: reset after a change
-- Start, Coin, Test (service mode) and Pause (button or OSD) in every game;
-  Service Credit and Tilt on the OSD's DIP Switches page (selecting the
-  line adds a credit or slams the tilt switch), Service Mode in the OSD's
-  main menu
+- Service Mode, Service Credit and Tilt in the OSD (on the DIP Switches page,
+  selecting Service Credit or Tilt adds a credit or slams the tilt switch);
+  pause from a button or while the OSD is open
 - The hidden menus, screens and debug features the programmers left in the
   games, on an OSD page of each game (Judge Dredd: Secret Menus, Mortal
-  Kombat games: Hidden Items, NBA Jam games: Cheat Codes & Hidden Items);
-  for Mortal Kombat, Reptile's fight, the moon silhouettes and his hints
-  on demand; for NBA Jam and NBA Jam Tournament Edition, the power-up codes
-  for all players and the codes of the Tonight's Match-Up screen (NBA Jam's
-  hidden tank game, TE's tournament mode)
-- Secret Player List window (NBA Jam, NBA Jam Tournament Edition): every
-  secret player's name, initials, birthday and versions, and every cheat
-  code as the players enter it, over the game's title screen
-- Finishing Moves page in the OSD (Mortal Kombat, Mortal Kombat II): every
-  fighter's finishing moves, entered for you at FINISH HIM
-- Move List window (Mortal Kombat, Mortal Kombat II): every fighter's special
-  moves and finishing moves, with the distance each finishing move needs,
-  over the game's title screen
-- Fixed AI Difficulty (Mortal Kombat, Mortal Kombat II): the computer
-  opponent's level held at 0 (easiest) to 9, or Off
-- OSD messages: what a set finishing move is waiting for, whether a code was
-  taken, what an option just turned on does (or that the loaded version
-  does not have it)
+  Kombat games: Hidden Items, NBA Jam games: Cheat Codes & Hidden Items),
+  with messages saying whether a code was taken, what a set finishing move is
+  waiting for, and what an option just turned on does (or that the loaded
+  version does not have it)
+- Mortal Kombat: Reptile's fight, the moon silhouettes and his hints on
+  demand (see the [Mortal Kombat page](docs/MortalKombat.md))
+- Mortal Kombat, Mortal Kombat II: a Move List (every fighter's special moves
+  and finishing moves, with the distance each finishing move needs, over the
+  game's title screen), Finishing Moves (every fighter's finishing moves,
+  entered for you at FINISH HIM) and Fixed AI Difficulty (the computer
+  opponent's level held at 0 (easiest) to 9, or Off); Mortal Kombat II Plus
+  has Fixed AI Difficulty only
+- NBA Jam, NBA Jam Tournament Edition: the power-up codes for all players and
+  the codes of the Tonight's Match-Up screen (NBA Jam's hidden tank game,
+  TE's tournament mode); a Secret Player List (every secret player's name,
+  initials, birthday and versions, and every cheat code as the players enter
+  it) over the game's title screen
+
+## OSD
+
+| Item | |
+|---|---|
+| Video Settings | Aspect ratio, scandoubler, scale, Video Timing, CRT Adjust (CRT Auto-Width, H-Size, H-Position, V-Shift, V-Size, V-Size Mode: shown while CRT Adjust is On) |
+| Move List | Mortal Kombat: Off, List 1, List 2; Mortal Kombat II: Off or a fighter. Shows the moves over the game's title screen; the game waits while it is shown |
+| Finishing Moves | Mortal Kombat, Mortal Kombat II: each fighter's finishing moves, entered for you at the next FINISH HIM |
+| Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II: Off, or 0 (easiest) to 9; the computer opponent's level in 1-player games (not applied while the test menu is selected) |
+| View Secret Players | NBA Jam: Off, Page 1, Page 2; NBA Jam Tournament Edition: Off, Page 1 to Page 6. Shows the secret players and the cheat codes over the game's title screen; the game waits while it is shown |
+| DIP Switches | The game's DIP switches in alphabetical order, with Service Credit and Tilt (selecting the line adds a credit or slams the tilt switch) |
+| Hidden Items | Hidden menus, cheats and extras, only for the games that have them: Secret Menus for Judge Dredd, Hidden Items for the Mortal Kombat games, Cheat Codes & Hidden Items for the NBA Jam games |
+| Service Mode | The cabinet's test switch |
+| Pause when OSD is open | On by default |
+| Reset / Reset and close OSD | Reset keeps the OSD open |
 
 Hidden menus are opened by codes on the controls, which the core enters for
 you: pick the item, and the OSD closes and the code plays (a few seconds;
@@ -120,45 +155,40 @@ and take effect at once unless the game's page says otherwise. When the OSD
 closes, a message says whether a code was taken, and what an option just
 turned on does. Each game's page lists its items.
 
-## CRT V-Size (experimental)
+## Controls
 
-With CRT Adjust on, CRT V-Size makes the picture taller (+) or shorter (-),
-3 lines per step, up to 21 lines; V-Shift then recentres it. A change is
-applied one line per frame. It works in one of two modes (CRT V-Size Mode):
-
-| Mode | How | For |
-|---|---|---|
-| PVM | The frame is retimed: fewer, longer lines make the picture taller, more, shorter lines make it shorter. Every picture line is shown once, nothing is blended. The line rate moves by about 0.4 % per line | Broadcast and studio monitors (PVM/BVM and the like) that follow a wide range of line rates |
-| Cabinet | The timing stays exactly the board's; each picture line's light is spread over the screen's fixed lines, as a monitor's own V-Size control would. The picture is very slightly softer vertically | Arcade monitors and TVs that do not follow line-rate changes |
-
-In PVM mode the frame has few spare lines at the larger + settings, so V-Shift
-has little room there; at the larger - settings the lines get short enough that
-the picture moves a little to the left (H-Position brings it back). With the
-57 Hz Video Timing there is even less room around the picture, so a taller
-picture is cut at the top or bottom. Like the
-rest of CRT Adjust, CRT V-Size also changes the HDMI picture; leave CRT Adjust
-off for an untouched HDMI image.
+Every game has Start, Coin, Test (service mode) and Pause, plus its own
+buttons, named in the controller setup and listed on its page. Judge Dredd
+plays up to three players, Mortal Kombat and Mortal Kombat II two, NBA Jam
+and NBA Jam Tournament Edition four.
 
 ## ROMs
 
-ROMs are not included in this repository. Use **merged** ROM sets.
+ROMs are **not** included in this repository; you need your own dumps of the
+games.
 
-Put the ROMs in `games/mame`. The MRA files go in `_Arcade` (other versions
-in `_Arcade/_alternatives`), the core in `_Arcade/cores`.  Mortal Kombat II Plus goes in `games/hbmame`.
+Use **merged** ROM sets from MAME 0.289 (recommended): one zip per game holds
+every version, so all of that game's MRAs, main and alternatives, find their
+files. Mortal Kombat's merged set is `mk.zip`; the other zip names are on
+each game's page. Files are found by CRC.
+
+Put the zips in `games/mame`, the MRA files in `_Arcade` (other versions in
+`_Arcade/_alternatives`) and the core in `_Arcade/cores`. Mortal Kombat II
+Plus is a hack that is not in MAME: its `mk2.zip` goes in `games/hbmame`.
 
 ## Credits and references
 
 - MAME T-Unit driver and video: Alex Pasadyn, Zsolt Vasvari, Ernesto Corvi,
   Aaron Giles (thanks to Kurt Mahan); MAME TMS34010 core, Williams ADPCM
   sound board, DCS sound board and ADSP-21xx core - the reference for this
-  core's behaviour (the ADSP-2105 and the DCS board are ports of MAME's ADSP-21xx
-  core and DCS board, Aaron Giles)
+  core's behaviour (the ADSP-2105 and the DCS board are ports of MAME's
+  ADSP-21xx core and DCS board, Aaron Giles)
 - Texas Instruments TMS34010 User's Guide
 - mc6809 core: Greg Miller (synchronous version by Sorgelig)
 - jt51 (YM2151) and jt6295 (OKI M6295): Jose Tejada (jotego)
 - SDRAM controller and MiSTer framework: Sorgelig and the MiSTer-devel team
-- CRT Adjust and CRT V-Size: Umberto Parisi (rmonic79); CRT Adjust with
-  Andrea Bogazzi (@asturur)
+- CRT Adjust and CRT V-Size: Umberto Parisi (rmonic79), with Andrea Bogazzi
+  (@asturur)
 - [Template_MiSTer](https://github.com/MiSTer-devel/Template_MiSTer),
   [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
 - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
