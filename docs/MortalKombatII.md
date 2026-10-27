@@ -13,6 +13,7 @@ Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
 - [Fixed AI Difficulty](#fixed-ai-difficulty)
+- [Mortal Kombat II Plus](#mortal-kombat-ii-plus)
 
 ## Versions
 
@@ -39,9 +40,10 @@ own complete `mk2.zip` (every file, including those that did not change from
 rev L3.1) goes in `games/hbmame`, while MAME's `mk2.zip` stays in `games/mame`
 for the other versions. The hack changes the fighters, their moves and the
 service menu. Its settings are kept apart from rev L3.1's. The core adds
-only Fixed AI Difficulty to it: the OSD has no Move List, Finishing Moves or
-Hidden Items, because the hack changes the moves and the code those are built
-on.
+Fixed AI Difficulty to it and gives it a Move List and View Secrets of its
+own, [described below](#mortal-kombat-ii-plus). The OSD has no Finishing
+Moves or Hidden Items, because the hack changes the moves and the code those
+are built on.
 
 ## Controls
 
@@ -53,7 +55,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, and Fixed AI Difficulty. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has only Fixed AI Difficulty: it changes the fighters, their moves and the code the other extras are built on, so its OSD shows no Move List, Finishing Moves or Hidden Items.
+Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, and Fixed AI Difficulty. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the other extras are built on, so its OSD shows no Finishing Moves or Hidden Items.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -65,26 +67,31 @@ Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves f
 | Noob Saibot Fight | In a two-player battle the winner of the first round fights Noob Saibot, as after a 50-win streak (L3.0 and later) | Hidden Items |
 | Smoke Fight | Hold Down and press Start in any fight to fight Smoke next, instead of only on The Portal while "Toasty!" shows (L2.0 and later) | Hidden Items |
 | Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
-| Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
+| Move List window | A page per fighter (55 moves in all) with the special moves and finishing moves and their distances, over the game's paused title screen. Set it On in the OSD, close the OSD and turn the pages with Left and Right, from Liu Kang to Raiden and round; open the OSD to set it Off. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
 | Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
+| Plus Move List window (Mortal Kombat II Plus only) | A page per fighter, 17 in all: the 12 fighters, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn. Each lists the special moves and the finishing moves with their distances, over the game's paused title screen; the moves the hack adds are marked +. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The moves are the MK2 Plus guide's (Ver. 2.8.50) | Move List |
+| Plus View Secrets window (Mortal Kombat II Plus only) | Five pages: how to unlock and play Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn; the 14 Kombat Kodes and the buttons for each player; the ending bonuses, the Dead Pool and the hack's settings. With Move List and View Secrets both On, the one turned On last is shown | View Secrets (main menu) |
 
 <!-- extra-content:end -->
 
 ## Move List
 
-The OSD's Move List option (Off or a fighter) shows a window over the
-game, on the game's title screen, with that fighter's special moves and
-finishing moves and the distance each finishing move needs. The game waits
-while the window is on; set Move List to Off to play on. The window only
-shows the moves; the core does not enter them for you (the Finishing Moves
-page does that).
+The OSD's Move List option (Off, On) shows a window over the game, on the
+game's title screen, with a fighter's special moves and finishing moves and
+the distance each finishing move needs: a page per fighter, Liu Kang first,
+Raiden last (the page's top right says which, 1/12 to 12/12). Set it On,
+close the OSD, and turn the pages with Left and Right on either controller
+(from the last page on to the first, and Left from the first to the last);
+open the OSD and set Move List to Off to play on. The game waits while the
+window is on. The window only shows the moves; the core does not enter them
+for you (the Finishing Moves page does that).
 
 Commands as the game reads them: F toward the opponent, B away. In
 (BL U U) LK, Block keeps the fighter from jumping on U and is let go
 before LK; (HP 1 s) means High Punch held for about a second, then let
 go; X+Y pressed together; "in air" during a jump. The list is the one of
-rev L3.1; other revisions and the hacks may differ. The OSD of Mortal Kombat
-II Plus has no Move List option.
+rev L3.1; other revisions and the hacks may differ. Mortal Kombat II Plus has
+a Move List of its own, [below](#mortal-kombat-ii-plus).
 
 | Fighter | Move | Command |
 |---|---|---|
@@ -161,7 +168,7 @@ the EJB code again (three tries at most).
 
 When the OSD closes, a message says what an option just turned on does, or
 that the loaded revision does not have it. Mortal Kombat II Plus has no Hidden
-Items page.
+Items page; its View Secrets option is [below](#mortal-kombat-ii-plus).
 
 ## Finishing Moves
 
@@ -181,7 +188,8 @@ start (the move stays set for the next one) and when the game did not take
 the move. A move is used once; "Clear the set move" drops a set move.
 
 Mortal Kombat II Plus has no Finishing Moves page: its moves differ from rev
-L3.1's, so the OSD leaves the page out.
+L3.1's, so the OSD leaves the page out. Its Move List shows its finishing
+moves.
 
 Commands as the game reads them: F toward the opponent, B away, U up, D
 down; HP / LP / HK / LK / BL High Punch, Low Punch, High Kick, Low Kick,
@@ -293,3 +301,277 @@ menu is selected (Service Mode, the Test button or the Test Switch DIP), so
 the diagnostics see the game as it is.
 
 Every Mortal Kombat II version has the option, Mortal Kombat II Plus included.
+
+## Mortal Kombat II Plus
+
+Mortal Kombat II Plus (Beta 2, hack) adds fighters, moves and secrets to
+Mortal Kombat II. The core gives it two windows of its own, a Move List and
+View Secrets, both Off or On on the OSD's main menu and shown over the game's
+paused title screen like the Move List above. Set one On, close the OSD, and
+turn the pages with Left and Right on either controller (from the last page
+on to the first, and Left from the first to the last); open the OSD and set
+it to Off to play on. If both are On, the one turned On last is shown, from
+its first page; set that one to Off and the other comes back. The windows
+only show; the core does not enter anything for you.
+
+### Move List
+
+17 pages (the top right says which, 1/17 to 17/17): the 12 fighters in the
+order of the character select, Liu Kang first and Raiden twelfth, then Jade,
+Noob Saibot, Smoke, Kintaro and Shao Kahn. Each page lists the fighter's
+special moves, then the finishing moves with the distance each needs
+(Shang Tsung's page also lists his morphs), and a few lines on how to read
+them. Distances are the guide's words: Close, Sweep (within a sweep's reach),
+Half screen (a jump away), Full screen, Anywhere. A + marks a move the guide
+lists as an addition to Mortal Kombat II: it needs Extra Moves On in the
+hack's settings (Service Mode, MK2+ Settings).
+
+Commands as the game reads them: F toward the opponent, B away, X+Y pressed
+together, (X) Y or (X Y) X held while Y is entered and then let go, (X 2 s)
+X held for about 2 seconds, then let go. Every fighter but Kintaro and Shao
+Kahn also has the Dead Pool: hold LP+LK, then D+HP, close. Hornbuckle, the
+opponent you fight to unlock Smoke, has Liu Kang's moves and finishing moves
+and no page of his own.
+
+| Fighter | Move | Command |
+|---|---|---|
+| Liu Kang | High Fireball | F F HP (also in air) |
+|  | Low Fireball | F F LP |
+|  | Flying Kick | F F HK |
+|  | Bicycle Kick | (LK 4 s) |
+| Kung Lao | Hat Throw | B F LP (Up / Down steer the hat) |
+|  | Teleport | D U (then HP / HK attacks) |
+|  | Diving Kick | D+HK in air |
+|  | Whirlwind Spin | (BL U U) LK (tap LK to keep spinning) |
+| Johnny Cage | High Green Orb | F D B HP |
+|  | Low Green Orb | B D F LP |
+|  | Shadow Kick | B F LK |
+|  | Split Punch | LP+BL (close) |
+|  | Shadow Uppercut | B D B HP |
+| Reptile | Acid Spit | F F HP |
+|  | Forceball | B B HP+LP |
+|  | + Fast Forceball | F F HP+LP |
+|  | Slide | B+LP+LK+BL |
+|  | Invisibility | (BL U U D) HP |
+| Sub-Zero | Freeze | D F LP |
+|  | + Air Freeze | D F LP in air |
+|  | Ground Freeze | D B LK |
+|  | Slide | B+LP+LK+BL |
+| Shang Tsung | Skull | B B HP |
+|  | 2 Skulls | B B F HP |
+|  | 3 Skulls | B B F F HP |
+|  | Morph into Baraka | D D LK |
+|  | Morph into Jax | D F B HK |
+|  | Morph into Johnny Cage | B B D LP |
+|  | Morph into Kitana | BL BL BL |
+|  | Morph into Kung Lao | B D B HK |
+|  | Morph into Liu Kang | B F F BL |
+|  | Morph into Mileena | (HP 2 s) |
+|  | Morph into Raiden | D B F LK |
+|  | Morph into Reptile | (BL U D) HP |
+|  | Morph into Scorpion | (BL U U) |
+|  | Morph into Sub-Zero | F D F HP |
+|  | Morph into Jade | F B F LK |
+|  | Morph into Noob Saibot | B D B HP |
+|  | Morph into Smoke | F F B LP |
+| Kitana | Fan Swipe | B+HP |
+|  | Fan Throw | F F LP+HP (also in air) |
+|  | Fan Lift | B B B HP |
+|  | Square Wave Punch | F D B HP |
+| Jax | Energy Wave | F D B HK |
+|  | Gotcha Grab | F F LP (tap LP for more hits) |
+|  | Multi-Slam | tap HP (quickly, while throwing) |
+|  | Ground Pound | (LK 3 s) |
+|  | Backbreaker | BL in air (next to an opponent in the air) |
+| Mileena | Sai Throw | (HP 2 s) (also in air) |
+|  | Teleport Kick | F F LK |
+|  | Ground Roll | B B D HK |
+| Baraka | Blade Swipe | B+HP |
+|  | Blade Spark | D B HP |
+|  | Blade Fury | B B B LP |
+|  | Double Kick | HK HK (close, quickly) |
+|  | + Blade Spin | F D F BL (tap BL for more spins) |
+| Scorpion | Spear | B B LP |
+|  | Teleport Punch | D B HP (also in air) |
+|  | + Forward Teleport | D F HP (also in air) |
+|  | Leg Takedown | F D B LK |
+|  | Air Throw | BL in air (next to an opponent in the air) |
+| Raiden | Lightning Bolt | D F LP |
+|  | Torpedo | B B F (also in air) |
+|  | Teleport | D U (quickly) |
+|  | Electric Grab | (HP 3 s) (close to the opponent) |
+| Jade | Fan Throw | F F LP+HP (also in air) |
+| Noob Saibot | Spear | B B LP |
+|  | Slide | B+LP+LK+BL |
+|  | Teleport | D U |
+|  | Leg Takedown | F D B LK |
+| Smoke | Spear | B B LP |
+|  | Teleport Punch | D B HP (also in air) |
+|  | Air Throw | BL in air (next to an opponent in the air) |
+|  | Dash Throw | F D B LK |
+| Kintaro | Fireball | B D F LP |
+|  | Teleport Stomp | D D U |
+| Shao Kahn | Spear Toss | B D F LP |
+|  | Grab & Punch | (HP 3 s) (close to the opponent) |
+|  | Shoulder Charge | B F F HP |
+|  | Upward Shoulder | B D B HK |
+
+| Fighter | Move | Command | Distance |
+|---|---|---|---|
+| Liu Kang | Butterfly Kick | (BL) F U B D F (Deadly Uppercut; a full stick turn) | Sweep |
+|  | + Butterfly Kick | hold D+BL for the decapitation | |
+|  | + Butterfly Kick | hold LP+LK for the stage fatality | |
+|  | Dragon's Bite | D F B B HK | Close |
+|  | Friendship | F B B B LK | Anywhere |
+|  | Babality | D D F B LK | Anywhere |
+|  | Pit / Spikes | B F F LK | Close |
+| Kung Lao | Hat Decap | (LP) B F (Up / Down aim at the neck) | Full screen |
+|  | Body Slice | F F F LK | Sweep |
+|  | + Hat Splitter | (LP) B F (Up / Down aim at the waist) | Full screen |
+|  | Friendship | B B B D HK | Anywhere |
+|  | Babality | B B F F HK | Anywhere |
+|  | Pit / Spikes | F F F HP | Close |
+| Johnny Cage | Decap Uppercut | F F D U | Close |
+|  | + Decap Uppercut | hold D+LP+LK+BL for the Triple Decap | |
+|  | Torso Rip | D D F F LP | Close |
+|  | Friendship | D D D D HK | Anywhere |
+|  | Babality | B B B HK | Anywhere |
+|  | Pit / Spikes | D D D HK | Close |
+| Reptile | Yummy! | B B D LP | Half screen |
+|  | Invisible Slice | F F D HK (while invisible) | Close |
+|  | Friendship | B B D LK | Anywhere |
+|  | Babality | D B B LK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Sub-Zero | Ice Shatter | F F D HK, then F D F F HP (Deep Freeze, then Uppercut) | Sweep, then Close |
+|  | Ice Grenade | (LP) B B D F | Full screen |
+|  | Grenade Shatter | F F D HK, then (LP) B B D F (Deep Freeze, then Ice Grenade) | Sweep, then Full screen |
+|  | Friendship | B B D HK | Anywhere |
+|  | Babality | D B B HK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Shang Tsung | Inner-Ear Explosion | (HK 2 s) | Sweep |
+|  | Soul Steal | U D U+LK | Close |
+|  | Kintaro Morph | (LP 30 s) | Sweep |
+|  | Friendship | B B D F HK | Anywhere |
+|  | Babality | B F D HK | Anywhere |
+|  | Pit / Spikes | D D U D | Close |
+| Kitana | Kiss of Death | (LK) F F D F | Close |
+|  | Fan Decap | BL BL BL HK | Close |
+|  | Friendship | D D D U+LK | Anywhere |
+|  | Babality | D D D LK | Anywhere |
+|  | Pit / Spikes | F D F HK | Close |
+| Jax | Arm Rip | BL BL BL BL LP | Sweep |
+|  | Head Smash | (LP) F F F | Close |
+|  | Friendship | D D U U LK | Anywhere |
+|  | Babality | D U D U LK | Anywhere |
+|  | Pit / Spikes | U U D LK | Close |
+| Mileena | Sai Stabs | F B F LP | Close |
+|  | Man-Eater | (HK 3 s) | Close |
+|  | Friendship | D D D U+HK | Anywhere |
+|  | Babality | D D D HK | Anywhere |
+|  | Pit / Spikes | F D F LK | Close |
+| Baraka | Blade Decap | B B B B HP | Close |
+|  | Blade Lift | B F D F LP | Close |
+|  | Friendship | U F F HK | Anywhere |
+|  | Babality | F F F HK | Anywhere |
+|  | Pit / Spikes | F F D HK | Close |
+| Scorpion | Spear Slice | (HP) D F F F | Close |
+|  | Toasty! | (BL) U U HP | Sweep |
+|  | Toasty!! | (BL) D D U U HP | Anywhere |
+|  | Friendship | B B D HK | Anywhere |
+|  | Babality | D B B HK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Raiden | Electrocution | (LK 3 s) tap LK+BL | Close |
+|  | Explosive Uppercut | (HP 10 s) (start before FINISH HIM, or hold U+HP+HK till heads drop) | Close |
+|  | Friendship | D B F HK | Anywhere |
+|  | Babality | D D U+HK | Anywhere |
+|  | Pit / Spikes | U U U HP | Close |
+| Jade | Kiss of Death | (LK) F F D F | Close |
+|  | Fan Decap | BL BL BL HK | Close |
+|  | Friendship | D D D U+LK | Anywhere |
+|  | Babality | D D D LK | Anywhere |
+|  | Pit / Spikes | F D F HK | Close |
+| Noob Saibot | Explosive Uppercut | F F D D HP (then hold U+HP+HK till heads drop) | Close |
+|  | Slice | (HP) D F F F | Close |
+|  | Friendship | B B D HK | Anywhere |
+|  | Babality | D B B HK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Smoke | Smoke Death | B D B B HP | Anywhere |
+|  | Telekinetic Decap | F B B F HP | Anywhere |
+|  | Friendship | B B D HK | Anywhere |
+|  | Babality | D B B HK | Anywhere |
+|  | Pit / Spikes | D F F BL | Close |
+| Kintaro | Oblivion Stomp | D D D D HK | Sweep |
+|  | Torso Punch | D D B B HP | Close |
+|  | Babality | (BL) U D D LK | Anywhere |
+| Shao Kahn | Matter over Mind | D D D F HP | Close |
+|  | Babality | D B F HK | Anywhere |
+
+### View Secrets
+
+Five pages: Jade and Noob Saibot; Smoke and Hornbuckle; Kintaro and Shao
+Kahn; the Kombat Kodes; other secrets (the ending bonuses, the Dead Pool and
+the hack's settings). Unlocking a secret character needs the right settings
+in the hack's Service Mode (MK2+ Settings): Improved AI Off for Jade and Noob
+Saibot, On for the two bosses, and Versus Cheats On to play as them.
+
+| Secret | Step | What to do |
+|---|---|---|
+| Jade | Unlock | Difficulty Very Hard and Improved AI Off, then beat the game, Jade included, without losing a match (a lost round is fine) |
+|  | Fight | Beat the opponent just below the ? on the ladder using Low Kicks (LK) only; Jade is in Goro's Lair |
+|  | Select | Hold START on the character select screen, then pick Kitana with another button |
+|  | Clues | "A princess is the key", "I am one of four!" |
+| Noob Saibot | Unlock | Difficulty Very Hard and Improved AI Off, then beat the game in under 12 minutes 50 seconds |
+|  | Fight | Win 50 matches in a row; Noob Saibot is in Goro's Lair |
+|  | Select | Hold START, then pick Sub-Zero with another button |
+|  | Clues | "Holding START is the key", "Ytfif ot teg", "It's cold in the shadows", "I am one of four!" |
+| Smoke | Unlock | Difficulty Very Easy. Win a match with a double Flawless and a Fatality on The Pit II while the silhouettes cross the moon: you then fight Hornbuckle, and beating him unlocks Smoke |
+|  | Tip | The silhouettes are rare (about 1 in 100): start a 1-player game and lose until The Pit II; with none, press Player 2 START, let the timer run out undamaged and start again |
+|  | Fight | At the Portal, uppercut the opponent until Dan Forden appears (Toasty!), then quickly press D+START: Smoke is in Goro's Lair |
+|  | Select | Hold START, then pick Reptile with another button |
+|  | Clues | "He is the original", "I am one of four!" |
+| Hornbuckle | Who | The opponent after the Pit II fatality; he has Liu Kang's moves and finishing moves |
+| Kintaro and Shao Kahn | Needs | Improved AI On, and Jade, Noob Saibot and Smoke unlocked |
+|  | Earn | Score at least 600 points in Survival mode, twice: the first time unlocks one boss, the second the other |
+|  | Sign | The results screen says "You are rewarded with a new fighter" |
+|  | Play as | Kintaro: hold U+LP+HP+LK+HK before the match starts |
+|  | Play as | Shao Kahn: hold D+LP+HP+LK+HK before the match starts |
+|  | Play needs | Versus Cheats On; works in Kahn's Arena |
+
+The Kombat Kodes: hold the buttons on the battle screen, before the match
+starts. In a 2-player game both players hold theirs. They work in Klassic
+Kombat too, and a message names the code when it is on, as FASTER UPPERCUTS!
+
+| Kombat Kode | Player 1 | Player 2 |
+|---|---|---|
+| Faster Uppercuts | HP | HP |
+| Super Uppercuts | U+HP | U+HP |
+| Blocking Disabled | BL | BL |
+| Throwing Disabled | LP | LP |
+| Outworld Weather | HP+HK | HP+HK |
+| Going Back in Time (Pong) | LP+LK+BL | LP+LK+BL |
+| La Luna Mode | U | U |
+| Dude Where's My Bar | D | D |
+| Round Timer Disabled | D+HK | - |
+| Display Hit Boxes | F | F |
+| Tug of War Kombat | B+BL | B+BL |
+| Randper Kombat | F+LK | B+LK |
+| Explosive Kombat | LP+HP | LK+HK |
+| 2 vs 2: Finishing Tags Allowed | LP+HP+BL | LP+HP+BL |
+
+Other secrets: during an ending, before the cast of characters, hold Down
+for the Dizzy Disco Ball or Up for the Babalities. The settings of the hack's
+Service Mode (MK2+ Settings) that matter here are Extra Moves, Improved AI,
+Versus Cheats, Secret Characters (lock or unlock each one) and Cheat Selection
+(forces a Kombat Kode on all the time).
+
+### Where the pages come from
+
+The pages follow the MK2+ guide (MKKomplete, Ver. 2.8.50,
+https://icemantraveler.github.io/mkksg/fan_made/mk2plus/default.htm). The
+hack in the MRA is HBMAME's MK2+ VER 1.48 (Beta 2, build of 12/22/2018), which
+is older than the guide, so a move or secret the guide adds may be missing in
+it. The moves were not tried in the core, and not checked in the hack's code;
+the clues, the Kombat Kode messages and the settings the pages name are in
+its ROM. The guide's SHRUNKEN KOMBAT!, LARGE EFFECTS! and TINY EFFECTS! codes
+are in the ROM too, but the guide gives no buttons for them, so they are not
+listed.
