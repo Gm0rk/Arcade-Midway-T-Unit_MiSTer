@@ -4,13 +4,17 @@
 //
 // Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 
-localparam [4:0] WIN_NBAJAM = 5'd0;     // 2 pages
-localparam [4:0] WIN_NBAJAMTE = 5'd2;   // 6 pages
-localparam [4:0] WIN_MK = 5'd8;         // 2 pages
-localparam [4:0] WIN_MK2 = 5'd10;       // 12 pages
+localparam [5:0] WIN_NBAJAM = 6'd0;                 // 2 pages
+localparam [5:0] WIN_NBAJAMTE = 6'd2;               // 6 pages
+localparam [5:0] WIN_MK = 6'd8;                     // 2 pages
+localparam [5:0] WIN_MK2 = 6'd10;                   // 12 pages
+localparam [5:0] WIN_MK2PLUS = 6'd22;               // 17 pages
+localparam [5:0] WIN_MK2PLUS_SECRETS = 6'd39;       // 5 pages
 
-// pages of each list (the OSD options: Off, then one value per page)
+// pages of each list (Left / Right turn them while the OSD option is On)
 localparam [4:0] WIN_NBAJAM_N = 5'd2;
 localparam [4:0] WIN_NBAJAMTE_N = 5'd6;
 localparam [4:0] WIN_MK_N = 5'd2;
 localparam [4:0] WIN_MK2_N = 5'd12;
+localparam [4:0] WIN_MK2PLUS_N = 5'd17;
+localparam [4:0] WIN_MK2PLUS_SECRETS_N = 5'd5;
