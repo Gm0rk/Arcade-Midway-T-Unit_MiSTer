@@ -119,27 +119,33 @@ The tests behind the status above are run on MiSTer hardware, with this setup
   demand (see the [Mortal Kombat page](docs/MortalKombat.md))
 - Mortal Kombat, Mortal Kombat II: a Move List (every fighter's special moves
   and finishing moves, with the distance each finishing move needs, over the
-  game's title screen), Finishing Moves (every fighter's finishing moves,
+  game's title screen; Left and Right turn the pages), Finishing Moves (every fighter's finishing moves,
   entered for you at FINISH HIM) and Fixed AI Difficulty (the computer
-  opponent's level held at 0 (easiest) to 9, or Off); Mortal Kombat II Plus
-  has Fixed AI Difficulty only
+  opponent's level held at 0 (easiest) to 9, or Off)
+- Mortal Kombat II Plus: its own Move List (a page for each fighter with the
+  moves the hack adds, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn)
+  and View Secrets (how to unlock and select the secret characters and the
+  bosses, the Kombat Kodes, the ending bonuses), turned with Left and Right
+  like the other lists, and Fixed AI Difficulty; no Finishing Moves or
+  Hidden Items
 - NBA Jam, NBA Jam Tournament Edition: the power-up codes for all players and
   the codes of the Tonight's Match-Up screen (NBA Jam's hidden tank game,
   TE's tournament mode); a Secret Player List (every secret player's name,
   initials, birthday and versions, and every cheat code as the players enter
-  it) over the game's title screen
+  it) over the game's title screen; Left and Right turn the pages
 
 ## OSD
 
 | Item | |
 |---|---|
 | Video Settings | Aspect ratio, scandoubler, scale, Video Timing, CRT Adjust (CRT Auto-Width, H-Size, H-Position, V-Shift, V-Size, V-Size Mode: shown while CRT Adjust is On) |
-| Move List | Mortal Kombat: Off, List 1, List 2; Mortal Kombat II: Off or a fighter. Shows the moves over the game's title screen; the game waits while it is shown |
+| Move List | Mortal Kombat, Mortal Kombat II, Mortal Kombat II Plus: Off, On. Shows the moves over the game's title screen (two pages for Mortal Kombat, a page per fighter for Mortal Kombat II and for Plus, which has the hack's own moves and fighters); the game waits while it is shown. With the OSD closed, Left or Right turns the page; open the OSD to set it Off |
 | Finishing Moves | Mortal Kombat, Mortal Kombat II: each fighter's finishing moves, entered for you at the next FINISH HIM |
 | Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II: Off, or 0 (easiest) to 9; the computer opponent's level in 1-player games (not applied while the test menu is selected) |
-| View Secret Players | NBA Jam: Off, Page 1, Page 2; NBA Jam Tournament Edition: Off, Page 1 to Page 6. Shows the secret players and the cheat codes over the game's title screen; the game waits while it is shown |
+| View Secret Players | NBA Jam, NBA Jam Tournament Edition: Off, On. Shows the secret players and the cheat codes over the game's title screen (two pages for NBA Jam, six for Tournament Edition); the game waits while it is shown. With the OSD closed, Left or Right turns the page; open the OSD to set it Off |
+| View Secrets | Mortal Kombat II Plus: Off, On. Shows how to unlock and select Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn, the Kombat Kodes, the ending bonuses and the settings that matter, over the game's title screen (five pages); the game waits while it is shown. With the OSD closed, Left or Right turns the page; open the OSD to set it Off (Move List and View Secrets can both be On: the one set On last is shown) |
 | DIP Switches | The game's DIP switches in alphabetical order, with Service Credit and Tilt (selecting the line adds a credit or slams the tilt switch) |
-| Hidden Items | Hidden menus, cheats and extras, only for the games that have them: Secret Menus for Judge Dredd, Hidden Items for the Mortal Kombat games, Cheat Codes & Hidden Items for the NBA Jam games |
+| Hidden Items | Hidden menus, cheats and extras, only for the games that have them: Secret Menus for Judge Dredd, Hidden Items for the Mortal Kombat games (Mortal Kombat II Plus has View Secrets instead), Cheat Codes & Hidden Items for the NBA Jam games |
 | Service Mode | The cabinet's test switch |
 | Pause when OSD is open | On by default |
 | Reset / Reset and close OSD | Reset keeps the OSD open |
