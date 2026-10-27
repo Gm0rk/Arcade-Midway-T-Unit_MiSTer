@@ -13,6 +13,7 @@ board. The earlier Y Unit revisions are not part of this core.
 - [Move List](#move-list)
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
+- [Fixed AI Difficulty](#fixed-ai-difficulty)
 
 ## Versions
 
@@ -36,7 +37,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Seven extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, three Reptile options, Finishing Moves, and a Move List window.
+Eight extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, three Reptile options, Finishing Moves, a Move List window, and Fixed AI Difficulty.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -47,6 +48,7 @@ Seven extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, thr
 | Reptile Hints Always | Reptile drops in with a hint before every round | Hidden Items |
 | Finishing Moves | Pick a fighter's fatality or The Pit (7 fighters). At the next FINISH HIM that fighter wins, the core takes the winner's controls and enters the move, waiting for the right distance. A message says when it is too far or too close, on the wrong stage, or not taken | Finishing Moves |
 | Move List window | Every fighter's special moves, fatality and the distance each needs, over the game's paused title screen: List 1 (Johnny Cage, Kano, Sub-Zero, Sonya), List 2 (Raiden, Liu Kang, Scorpion). Distances are given as Close, Sweep, Jump, Half screen, Full screen | Move List |
+| Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
 
 <!-- extra-content:end -->
 
@@ -166,3 +168,19 @@ Sweep 80-127, Jump 128-199, Half screen 200-259, Full screen 260 or more.
 | Scorpion | Fire Breath | (BL) U U | Sweep to jump |
 
 Every fighter also has The Pit: D+HP, close.
+
+## Fixed AI Difficulty
+
+The OSD's Fixed AI Difficulty option (Off, then 0 to 9; Off by default, on the
+main menu below Finishing Moves) pins the computer opponent's level. The game
+keeps that level in one number, 0 (easiest) to 9, and raises it after matches
+you win and lowers it after matches you lose; the computer's play follows it.
+With the option on, the computer plays at the level you picked whatever the
+game thinks the level is, through wins and losses in 1-player games. Set it
+to Off and the game's own level is back at once. A change takes effect as the
+game next reads the level.
+
+The option pins the level; it does not change how the computer plays at a
+given level. It has no effect on 2-player fights, and it is off while the test
+menu is selected (Service Mode, the Test button or the Test Switch DIP), so
+the diagnostics see the game as it is.
