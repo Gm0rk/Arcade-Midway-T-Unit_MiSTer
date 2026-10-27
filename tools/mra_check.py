@@ -21,7 +21,12 @@ md5. This check is independent of mra_gen.py and tunit_layout.py.
 
 ROM index 1's first word must hold only the game id and the hide flag (bit 8,
 the OSD hides the Move List, Finishing Moves and Hidden Items), and a set with
-the flag has no table after the format word.
+the flag has no table after the format word but the AI level word (bytes
+0x454-0x457, zeros before it). Every MK and MK2 set must carry the AI level
+word (Fixed AI Difficulty) there, and it must be the one an independent scan
+of the loaded program ROM finds: the routine that reads the CPU opponent's
+level, adds to it, clamps it to 0..9 and writes it back (exactly one in the
+ROM, with the same word read and written).
 
 With --out, the loaded streams are written as <set>_rom0.bin / _rom3.bin
 for the simulator, and the game id / secrets table as <set>_rom1.bin
@@ -118,6 +123,28 @@ def load_part(ld, part, zips, mp):
         ld.rom_data(data, mp)
 
 
+# Fixed AI Difficulty: the adjust routine's word (0 = wildcard). Written here
+# on its own, not taken from tools/tunit_fmoves.py.
+LEVEL_ADJUST = [0x05A0, 0, 0, 0x4020, 0xCF01, 0x5600, 0x0B40, 0xFFF6, 0xC201, 0x1920, 0x0580, 0, 0, 0x0960]
+LEVEL_WILD = {1, 2, 11, 12}
+
+
+def level_scan(prog):
+    """The AI level word's bit address in the program ROM (little-endian 16-bit
+    words), or an error text."""
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+    hits = [i for i in range(n - len(LEVEL_ADJUST))
+            if all(j in LEVEL_WILD or w[i + j] == v for j, v in enumerate(LEVEL_ADJUST))]
+    if len(hits) != 1:
+        return '%d AI level adjust routines in the program ROM, not 1' % len(hits)
+    i = hits[0]
+    rd, wr = w[i + 1] | w[i + 2] << 16, w[i + 11] | w[i + 12] << 16
+    if rd != wr:
+        return 'the AI level routine reads %08X and writes %08X' % (rd, wr)
+    return rd
+
+
 # region checks: (rom index, stream offset, region, region offset, length)
 def region_checks(setname, streams, regions_dir):
     d = os.path.join(regions_dir, setname)
@@ -211,8 +238,20 @@ def main():
             hides = bool(w0 & 0x100)
             if w0 & ~0x107:
                 msgs.append('rom 1 word 0 is %04X: bits other than the game id and the hide flag' % w0)
-            if hides and len(t) != 4:
-                msgs.append('rom 1 hides the extras but is %d bytes, not the 4 of game id and format' % len(t))
+            gid = w0 & 7
+            if hides and (len(t) != 0x458 or any(t[4:0x454])):
+                msgs.append('rom 1 hides the extras but is %d bytes, not game id and format, zeros, '
+                            'and the AI level word at 0x454' % len(t))
+            if gid <= 2:      # MK, MK Turbo, MK2: the AI level word, as the scan finds it
+                lv = level_scan(streams.get(0, b'')[:0x100000])
+                if len(t) < 0x458:
+                    msgs.append('rom 1 has no AI level word (%d bytes)' % len(t))
+                elif isinstance(lv, str):
+                    msgs.append(lv)
+                else:
+                    got = (t[0x454] | t[0x455] << 8 | t[0x456] << 16 | t[0x457] << 24) << 4
+                    if got != lv:
+                        msgs.append('rom 1 AI level word is %08X, the program ROM\'s is %08X' % (got, lv))
         status = 'OK' if not msgs else 'FAIL'
         bad += bool(msgs)
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
