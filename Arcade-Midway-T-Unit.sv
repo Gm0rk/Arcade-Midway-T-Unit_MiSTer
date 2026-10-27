@@ -597,21 +597,20 @@ wire        core_hs, core_vs, core_hb, core_vb;
 // the core sends its own frames instead: black, with the timing the 34010
 // starts from (253 VCLKs of 2 dots x 289 lines, the same blanking and sync;
 // 15.81 kHz, 54.7 Hz), so the output stays locked and the scaler shows black.
-reg   [8:0] idl_x = 9'd0;       // dot in the line, 0-505
-reg   [8:0] idl_y = 9'd0;       // line in the frame, 0-288
-always @(posedge clk_sys) if (ce_pix) begin
-	if (idl_x == 9'd505) begin
-		idl_x <= 9'd0;
-		idl_y <= (idl_y == 9'd288) ? 9'd0 : idl_y + 9'd1;
-	end
-	else
-		idl_x <= idl_x + 9'd1;
-end
-
-wire idl_hs = (idl_x < 9'd36);                           // HESYNC 18 VCLKs
-wire idl_hb = (idl_x < 9'd90) | (idl_x >= 9'd500);       // HEBLNK 45, HSBLNK 250
-wire idl_vs = (idl_y < 9'd3);                            // VESYNC 3
-wire idl_vb = (idl_y < 9'd20) | (idl_y >= 9'd274);       // VEBLNK 20, VSBLNK 274
+// With the 57Hz Video Timing the frame is the board's 277-line one (57.1 Hz),
+// so the loading screen runs at the refresh rate the game will run at
+// (rtl/tunit_idle.sv).
+wire idl_hs, idl_vs, idl_hb, idl_vb;
+tunit_idle idle
+(
+	.clk    (clk_sys),
+	.ce_pix (ce_pix),
+	.vt57   (status[10]),       // 57Hz (the board's vtiming)
+	.hs     (idl_hs),
+	.vs     (idl_vs),
+	.hb     (idl_hb),
+	.vb     (idl_vb)
+);
 
 assign core_hs = load_black ? idl_hs : brd_hs;
 assign core_vs = load_black ? idl_vs : brd_vs;
