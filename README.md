@@ -165,7 +165,7 @@ Mortal Kombat II Plus goes in `games/hbmame`.
   Andrea Bogazzi (@asturur)
 - [Template_MiSTer](https://github.com/MiSTer-devel/Template_MiSTer),
   [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
-  - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
+- ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
   the arcade core guidance used while developing and checking this core
 
 ## License
