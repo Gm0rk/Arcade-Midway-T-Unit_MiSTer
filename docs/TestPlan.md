@@ -18,8 +18,8 @@ it is in `config/nvram` on the SD card, named after the MRA.
 | Section | Tests | Passed | Done |
 |---|---|---|---|
 | [Core-wide](#core-wide) | 17 | 0 | No |
-| [Mortal Kombat](#mortal-kombat) | 21 | 0 | No |
-| [Mortal Kombat II](#mortal-kombat-ii) | 20 | 0 | No |
+| [Mortal Kombat](#mortal-kombat) | 23 | 0 | No |
+| [Mortal Kombat II](#mortal-kombat-ii) | 22 | 0 | No |
 | [NBA Jam](#nba-jam) | 18 | 0 | No |
 | [NBA Jam Tournament Edition](#nba-jam-tournament-edition) | 18 | 0 | No |
 | [Judge Dredd](#judge-dredd) | 13 | 0 | No |
@@ -77,6 +77,8 @@ Main MRA: Mortal Kombat (rev 5.0 T-Unit 03-19-93). See also the
 | MK19 | Hidden Items: Moon Silhouettes Always On, play to The Pit | The message names it when the OSD closes; silhouettes cross the moon in every round there | |
 | MK20 | Hidden Items: Reptile Hints Always On, start a match | The message names it when the OSD closes; Reptile drops in with a hint before each round's "Fight!"; the EJB Menu's game audits are not cleared | |
 | MK21 | MK17 and MK20 on rev 4.0 and Turbo Ninja | The same as on rev 5.0 | |
+| MK22 | Fixed AI Difficulty (OSD main menu, below Finishing Moves): set 0, start a 1-player game and play a fight; then set 9 and play another; then Off | At 0 the opponent is as easy as the game gets and at 9 as hard, from the first fight after the change; the level holds when you win or lose a match; with Off the game's own level is back (it starts low and rises with your wins); the same on rev 4.0 and Turbo Ninja | |
+| MK23 | Fixed AI Difficulty with a level set (say 9): open the test menu (Service Mode or the Test button) and run the RAM, switch and sound tests, then leave it | Every test passes as it does with the option Off; the level is back in the next game | |
 
 ## Mortal Kombat II
 
@@ -104,7 +106,9 @@ Main MRA: Mortal Kombat II (rev L3.1). See also the
 | MK2-17 | Other versions: L3.2 and L3.1 European, L3.0, L2.1, L2.0, L1.4, L1.1 | Each boots to the attract mode and starts a game | |
 | MK2-18 | Hacks: L4.2, L9.1, Challenger | Each boots to the attract mode and starts a game | |
 | MK2-19 | Mortal Kombat II Plus (Beta 2, hack): put its complete `mk2.zip` in `games/hbmame` (MAME's `mk2.zip` stays in `games/mame`) and load its MRA from `_alternatives` | It boots to the attract mode and starts a game; play a few fights, including new fighters or moves if you know them: graphics and sound right (DCS music and speech clean), no lockup; its settings are kept apart from rev L3.1's (change one in Plus, load rev L3.1: unchanged) | |
-| MK2-20 | Mortal Kombat II Plus: open the OSD, then load rev L3.1 and open it again | On Plus the main menu has no Move List, Finishing Moves or Hidden Items, and Video Settings, DIP Switches, Service Mode, Pause when OSD is open and Reset work; on rev L3.1 all three are there | |
+| MK2-20 | Mortal Kombat II Plus: open the OSD, then load rev L3.1 and open it again | On Plus the main menu has no Move List, Finishing Moves or Hidden Items (it has Fixed AI Difficulty), and Video Settings, DIP Switches, Service Mode, Pause when OSD is open and Reset work; on rev L3.1 all three are there as well | |
+| MK2-21 | Fixed AI Difficulty (OSD main menu, below Finishing Moves): set 0, start a 1-player game and play a fight; then set 9 and play another; then Off | At 0 the opponent is as easy as the game gets and at 9 as hard, from the first fight after the change; the level holds when you win or lose a match; with Off the game's own level is back; the same on Mortal Kombat II Plus | |
+| MK2-22 | Fixed AI Difficulty with a level set (say 9): open the test menu (Service Mode or the Test button) and run the RAM, switch and sound tests, then leave it | Every test passes as it does with the option Off; the level is back in the next game | |
 
 ## NBA Jam
 
