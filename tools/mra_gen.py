@@ -12,10 +12,11 @@ mra/_alternatives/_<Game>/. Each MRA carries
     Secrets and cheats, tools/tunit_secrets.py) and, for MK and MK2 at byte
     0x400, the fight variables the finishing-move player follows and the
     AI level word of Fixed AI Difficulty (tools/tunit_fmoves.py); both need
-    --zips: they are found in the set's own program ROM. A set that hides
-    the extras (hbmame_sets.py hide_extras) has the game id with the hide
-    flag instead: no table, and the OSD shows no Move List, Finishing Moves
-    or Hidden Items (only the AI level word, at byte 0x454),
+    --zips: they are found in the set's own program ROM. A set with its own
+    extras (hbmame_sets.py hide_extras: Mortal Kombat II Plus) has the game
+    id with the flag instead: no table, and the OSD shows the hack's Move
+    List and View Secrets (tools/tunit_plus.py) but no Finishing Moves or
+    Hidden Items (and the AI level word, at byte 0x454),
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
   - MAME's DIP switches for the set (less the ones the set does not use,
@@ -285,9 +286,10 @@ def main():
 
         out.append('\t<rom index="1">')
         if getattr(g, 'hide_extras', False):
-            # the OSD shows no Move List, Finishing Moves or Hidden Items:
-            # the game id with the hide flag, no secrets table, no fight
-            # variables; only the AI level word (Fixed AI Difficulty stays)
+            # the OSD shows the hack's own Move List and View Secrets but no
+            # Finishing Moves or Hidden Items: the game id with the flag, no
+            # secrets table, no fight variables; the AI level word (Fixed AI
+            # Difficulty stays)
             table, notes = tunit_secrets.hidden_table(gid)
             out.append('\t\t<!-- game id (rtl/tunit_secrets.sv): %s -->' % escape('; '.join(notes)))
             out.append('\t\t<part>')

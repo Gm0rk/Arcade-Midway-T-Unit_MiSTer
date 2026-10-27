@@ -22,10 +22,11 @@ Entry fields
   desc     description (the MRA's file name and <name>)
   zip      file name in games/hbmame
   files    {file name in the zip: new CRC} - the parent's files that differ
-  hide_extras  the core's OSD shows no Move List, Finishing Moves or Hidden
-           Items for the set (the MRA's game id word carries the flag, no
-           secrets table or fight variables are written): the hack changes
-           the code and the moves those extras are built on
+  hide_extras  the core's OSD has no Finishing Moves or Hidden Items for the
+           set, and shows its own Move List and View Secrets instead of MK2's
+           (the MRA's game id word carries the flag, no secrets table or
+           fight variables are written): the hack changes the code and the
+           moves those extras are built on
 
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 """

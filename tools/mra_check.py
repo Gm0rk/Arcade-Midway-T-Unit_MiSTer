@@ -19,8 +19,9 @@ loaded streams are also compared with what MAME itself loaded, region by
 region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
 
-ROM index 1's first word must hold only the game id and the hide flag (bit 8,
-the OSD hides the Move List, Finishing Moves and Hidden Items), and a set with
+ROM index 1's first word must hold only the game id and the flag (bit 8,
+Mortal Kombat II Plus: the OSD shows the hack's Move List and View Secrets and
+hides the Finishing Moves and Hidden Items), and a set with
 the flag has no table after the format word but the AI level word (bytes
 0x454-0x457, zeros before it). Every MK and MK2 set must carry the AI level
 word (Fixed AI Difficulty) there, and it must be the one an independent scan
@@ -229,8 +230,9 @@ def main():
         if a.regions and hb is None:
             msgs += region_checks(setname, streams, a.regions)
         # ROM index 1, word 0: the game id (bits 2:0) and, for a set that hides
-        # the OSD's Move List, Finishing Moves and Hidden Items, bit 8; that
-        # set's table is the two words (game id and format), nothing else
+        # the Plus set's own Move List and View Secrets (no Finishing Moves or
+        # Hidden Items), bit 8; that set's table is the two words (game id and
+        # format), nothing else
         t = streams.get(1, b'')
         hides = False
         if len(t) >= 2:
@@ -256,7 +258,7 @@ def main():
         bad += bool(msgs)
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
                                                              len(streams.get(3, b'')), len(streams.get(1, b'')),
-                                                             '; '.join(msgs + (['hides Move List, Finishing Moves, Hidden Items'] if hides else []))))
+                                                             '; '.join(msgs + (['Plus: own Move List and View Secrets, no Finishing Moves or Hidden Items'] if hides else []))))
     sys.exit(1 if bad else 0)
 
 
