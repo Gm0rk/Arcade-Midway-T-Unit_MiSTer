@@ -47,20 +47,21 @@ Eight extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, thr
 | Moon Silhouettes Always | Every match on The Pit has the silhouettes crossing the moon, and with them the chance to win flawless, never Block, finish with a fatality, and meet Reptile | Hidden Items |
 | Reptile Hints Always | Reptile drops in with a hint before every round | Hidden Items |
 | Finishing Moves | Pick a fighter's fatality or The Pit (7 fighters). At the next FINISH HIM that fighter wins, the core takes the winner's controls and enters the move, waiting for the right distance. A message says when it is too far or too close, on the wrong stage, or not taken | Finishing Moves |
-| Move List window | Every fighter's special moves, fatality and the distance each needs, over the game's paused title screen: List 1 (Johnny Cage, Kano, Sub-Zero, Sonya), List 2 (Raiden, Liu Kang, Scorpion). Distances are given as Close, Sweep, Jump, Half screen, Full screen | Move List |
+| Move List window | Every fighter's special moves, fatality and the distance each needs, over the game's paused title screen: page 1 (Johnny Cage, Kano, Sub-Zero, Sonya), page 2 (Raiden, Liu Kang, Scorpion). Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. Distances are given as Close, Sweep, Jump, Half screen, Full screen | Move List |
 | Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
 
 <!-- extra-content:end -->
 
 ## Move List
 
-The OSD's Move List option (Off, List 1, List 2) shows a window over the
-game, on the game's title screen, with every fighter's special moves,
-fatality and the distance it needs: List 1 has Johnny Cage, Kano, Sub-Zero
-and Sonya, List 2 Raiden, Liu Kang and Scorpion. The game waits while the
-window is on; set Move List to Off to play on. The window only shows the
-moves; the core does not enter them for you (the Finishing Moves page does
-that).
+The OSD's Move List option (Off, On) shows a window over the game, on the
+game's title screen, with every fighter's special moves, fatality and the
+distance it needs: page 1 has Johnny Cage, Kano, Sub-Zero and Sonya, page 2
+Raiden, Liu Kang and Scorpion. Set it On, close the OSD, and turn the pages
+with Left and Right on either controller (from page 2 on to page 1, and Left
+from page 1 to page 2); open the OSD and set Move List to Off to play on. The
+game waits while the window is on. The window only shows the moves; the core
+does not enter them for you (the Finishing Moves page does that).
 
 Commands as the game reads them: F toward the opponent, B away; (BL B F)
 means Block held while you enter B F; X+Y pressed together. The list is
