@@ -10,11 +10,12 @@ mra/_alternatives/_<Game>/. Each MRA carries
   - the game id (rom index 1) that selects the board configuration, and
     after it the set's secrets table (codes and read patches for the OSD
     Secrets and cheats, tools/tunit_secrets.py) and, for MK and MK2 at byte
-    0x400, the fight variables the finishing-move player follows
-    (tools/tunit_fmoves.py); both need --zips: they are found in the set's
-    own program ROM. A set that hides the extras (hbmame_sets.py
-    hide_extras) has the game id with the hide flag instead: no table, and
-    the OSD shows no Move List, Finishing Moves or Hidden Items,
+    0x400, the fight variables the finishing-move player follows and the
+    AI level word of Fixed AI Difficulty (tools/tunit_fmoves.py); both need
+    --zips: they are found in the set's own program ROM. A set that hides
+    the extras (hbmame_sets.py hide_extras) has the game id with the hide
+    flag instead: no table, and the OSD shows no Move List, Finishing Moves
+    or Hidden Items (only the AI level word, at byte 0x454),
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
   - MAME's DIP switches for the set (less the ones the set does not use,
@@ -286,12 +287,22 @@ def main():
         if getattr(g, 'hide_extras', False):
             # the OSD shows no Move List, Finishing Moves or Hidden Items:
             # the game id with the hide flag, no secrets table, no fight
-            # variables
+            # variables; only the AI level word (Fixed AI Difficulty stays)
             table, notes = tunit_secrets.hidden_table(gid)
             out.append('\t\t<!-- game id (rtl/tunit_secrets.sv): %s -->' % escape('; '.join(notes)))
             out.append('\t\t<part>')
             out += tunit_secrets.part_hex(table)
             out.append('\t\t</part>')
+            lv, lv_note = tunit_fmoves.level_part(
+                mame_src.build_region(g.romset.regions['maincpu'], gz)) if gz else (b'', '')
+            if lv:
+                # at bytes 0x454-0x457 (rtl/tunit_fmoves.sv's words 0x22A-0x22B)
+                out.append('\t\t<!-- %s (Fixed AI Difficulty) -->' % escape(lv_note))
+                out.append('\t\t<part repeat="%d">00</part>'
+                           % ((tunit_fmoves.CFG_BASE + tunit_fmoves.LVL_WORD) * 2 - len(table)))
+                out.append('\t\t<part>')
+                out += tunit_secrets.part_hex(lv)
+                out.append('\t\t</part>')
         elif gz:
             prog = mame_src.build_region(g.romset.regions['maincpu'], gz)
             table, notes = tunit_secrets.build(gid, prog)
