@@ -4,6 +4,11 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 37 (2026-10-27)
+
+**Docs**
+- README in the layout of the Y Unit core's README: Table of Contents (with links to Extra content and the Test plan), Hardware, Games (new Main set column, screenshots with alt text), Testing setup, Features, OSD (a table of the OSD items), Controls, ROMs, Credits and references, License. CRT V-Size moved from its own section into Features. Nothing was added or removed in the core itself; no new RBF.
+
 ## Build 36 (2026-10-27)
 
 **Removed**
