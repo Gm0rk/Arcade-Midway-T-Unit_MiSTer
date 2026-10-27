@@ -4,6 +4,20 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 35 (2026-10-26)
+
+**Added**
+- Fixed AI Difficulty for Mortal Kombat (rev 5.0, rev 4.0, Turbo Ninja) and Mortal Kombat II (all 12 versions, Mortal Kombat II Plus included): an OSD option on the main menu, below Finishing Moves. Off (the default), or 0 (easiest) to 9. The games keep the computer opponent's level in one RAM word, raise it after matches you win and lower it after matches you lose; with the option on, the CPU's reads of that word return the chosen level, so the computer plays at it through wins and losses in 1-player games. Off hands the game's own level back at once.
+- The option is off while the test menu is selected (Service Mode, the Test button or the Test Switch DIP), and the word is only pinned while the CPU has interrupts enabled, so the diagnostics' RAM tests see the real RAM.
+
+**Changed**
+- The 15 Mortal Kombat and Mortal Kombat II MRAs carry the level word's address (ROM index 1, bytes 0x454-0x457), found in each set's own program ROM; the Mortal Kombat II Plus MRA has it after the game id and the hide flag. The NBA Jam, NBA Jam Tournament Edition and Judge Dredd MRAs are as in Build 34. This needs a new RBF (the top level and the board).
+
+**Docs & tools**
+- `tools/tunit_fmoves.py` finds the level word (the one routine that adjusts it: read, add, clamp to 0..9, write; exactly one in each ROM); `tools/mra_gen.py` writes it; `tools/mra_check.py` repeats the scan on its own and compares it with the MRA's, and a set with the hide flag now has the 4 bytes, zeros, and the level word.
+- The simulator has `--level ADDR:N` (pin on) and `--lvlwatch ADDR` (log the CPU's reads and writes of the word).
+- README, the Mortal Kombat and Mortal Kombat II pages, ExtraContent.md and TestPlan.md (MK22-MK23, MK2-21 and MK2-22: Mortal Kombat has 23 tests, Mortal Kombat II 22) cover the option.
+
 ## Build 34 (2026-10-25)
 
 **Changed**
