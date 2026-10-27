@@ -74,6 +74,12 @@ module midway_tunit
 	input       [7:0] pt_en,
 	input       [7:0] pt_fetch,      // entry applies to instruction fetches only (program code)
 
+	// Fixed AI Difficulty (MK, MK2): while lvl_on, the CPU's reads of the
+	// game's AI level word return lvl_val (see "Read patches")
+	input             lvl_on,
+	input      [27:0] lvl_addr,      // the level word's word address (bit address >> 4)
+	input       [3:0] lvl_val,       // 0 (easiest) to 9
+
 	// sound board
 	output reg        snd_wr,        // one pulse per write of the sound data word
 	output reg [15:0] snd_data,
@@ -384,6 +390,17 @@ wire [27:0] wa = b_addr;
 // processes (all reads seen in MAME: ST.IE 1), while the RAM tests (NBA Jam
 // 2.00's at every power-up, the diagnostics') run with interrupts off and
 // so read back what they wrote.
+//
+// Fixed AI Difficulty is one more entry of the same kind, with its value
+// from the OSD (lvl_val, 0 to 9) instead of the table: MK and MK2 keep their
+// CPU opponent's level in one main RAM word (the AI picks entries of its
+// 10-entry tables with it; the game raises it after matches won and lowers
+// it after matches lost, from a few places), and while the option is on
+// every read of that word with interrupts enabled returns the chosen level.
+// The game's writes are untouched (it goes on adjusting its own copy, which
+// the option does not show it), so Off hands the game's own value back at
+// once, and in the diagnostics' RAM test (interrupts off, MAME) the word
+// reads what the test wrote.
 //----------------------------------------------------------------------------
 
 reg         pt_hit;
@@ -397,6 +414,10 @@ always @(posedge clk) begin
 			pt_hit <= 1'b1;
 			pt_q   <= pt_data[16 * pt_i +: 16];
 		end
+	if (lvl_on && wa == lvl_addr && b_ie) begin
+		pt_hit <= 1'b1;
+		pt_q   <= {12'd0, lvl_val};
+	end
 end
 
 assign cpu_rdata = pt_hit ? pt_q : mem_rdata;
