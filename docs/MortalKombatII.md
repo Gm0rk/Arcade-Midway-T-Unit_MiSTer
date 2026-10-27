@@ -12,6 +12,7 @@ Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 - [Move List](#move-list)
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
+- [Fixed AI Difficulty](#fixed-ai-difficulty)
 
 ## Versions
 
@@ -38,8 +39,9 @@ own complete `mk2.zip` (every file, including those that did not change from
 rev L3.1) goes in `games/hbmame`, while MAME's `mk2.zip` stays in `games/mame`
 for the other versions. The hack changes the fighters, their moves and the
 service menu. Its settings are kept apart from rev L3.1's. The core adds
-nothing of its own to it: the OSD has no Move List, Finishing Moves or Hidden
-Items, because the hack changes the moves and the code those are built on.
+only Fixed AI Difficulty to it: the OSD has no Move List, Finishing Moves or
+Hidden Items, because the hack changes the moves and the code those are built
+on.
 
 ## Controls
 
@@ -51,7 +53,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Nine extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, and a Move List window. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has none of them: it changes the fighters, their moves and the code these extras are built on, so its OSD shows no Move List, Finishing Moves or Hidden Items.
+Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, and Fixed AI Difficulty. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has only Fixed AI Difficulty: it changes the fighters, their moves and the code the other extras are built on, so its OSD shows no Move List, Finishing Moves or Hidden Items.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -64,6 +66,7 @@ Nine extras across the 11 versions in MAME: seven hidden items, Finishing Moves 
 | Smoke Fight | Hold Down and press Start in any fight to fight Smoke next, instead of only on The Portal while "Toasty!" shows (L2.0 and later) | Hidden Items |
 | Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
 | Move List window | Pick a fighter (55 moves in all) to see the special moves and finishing moves with their distances over the game's paused title screen. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
+| Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
 
 <!-- extra-content:end -->
 
@@ -272,3 +275,21 @@ the game".
 |  | Pit / Spikes | U U HP | Close |
 
 Every fighter also has the Dead Pool: D+LP+LK HP, close.
+
+## Fixed AI Difficulty
+
+The OSD's Fixed AI Difficulty option (Off, then 0 to 9; Off by default, on the
+main menu below Finishing Moves) pins the computer opponent's level. The game
+keeps that level in one number, 0 (easiest) to 9, and raises it after matches
+you win and lowers it after matches you lose; the computer's play follows it.
+With the option on, the computer plays at the level you picked whatever the
+game thinks the level is, through wins and losses in 1-player games. Set it
+to Off and the game's own level is back at once. A change takes effect as the
+game next reads the level.
+
+The option pins the level; it does not change how the computer plays at a
+given level. It has no effect on 2-player fights, and it is off while the test
+menu is selected (Service Mode, the Test button or the Test Switch DIP), so
+the diagnostics see the game as it is.
+
+Every Mortal Kombat II version has the option, Mortal Kombat II Plus included.
