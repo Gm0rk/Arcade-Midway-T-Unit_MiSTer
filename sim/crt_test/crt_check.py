@@ -30,7 +30,7 @@ FRAME = 506 * 289 * 12
 
 def run(name, vshift=0, vsize=0, mode=0, vt=0):
     p = os.path.join(OUT, name + '.bin')
-    subprocess.run([TB, p, '35', '3', '1', '0', '0', '0', str(vshift & 31), str(vsize), str(mode), str(vt)], check=True)
+    subprocess.run([TB, p, '35', '3', '1', '0', '0', str(vshift & 31), str(vsize), str(mode), str(vt)], check=True)
     return p
 
 def last_frame(p):
