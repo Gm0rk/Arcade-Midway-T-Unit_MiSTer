@@ -15,7 +15,7 @@ Beyond the arcade board itself, the core adds 12 core-wide features and a set of
 | Service Credit and Tilt | Two extra lines on the DIP Switches page: selecting one adds a credit or slams the tilt switch |
 | Service Mode | Opens the game's test mode from the OSD's main menu |
 | Pause | Pause from a button or the OSD, and "Pause when OSD is Open" |
-| Video Timing | Native 54.7 Hz, 57 Hz or 60 Hz frames for TVs that do not hold 54.7 Hz. Only blank lines are dropped, so the whole picture is still sent. Games run about 4% (57 Hz) or 10% (60 Hz) faster; sound keeps its pitch and tempo |
+| Video Timing | Native 54.7 Hz or 57 Hz frames for TVs that do not hold 54.7 Hz. Only blank lines are dropped, so the whole picture is still sent. Games run about 4% faster at 57 Hz; sound keeps its pitch and tempo |
 | CRT V-Size (experimental) | Makes the picture taller or shorter in 3-line steps (up to 21 lines) under CRT Adjust, in PVM mode (retimed frame) or Cabinet mode (timing unchanged, light spread over the fixed lines) |
 | NVRAM | CMOS settings, audits and high scores are kept across power-off and written to the SD card once when the OSD is opened, if the game changed them, or with Save Settings |
 | Secrets pages | The hidden menus, screens and debug features the programmers left in each game, as OSD items. The core enters the control codes for you |
