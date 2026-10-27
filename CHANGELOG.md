@@ -4,6 +4,16 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 41 (2026-10-27)
+
+**Fixed**
+- The black screen while a ROM set loads follows the Video Timing option. The core's own loading frames were always the native 289-line frame (54.7 Hz), so with 57Hz selected the "Sending ROM" box sat on a 54.7 Hz picture and the refresh rate changed when the game started. With 57Hz the loading frames are the board's 277-line frame (57.1 Hz): after VSBLNK (line 274) comes line 287, as the 34010 does when it drops 12 blank lines. The picture lines, VSync and line timing are the same. Changing the option while a game loads takes effect within a frame.
+
+**Docs & tools**
+- New `rtl/tunit_idle.sv` (in `files.qip`): the loading frames, out of the top level, with a `vt57` input (`status[10]`, the board's `vtiming`).
+- New `sim/idle_test` (339 checks): both timings (line and frame lengths, sync, blank and picture lines), the option switched at every 7th line of a frame in both directions, and 200 frames of random switching (a frame is 277 or 289 lines, never another length); five deliberate changes to the module are each caught.
+- README, ExtraContent.md (Video Timing) and TestPlan.md (C17) mention it.
+
 ## Build 40 (2026-10-27)
 
 **Added**
