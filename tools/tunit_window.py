@@ -10,26 +10,34 @@ window):
     name, the initials and birthday that bring them up and the versions
     that have them (tools/tunit_splist.py has the players), then the cheat
     codes as the players enter them (tools/tunit_secrets.py CHEATS). The
-    OSD option picks the page (Off, Page 1 to Page n).
+    OSD option is Off or On, and with the OSD closed Left and Right turn
+    the pages (rtl/tunit_mlpage.sv); each page says so under its title.
   - Move List (Mortal Kombat, Mortal Kombat II): each fighter's special
     moves and finishing moves with the distance they need, in words (Close,
     Sweep, Jump, Half screen, Full screen; tools/tunit_fmoves.py has the
-    moves and the distances). MK2 has a page per fighter (the OSD option
-    picks the fighter); MK1's fighters have fewer moves, so several share a
-    page (the option picks List 1 or List 2).
+    moves and the distances). MK2 has a page per fighter; MK1's fighters
+    have fewer moves, so several share a page. The OSD option is Off or On,
+    and with the OSD closed Left and Right turn the pages (rtl/
+    tunit_mlpage.sv); each page says so under its title.
+  - Mortal Kombat II Plus (the hack; tools/tunit_plus.py has the data, from
+    the MK2+ guide): a Move List with a page per fighter (the 12 of MK2 with
+    the Plus moves, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn),
+    and a separate View Secrets list: how to unlock and select the secret
+    characters and the bosses, the Kombat Kodes, the ending bonuses and the
+    settings that matter. Both are OSD options, Off or On.
 
 A page is 30 rows of 56 characters; a row is a list of segments, runs of
 text in one colour (the blanks between them are not stored). ROM images
 for $readmemh:
 
-    rtl/tunit_window_row.hex   1024 x 11 bits, address {page, row}: the
+    rtl/tunit_window_row.hex   2048 x 11 bits, address {page, row}: the
                                row's first segment (0: empty row)
-    rtl/tunit_window_seg.hex   2048 x 28 bits, a segment: [12:0] its first
-                               character in the text ROM, [18:13] its
-                               length, [24:19] its column, [26:25] its
+    rtl/tunit_window_seg.hex   2048 x 29 bits, a segment: [13:0] its first
+                               character in the text ROM, [19:14] its
+                               length, [25:20] its column, [27:26] its
                                colour (0 white, 1 yellow, 2 cyan, 3 gray),
-                               [27] the row's last segment
-    rtl/tunit_window_text.hex  8192 x 7 bits: the character codes - 32
+                               [28] the row's last segment
+    rtl/tunit_window_text.hex  16384 x 7 bits: the character codes - 32
                                (segments with the same text share it)
     rtl/tunit_window_font.hex  96 x 8 rows of 8 bits (bit x: column x),
                                characters 32-127: the MiSTer OSD's font
@@ -66,6 +74,7 @@ sys.path.insert(0, HERE)
 import tunit_splist as sl   # noqa: E402
 import tunit_fmoves as fm   # noqa: E402
 import tunit_secrets as ts  # noqa: E402
+import tunit_plus as tp     # noqa: E402
 
 OUT = {k: os.path.join(REPO, 'rtl', 'tunit_window_%s.hex' % k)
        for k in ('row', 'seg', 'text', 'font', 'bg', 'pal')}
@@ -73,9 +82,9 @@ OUT_SVH = os.path.join(REPO, 'rtl', 'tunit_window_pages.svh')
 
 COLS, ROWS = 56, 30
 LEFT, RIGHT = 1, 54                 # the columns text uses
-PAGES = 32                          # row ROM pages
+PAGES = 64                          # row ROM pages (the page input has 6 bits)
 SEG_SIZE = 2048                     # segment ROM entries
-TEXT_SIZE = 8192                    # text ROM characters
+TEXT_SIZE = 16384                   # text ROM characters
 WHITE, YELLOW, CYAN, GRAY = range(4)
 BG_W, BG_H, BG_COLOURS = 200, 127, 32
 BG_GAMES = ('nbajam', 'nbajamte', 'mk', 'mk2')
@@ -127,8 +136,10 @@ def row(*segs, col=LEFT):
 
 
 def at(*cells):
-    """A row from (column, text, colour) cells."""
-    segs, k = [], LEFT
+    """A row from (column, text, colour) cells (the first may be in column 0:
+    a marker hanging left of the text)."""
+    k = min(LEFT, cells[0][0]) if cells else LEFT
+    segs, first = [], k
     for col, text, colour in cells:
         if col < k:
             raise SystemExit('cells overlap: %r' % (cells,))
@@ -137,7 +148,7 @@ def at(*cells):
             k = col
         segs.append((text, colour))
         k += len(text)
-    return row(*segs)
+    return row(*segs, col=first)
 
 
 def width(r):
@@ -269,7 +280,7 @@ def code_groups(game):
 
 def nba_pages(game):
     """The Secret Player List window of nbajam or nbajamte: the secret
-    players, then the cheat codes (the OSD option picks the page)."""
+    players, then the cheat codes (Left / Right turn the page)."""
     data = sl.load()
     _, title, _, sets = [g for g in sl.GAMES if g[0] == game][0]
     sp_foot = [row(*f) for f in SP_FOOTER] + [row(*SP_FOOTER_GAME[game])]
@@ -279,12 +290,12 @@ def nba_pages(game):
     n_all = len(sp) + len(cd)
     out = []
     for n, body in enumerate(sp):
-        head = [title_row('SECRET PLAYERS', '%s  %d/%d' % (title, n + 1, n_all)), None,
+        head = [title_row('SECRET PLAYERS', '%s  %d/%d' % (title, n + 1, n_all)), row(*SP_HINT),
                 at((C_NAME, 'PLAYER', GRAY), (C_INI, 'INI', GRAY), (C_DAY, 'BIRTHDAY', GRAY),
                    (C_VER, 'VERSIONS', GRAY))]
         out.append(compose('%s players %d' % (game, n + 1), head, body, sp_foot))
     for n, body in enumerate(cd):
-        head = [title_row('CHEAT CODES', '%s  %d/%d' % (title, len(sp) + n + 1, n_all)), None]
+        head = [title_row('CHEAT CODES', '%s  %d/%d' % (title, len(sp) + n + 1, n_all)), row(*SP_HINT)]
         out.append(compose('%s codes %d' % (game, n + 1), head, body, cd_foot))
     return out
 
@@ -299,6 +310,10 @@ ML_NOTATION = [
      ('X+Y', YELLOW), (' together', GRAY)],
     [('(X) Y', YELLOW), (' or ', GRAY), ('(X Y)', YELLOW), (': hold X while you enter Y, then let go', GRAY)],
 ]
+ML_HINT = [('Left', YELLOW), (' / ', GRAY), ('Right', YELLOW), (': page    ', GRAY),
+           ('OSD', YELLOW), (': Move List Off to play', GRAY)]
+SP_HINT = [('Left', YELLOW), (' / ', GRAY), ('Right', YELLOW), (': page    ', GRAY),
+           ('OSD', YELLOW), (': View Secret Players Off', GRAY)]
 ML_HOLD = [('(X 2 s)', YELLOW), (': hold X about 2 seconds, then let go', GRAY)]
 ML_DISTANCE = [('Distance', YELLOW), (': ', GRAY), ('Sweep', YELLOW), (" = a sweep's reach, ", GRAY),
                ('Jump', YELLOW), (' = a jump away', GRAY)]
@@ -364,11 +379,13 @@ def special_rows(game, name, sp, col, cmd_col):
 
 
 def mk2_pages():
-    """MK2's Move List: a page per fighter (the Move List option's order)."""
+    """MK2's Move List: a page per fighter (Right turns to the next one)."""
     out = []
-    for (name, cid, moves), (n2, sp) in zip(fm.fighters('mk2'), fm.specials('mk2')):
+    n_pages = len(fm.fighters('mk2'))
+    for k, ((name, cid, moves), (n2, sp)) in enumerate(zip(fm.fighters('mk2'), fm.specials('mk2'))):
         assert name == n2
-        head = [title_row(name.upper(), MK_TITLES['mk2']), None, row(('SPECIAL MOVES', CYAN))]
+        head = [title_row(name.upper(), '%s  %d/%d' % (MK_TITLES['mk2'], k + 1, n_pages)),
+                row(*ML_HINT), row(('SPECIAL MOVES', CYAN))]
         plain = sp[:next((k for k, (_, c) in enumerate(sp) if c is None), len(sp))]
         morphs = sp[len(plain) + 1:]
         nw = max(16, max(len(m) for m, _ in plain) + 2)
@@ -431,9 +448,169 @@ def mk_pages():
         for name, b in g:
             body += ([None] if body else []) + b
         head = [title_row('MOVE LIST' + ('  %d/%d' % (k + 1, len(groups)) if len(groups) > 1 else ''),
-                          MK_TITLES['mk']), None,
+                          MK_TITLES['mk']), row(*ML_HINT),
                 at((c_name, 'MOVE', GRAY), (c_cmd, 'COMMAND', GRAY), (c_dist, 'DISTANCE', GRAY))]
         out.append(compose('mk %s' % ', '.join(n for n, _ in g), head, body, foot))
+    return out
+
+
+# ----------------------------------------------------------------------------
+# Mortal Kombat II Plus (tools/tunit_plus.py): Move List and Secrets
+# ----------------------------------------------------------------------------
+
+MK_TITLES['mk2plus'] = 'MORTAL KOMBAT II PLUS'
+PLUS_DISTANCE = [('Sweep', YELLOW), (": a sweep's reach, ", GRAY), ('Half screen', YELLOW),
+                 (': a jump away', GRAY)]
+PLUS_STAGE = [('Pit / Spikes', YELLOW), (': Kombat Tomb, The Pit II, The Pit only', GRAY)]
+PLUS_EXTRA = [('+', YELLOW), (' needs Extra Moves On in the hack\'s settings', GRAY)]
+PLUS_SECRET = [('Unlock and select it: ', GRAY), ('OSD View Secrets', YELLOW)]
+SC_HINT = [('Left', YELLOW), (' / ', GRAY), ('Right', YELLOW), (': page    ', GRAY),
+           ('OSD', YELLOW), (': View Secrets Off to play', GRAY)]
+PLUS_SOURCE = ["From the MK2+ guide (%s). The ROM in MAME is" % tp.GUIDE_VERSION,
+               "%s; a newer entry may be missing" % tp.ROM_VERSION]
+
+
+def plus_special_rows(sp, nw):
+    """A fighter's special moves: name, command, a note after the command or
+    under it; a plus before an addition (Extra Moves)."""
+    out = []
+    for m, c, note, plus in sp:
+        mark = [(0, '+', YELLOW)] if plus else []
+        r = at(*mark, (LEFT, m, WHITE), (LEFT + nw, c, YELLOW))
+        if note and width(r) + 2 + len(note) <= RIGHT:
+            r = at(*mark, (LEFT, m, WHITE), (LEFT + nw, c, YELLOW),
+                   (LEFT + nw + len(c) + 2, note, GRAY))
+            note = None
+        out.append(r)
+        if note:
+            out.append(at((LEFT + nw, note, GRAY)))
+    return out
+
+
+def plus_finishing_rows(fin, fw, cd):
+    """A fighter's finishing moves: name, command and distance; a second part
+    on the next row; a note and the additions (plus rows) under the command."""
+    out = []
+    for f in fin:
+        mark = [(0, '+', YELLOW)] if f['plus'] else []
+        out.append(at(*mark, (LEFT, f['name'], WHITE), (LEFT + fw, f['cmd'], YELLOW), (cd, f['dist'], GRAY)))
+        for c, d in f['then']:
+            out.append(at((LEFT + fw, 'then ' + c, YELLOW), (cd, d, GRAY)))
+        for line in ([f['note']] if isinstance(f['note'], str) else f['note'] or []):
+            out.append(at((LEFT + fw, line, GRAY)))
+        for a in f['adds']:
+            out.append(at((0, '+', YELLOW), (LEFT + fw, a, GRAY)))
+    return out
+
+
+def plus_pages():
+    """Mortal Kombat II Plus's Move List: a page per fighter (the 12 of MK2,
+    then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn)."""
+    out = []
+    n_pages = len(tp.FIGHTERS)
+    for k, f in enumerate(tp.FIGHTERS):
+        name = f['name']
+        head = [title_row(name.upper(), '%s  %d/%d' % (MK_TITLES['mk2plus'], k + 1, n_pages)),
+                row(*ML_HINT), row(('SPECIAL MOVES', CYAN))]
+        nw = max(16, max(len(m) for m, _, _, _ in f['special']) + 2)
+        body = plus_special_rows(f['special'], nw)
+        if f.get('morph'):
+            body.append(row(('MORPH INTO', CYAN)))
+            body += morph_rows(f['morph'])
+            body.append(row((f['morph_note'], GRAY)))
+        if f.get('secret'):
+            body.append(row(*PLUS_SECRET))
+        body.append(None)
+        fin = f['finish']
+        fw = max(len(x['name']) for x in fin) + 2
+        iw = max([len(x['cmd']) for x in fin] + [len('then ' + c) for x in fin for c, _ in x['then']]) + 2
+        dw = max(len(d) for x in fin for d in [x['dist']] + [d for _, d in x['then']])
+        if max(fw, nw) + iw + dw <= RIGHT - LEFT + 1:
+            fw = max(fw, nw)
+        if fw + iw + dw > RIGHT - LEFT + 1:
+            raise SystemExit('mk2plus %s: the finishing moves need %d columns' % (name, fw + iw + dw))
+        cd = RIGHT + 1 - max(dw, len('DISTANCE'))
+        body.append(at((LEFT, 'FINISHING MOVES', CYAN), (cd, 'DISTANCE', CYAN)))
+        body += plus_finishing_rows(fin, fw, cd)
+        cmds = [c for _, c, _, _ in f['special']] + [x['cmd'] for x in fin] + [c for x in fin for c, _ in x['then']]
+        foot = ML_NOTATION[:]
+        if any(tp.hold_time(c) for c in cmds):
+            foot.append(ML_HOLD)
+        foot.append(PLUS_DISTANCE)
+        if any(x['name'] == 'Pit / Spikes' for x in fin):
+            foot.append(PLUS_STAGE)
+        if any(x['name'] in ('Friendship', 'Babality') for x in fin):
+            foot.append(ML_FRIEND)
+        if any(x['plus'] or x['adds'] for x in fin) or any(p for _, _, _, p in f['special']):
+            foot.append(PLUS_EXTRA)
+        out.append(compose('mk2plus %s' % name, head, body, [row(*x) for x in foot]))
+    return out
+
+
+def label_rows(label, text, col_text, width_):
+    """label at LEFT + 1, the wrapped text from col_text"""
+    lines = wrap_words(text, width_)
+    out = [at((LEFT + 1, label, GRAY), (col_text, lines[0], WHITE))]
+    return out + [at((col_text, ln, WHITE)) for ln in lines[1:]]
+
+
+def plus_secret_pages():
+    """Mortal Kombat II Plus's View Secrets pages: the secret characters, the
+    bosses, the Kombat Kodes and the other secrets."""
+    col = LEFT + 11
+    w = RIGHT + 1 - col
+    pages_ = []                      # (heading, body rows, footer rows)
+
+    def block(title, items):
+        rows = [row((title, CYAN))]
+        for label, text in items:
+            rows += label_rows(label, text, col, w)
+        return rows
+
+    # 1: Jade and Noob Saibot
+    body = []
+    for k, (title, items) in enumerate(tp.SECRET_CHARACTERS):
+        body += ([None] if k else []) + block(title, items)
+    body += [None, row((tp.SECRET_NOTE_JN, GRAY))]
+    pages_.append(('JADE AND NOOB SAIBOT', body, []))
+    # 2: Smoke and Hornbuckle
+    body = block(*tp.SMOKE) + [None] + block(*tp.HORNBUCKLE)
+    pages_.append(('SMOKE AND HORNBUCKLE', body, []))
+    # 3: Kintaro and Shao Kahn
+    pages_.append(('KINTARO AND SHAO KAHN', block(*tp.BOSS_UNLOCK) + [None] + block(*tp.BOSS_PLAY)
+                   + [None, row((tp.BOSS_NOTE, GRAY))], []))
+    # 4: Kombat Kodes
+    c_name, c_p1, c_p2 = LEFT, 30, 42
+    body = [row(('Hold the buttons on the battle screen, before the', GRAY)),
+            row(('match starts. Both players hold theirs (2 players).', GRAY)), None,
+            at((c_name, 'CODE', CYAN), (c_p1, 'PLAYER 1', CYAN), (c_p2, 'PLAYER 2', CYAN))]
+    for n, p1, p2 in tp.KODES:
+        body.append(at((c_name, n, WHITE), (c_p1, p1, YELLOW), (c_p2, p2, YELLOW)))
+    body += [None, at((c_name, tp.KODE_TAG[0], WHITE), (c_p1 + 10, tp.KODE_TAG[1], YELLOW))]
+    foot = [row(('They work in Klassic Kombat too. A message names the', GRAY)),
+            row(('code when it is on, as FASTER UPPERCUTS!', GRAY))]
+    pages_.append(('KOMBAT KODES', body, foot))
+    # 5: other secrets
+    body = [row(('ENDING BONUSES', CYAN)),
+            row(('Hold during the ending, before the cast of characters:', GRAY))]
+    body += [at((LEFT + 1, n, WHITE), (LEFT + 19, t, YELLOW)) for n, t in tp.ENDINGS]
+    body += [None, row(('STAGE FATALITIES', CYAN)),
+             at((LEFT + 1, 'Dead Pool', WHITE), (LEFT + 13, 'hold LP+LK, then D+HP; close', YELLOW)),
+             at((LEFT + 1, 'The others', WHITE), (LEFT + 13, "are on each fighter's page", GRAY)),
+             None, row(('SETTINGS', CYAN)), row(("Service Mode (test menu), MK2+ Settings:", GRAY))]
+    for n, t in tp.SETTINGS:
+        r = label_rows(n, t, LEFT + 20, RIGHT + 1 - LEFT - 20)
+        body += r
+    body += [None]
+    foot = [row((t, GRAY)) for t in PLUS_SOURCE]
+    pages_.append(('OTHER SECRETS', body, foot))
+
+    out = []
+    n_pages = len(pages_)
+    for k, (title, body, foot) in enumerate(pages_):
+        head = [title_row(title, '%s  %d/%d' % (MK_TITLES['mk2plus'], k + 1, n_pages)),
+                row(*SC_HINT), None]
+        out.append(compose('mk2plus secrets %d' % (k + 1), head, body, foot))
     return out
 
 
@@ -442,7 +619,8 @@ def mk_pages():
 # ----------------------------------------------------------------------------
 
 LISTS = [('nbajam', lambda: nba_pages('nbajam')), ('nbajamte', lambda: nba_pages('nbajamte')),
-         ('mk', mk_pages), ('mk2', mk2_pages)]
+         ('mk', mk_pages), ('mk2', mk2_pages), ('mk2plus', plus_pages),
+         ('mk2plus_secrets', plus_secret_pages)]
 
 
 def pages():
@@ -490,7 +668,7 @@ def images():
                     if at_ < 0:
                         at_ = len(text)
                         text += t
-                    seg.append(at_ | (len(t) << 13) | (col << 19) | (colour << 25) | ((n == len(sg) - 1) << 27))
+                    seg.append(at_ | (len(t) << 14) | (col << 20) | (colour << 26) | ((n == len(sg) - 1) << 28))
             rows.append(lists[sg])
     rows += [0] * (PAGES * 32 - len(rows))
     if len(seg) > SEG_SIZE or len(text) > TEXT_SIZE:
@@ -507,13 +685,15 @@ def images():
            '// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later',
            '']
     for name, (p0, n) in first.items():
-        svh.append("%-40s// %d page%s" % ("localparam [4:0] WIN_%s = 5'd%d;" % (name.upper(), p0),
+        svh.append("%-52s// %d page%s" % ("localparam [5:0] WIN_%s = 6'd%d;" % (name.upper(), p0),
                                           n, 's' if n > 1 else ''))
-    svh += ['', '// pages of each list (the OSD options: Off, then one value per page)']
+    svh += ['', '// pages of each list (Left / Right turn them while the OSD option is On)']
     for name, (p0, n) in first.items():
+        if n > 31:
+            raise SystemExit('%s: %d pages (the page register has 5 bits)' % (name, n))
         svh.append("localparam [4:0] WIN_%s_N = 5'd%d;" % (name.upper(), n))
     return {'row': '\n'.join('%03X' % w for w in rows) + '\n',
-            'seg': '\n'.join('%07X' % w for w in seg) + '\n',
+            'seg': '\n'.join('%08X' % w for w in seg) + '\n',
             'text': '\n'.join('%02X' % w for w in codes) + '\n',
             'font': '\n'.join('%02X' % w for w in font) + '\n',
             'svh': '\n'.join(svh) + '\n'}, used
