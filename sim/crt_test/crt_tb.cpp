@@ -2,7 +2,7 @@
 //
 // Copyright (C) 2026 Gm0rk. Distributed under GNU GPL v3 or later.
 //
-// usage: crt_tb out.bin frames rec_frames crt_en autow hsize hpos vshift vsize vsmode [vtiming]
+// usage: crt_tb out.bin frames rec_frames crt_en hsize hpos vshift vsize vsmode [vtiming]
 //   (OSD values as the status bits hold them: hsize 0-31, hpos 0-96,
 //   vshift 0-31, vsize 0-14, vsmode 0 PVM / 1 Cabinet, vtiming 0 54.7 Hz /
 //   1 57 Hz)
@@ -18,8 +18,8 @@
 
 int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
-	if (argc < 11) {
-		fprintf(stderr, "usage: %s out.bin frames rec_frames crt_en autow hsize hpos vshift vsize vsmode\n", argv[0]);
+	if (argc < 10) {
+		fprintf(stderr, "usage: %s out.bin frames rec_frames crt_en hsize hpos vshift vsize vsmode\n", argv[0]);
 		return 1;
 	}
 	Vtb_crt *t = new Vtb_crt;
@@ -27,13 +27,12 @@ int main(int argc, char **argv) {
 	if (!f) { perror(argv[1]); return 1; }
 	int frames = atoi(argv[2]), rec = atoi(argv[3]);
 	t->crt_en     = atoi(argv[4]);
-	t->autow      = atoi(argv[5]);
-	t->hsize_osd  = atoi(argv[6]) & 31;
-	t->hpos_osd   = atoi(argv[7]) & 127;
-	t->vshift_osd = atoi(argv[8]) & 31;
-	t->vsize_osd  = atoi(argv[9]) & 15;
-	t->vsmode_osd = atoi(argv[10]) & 1;
-	t->vtiming    = (argc > 11) ? (atoi(argv[11]) & 1) : 0;
+	t->hsize_osd  = atoi(argv[5]) & 31;
+	t->hpos_osd   = atoi(argv[6]) & 127;
+	t->vshift_osd = atoi(argv[7]) & 31;
+	t->vsize_osd  = atoi(argv[8]) & 15;
+	t->vsmode_osd = atoi(argv[9]) & 1;
+	t->vtiming    = (argc > 10) ? (atoi(argv[10]) & 1) : 0;
 	const uint64_t FR = 506ull * 289 * 12;      // clocks per board frame
 	uint64_t total = FR * frames, start = FR * (frames - rec);
 	for (uint64_t c = 0; c < total; c++) {
