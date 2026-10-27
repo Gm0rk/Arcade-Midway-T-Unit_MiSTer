@@ -4,6 +4,15 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 36 (2026-10-27)
+
+**Removed**
+- The 60 Hz Video Timing. Video Settings > Video Timing is now Native 54.7Hz or 57Hz: the 263-line frame (games about 10% faster) is gone from the OSD and from the board. The option is one OSD bit now, so a saved setting of 57Hz stays as it was and a saved 60Hz comes back as Native 54.7Hz. This changes the top level and the board; it needs a new RBF.
+
+**Docs & tools**
+- README, ExtraContent.md and TestPlan.md (C14) name the two timings; the CRT stage's comments say 57 Hz only.
+- The simulator's `--vtiming` is 0 or 1; the CRT test bench (`sim/crt_test`) drops its 60 Hz cases and checks the 57 Hz frame at both V-Shift extremes instead.
+
 ## Build 35 (2026-10-26)
 
 **Added**
