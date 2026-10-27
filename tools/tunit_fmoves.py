@@ -24,7 +24,9 @@ HIM it fits. The "Move List" option shows the fighters' moves in a window
     docs/MortalKombat.md (mk) or docs/MortalKombatII.md (mk2)
 
 and, for mra_gen.py, each set's RAM addresses (ROM index 1, words 0x200 on):
-the move player follows the fight by watching the CPU's writes to them.
+the move player follows the fight by watching the CPU's writes to them, and
+the OSD's "Fixed AI Difficulty" returns its level for the CPU's reads of the
+AI level word (words 0x22A-0x22B, level_word below).
 
 Where they come from (34010 bit addresses, MK2 L3.1 / MK 5.0):
 
@@ -297,8 +299,17 @@ def compile_prog(prog):
 # --------------------------------------------------------------------------
 
 CFG_BASE = 0x200
-CFG_WORDS = 42                   # 40 for MK2 (no Reptile words)
+CFG_WORDS = 44                   # words 40-41 are MK only (zero for MK2)
 FORMAT = 1
+LVL_WORD = 42                    # words 42-43 (bytes 0x454-0x457): the AI level word
+
+# The AI level word (the CPU opponent's level, 0 to 9; the game raises it
+# after matches won and lowers it after matches lost) is found by the one
+# routine that adjusts it: MOVE @level,A0 / ADD A1,A0 / clamp to 0..9 /
+# MOVE A0,@level. The same in every MK and MK2 revision, hack ROMs included
+# (one match in each, checked in MAME). The OSD's Fixed AI Difficulty option
+# returns its level for the CPU's reads of the word.
+LVL_PATTERN = [0x05A0, X, X, 0x4020, 0xCF01, 0x5600, 0x0B40, 0xFFF6, 0xC201, 0x1920, 0x0580, X, X, 0x0960]
 
 # Moves a revision does not have, by MAME set name: (fighter or '*', move).
 # Checked in MAME: played as on L3.1, the move is not taken. The Dead Pool's
@@ -437,6 +448,25 @@ def addresses(gid, prog_bytes):
     return r, notes
 
 
+def level_word(prog_bytes):
+    """The AI level word's bit address, or None (not found, or not exactly one
+    adjust routine with the same word read and written)."""
+    p = Prog(prog_bytes)
+    h = p.find(LVL_PATTERN)
+    if len(h) != 1 or p.u32(h[0] + 1) != p.u32(h[0] + 11):
+        return None
+    return p.u32(h[0] + 1)
+
+
+def level_part(prog_bytes):
+    """The level word as table bytes (words 42-43: word address, low word
+    first) and a note; b'' if not found."""
+    a = level_word(prog_bytes)
+    if a is None:
+        return b'', 'AI level word not found'
+    return struct.pack('<2H', (a >> 4) & 0xFFFF, a >> 20), 'AI level word %08X' % a
+
+
 def missing_mask(gid, setname):
     """Bit line * 8 + slot set for each move of the OSD the set lacks."""
     game = 'mk2' if gid == G_MK2 else 'mk'
@@ -460,7 +490,8 @@ def build(gid, prog_bytes, setname=None):
     resume-address offsets in words (30: {resume[15:8], x[7:0]}); the moves
     the set lacks (32-39: bit line * 8 + slot of the OSD's moves); MK: the
     word address of Reptile's flag (40-41, the top level's Reptile Fight
-    Next is used up when the game writes 1 there; 0 = no Reptile)."""
+    Next is used up when the game writes 1 there; 0 = no Reptile); the word
+    address of the AI level (42-43; 0 = none)."""
     r, notes = addresses(gid, prog_bytes)
     if not r:
         return b'', notes
@@ -484,8 +515,13 @@ def build(gid, prog_bytes, setname=None):
         if rp:
             w[40], w[41] = (rp[1] >> 4) & 0xFFFF, rp[1] >> 20
             notes.append('Reptile flag %08X' % rp[1])
-    n = CFG_WORDS if gid in (G_MK, G_MKTURBO) else 40     # words 40-41: MK only
-    return struct.pack('<%dH' % n, *w[:n]), notes
+    lv = level_word(prog_bytes)
+    if lv is not None:
+        w[LVL_WORD], w[LVL_WORD + 1] = (lv >> 4) & 0xFFFF, lv >> 20
+        notes.append('AI level word %08X' % lv)
+    else:
+        notes.append('AI level word not found')
+    return struct.pack('<%dH' % CFG_WORDS, *w), notes
 
 
 # --------------------------------------------------------------------------
@@ -747,6 +783,9 @@ def main():
         if r:
             for k, v in r.items():
                 print('%-7s %08X' % (k, v))
+        lv = level_word(open(a[1], 'rb').read())
+        if lv is not None:
+            print('%-7s %08X' % ('level', lv))
     else:
         print(__doc__)
 
