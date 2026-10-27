@@ -1,5 +1,5 @@
 # Analog CRT stage test: rtl/video/tunit_crt.sv (centred sync, CRT V-Size,
-# CRT Adjust, Auto-Width) on the T-Unit raster.
+# CRT Adjust) on the T-Unit raster.
 #   make && python3 crt_check.py
 
 RTL = ../../rtl
