@@ -40,6 +40,11 @@ module sim_top
 	input       [1:0] osd_trig,
 	input      [10:0] osd_opt,
 
+	// Fixed AI Difficulty (MK, MK2): the level word's word address and the level
+	input             lvl_on,
+	input      [27:0] lvl_addr,
+	input       [3:0] lvl_val,
+
 	// DDR3 (C++ model)
 	input             ddr_busy,
 	output      [7:0] ddr_burstcnt,
@@ -180,6 +185,10 @@ midway_tunit board
 	.pt_data        (pt_data),
 	.pt_en          (pt_en),
 	.pt_fetch       (pt_fetch),         // program code patches: instruction fetches only
+
+	.lvl_on         (lvl_on),
+	.lvl_addr       (lvl_addr),
+	.lvl_val        (lvl_val),
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),

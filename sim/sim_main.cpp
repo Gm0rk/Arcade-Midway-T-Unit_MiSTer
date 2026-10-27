@@ -7,7 +7,7 @@
 //            [--wav out.wav] [--ddr-lat 24] [--ramclear] [--nosound]
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
 //            [--info mk_rom1.bin] [--osd "500:0:1;..."]
-//            [--vtiming 0|1|2] [--lines lines.txt]
+//            [--vtiming 0|1|2] [--lines lines.txt] [--level ADDR:N] [--lvlwatch ADDR]
 //            [--dcslog samples.bin] [--dcstrace dsp.txt:A:B]
 //            [--dcsstate regs.bin:A:B]
 //
@@ -60,6 +60,12 @@
 //              timed like --press; item 0 and 1 are the triggers R[14] and
 //              R[15] (code 1 and 2), 2-12 the option slots 1-11 of the
 //              secrets module
+//  --level     Fixed AI Difficulty on: ADDR is the AI level word's bit
+//              address (hex, e.g. 010519C0 in MK, 01061AD0 in MK2), N the
+//              level 0-9
+//  --lvlwatch  log the CPU's reads and writes of the word at bit address ADDR
+//              (hex; with --level, its address): frame, R or W, value read
+//              or written, to stderr (the first 400), and a summary at the end
 //  --vtiming   the OSD's Video Timing: 0 native 289-line frames (54.7 Hz),
 //              1 277 lines (57 Hz), 2 263 lines (60 Hz)
 //  --lines     write a line per frame: frame, lines from one VSync to the
@@ -252,6 +258,8 @@ int main(int argc, char **argv) {
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
 	std::string info, osds, dcslog, linespath, dcstrace, dcsstate;
 	int frames = 100, dsw = -1, vtiming = 0;
+	bool lvl_on = false, lvl_watch = false; uint32_t lvl_addr = 0; int lvl_val = 0;
+	long lvl_r = 0, lvl_w = 0, lvl_hist[16] = {0}, lvl_lines = 0;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
 	Ddr ddr;
 	for (int i = 1; i < argc; i++) {
@@ -280,6 +288,13 @@ int main(int argc, char **argv) {
 		else if (a == "--dcstrace") dcstrace = next();
 		else if (a == "--dcsstate") dcsstate = next();
 		else if (a == "--vtiming") vtiming = atoi(next().c_str());
+		else if (a == "--lvlwatch") { lvl_watch = true; lvl_addr = strtoul(next().c_str(), nullptr, 16) >> 4; }
+		else if (a == "--level") {
+			lvl_watch = true;
+			std::string v = next(); size_t c = v.find(':');
+			lvl_on = true; lvl_addr = strtoul(v.substr(0, c).c_str(), nullptr, 16) >> 4;
+			lvl_val = c == std::string::npos ? 0 : atoi(v.substr(c + 1).c_str());
+		}
 		else if (a == "--lines") linespath = next();
 	}
 
@@ -369,6 +384,7 @@ int main(int argc, char **argv) {
 	top->osd_trig = 0; top->osd_opt = 0;
 	top->pause = 0;
 	top->vtiming = vtiming & 3;
+	top->lvl_on = lvl_on; top->lvl_addr = lvl_addr; top->lvl_val = lvl_val & 15;
 	top->ram_clr_req = 0;
 	top->snd_off = nosound;
 	top->reset = 1;
@@ -493,6 +509,12 @@ int main(int argc, char **argv) {
 			fprintf(wf, "%d %d %s %llu\n", fr.frame, fr.y, top->dbg_blit_busy ? "blit-start" : "blit-end",
 			        (unsigned long long)cyc);
 		blit_d = top->dbg_blit_busy;
+		if (lvl_watch && (top->dbg_rd || top->dbg_wr) && top->dbg_wa == lvl_addr) {
+			bool rd = top->dbg_rd;
+			unsigned v = rd ? top->dbg_rdata : top->dbg_wdata;
+			if (rd) { lvl_r++; lvl_hist[v & 15]++; } else lvl_w++;
+			if (lvl_lines++ < 400) fprintf(stderr, "lvl %d %c %04X\n", fr.frame, rd ? 'R' : 'W', v);
+		}
 		if (wf && top->dbg_wr && fr.frame >= wr_a && fr.frame <= wr_b) {
 			uint32_t wa = top->dbg_wa;
 			bool ram = (wa >> 18) == 0x004, vram = (wa >> 18) == 0;
@@ -576,6 +598,11 @@ int main(int argc, char **argv) {
 			fwrite(&v, 2, 1, f);
 		}
 		fclose(f);
+	}
+	if (lvl_watch) {
+		fprintf(stderr, "lvl summary: %ld reads, %ld writes; values read:", lvl_r, lvl_w);
+		for (int i = 0; i < 16; i++) if (lvl_hist[i]) fprintf(stderr, " %d x%ld", i, lvl_hist[i]);
+		fprintf(stderr, "\n");
 	}
 	if (tf) fclose(tf);
 	if (linesf) fclose(linesf);
