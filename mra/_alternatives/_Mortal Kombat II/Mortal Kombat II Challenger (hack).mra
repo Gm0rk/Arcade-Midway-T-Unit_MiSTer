@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II Challenger (hack)</name>
-	<mratimestamp>20261011</mratimestamp>
+	<mratimestamp>20261026</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2chal</setname>
 	<year>1993</year>
@@ -45,12 +45,12 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 80
 		</part>
-		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0 -->
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; AI level word 01061AD0 -->
 		<part repeat="744">00</part>
 		<part>
 		01 00 00 00 B0 61 10 00 28 60 10 00 E5 60 10 00 2F 60 10 00 EC 60 10 00 22 60 10 00 DF 60 10 00
 		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 C0 27 8C FF 10 7E A1 FF 70 F2 82 FF 09 0E 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AD 61 10 00
 		</part>
 	</rom>
 	<rom index="0" zip="mk2chal.zip|mk2.zip" md5="e4bade4c1711fc27ab3218c43330b382" type="merged">
