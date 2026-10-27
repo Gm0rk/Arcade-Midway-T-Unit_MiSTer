@@ -33,7 +33,7 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id (rtl/tunit_secrets.sv): the OSD hides the Move List, Finishing Moves and Hidden Items for this set: no patches or codes -->
+		<!-- game id (rtl/tunit_secrets.sv): the OSD shows the Plus Move List and View Secrets, and no Finishing Moves or Hidden Items, for this set: no patches or codes -->
 		<part>
 		02 01 01 00
 		</part>
