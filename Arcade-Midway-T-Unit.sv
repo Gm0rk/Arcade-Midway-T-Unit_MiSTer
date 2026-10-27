@@ -62,7 +62,7 @@ localparam CONF_STR = {
 	"P1O[5:3],Scandoubler Fx,None,HQ2x,CRT 25%,CRT 50%,CRT 75%;",
 	"P1O[7:6],Scale,Normal,V-Integer,Narrower HV-Integer,Wider HV-Integer;",
 	"P1-;",
-	"P1O[11:10],Video Timing,Native 54.7Hz,57Hz,60Hz;",
+	"P1O[10],Video Timing,Native 54.7Hz,57Hz;",
 	"P1O[101],CRT Adjust,Off,On;",
 	"H1P1O[102],CRT Auto-Width,Off,On;",
 	"H1P1O[100:96],CRT H-Size,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
@@ -947,7 +947,7 @@ midway_tunit board
 	.clk            (clk_sys),
 	.reset          (reset),
 	.pause          (pause),
-	.vtiming        (status[11:10]),    // 54.7 / 57 / 60 Hz frames (see midway_tunit.sv)
+	.vtiming        (status[10]),       // 54.7 / 57 Hz frames (see midway_tunit.sv)
 
 	.prot_id        (cfg_prot),
 	.mk_turbo       (cfg_turbo),
