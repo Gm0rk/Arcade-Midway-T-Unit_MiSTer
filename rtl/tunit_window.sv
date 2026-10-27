@@ -1,19 +1,20 @@
 //============================================================================
 //  tunit_window - the OSD's information window (Secret Player List, Move List)
 //
-//  With the OSD's "Secret Player List" (NBA Jam, TE) or "Move List" (MK,
-//  MK2) on, this draws one page over the picture: the game's title screen,
+//  With the OSD's "View Secret Players" (NBA Jam, TE), "Move List" (MK, MK2,
+//  MK2 Plus) or "View Secrets" (MK2 Plus) on, this draws one page over the
+//  picture: the game's title screen,
 //  dimmed, and on it a grid of 56 x 30 characters (7 x 8 dots each, the
 //  MiSTer OSD's font), centred in the 400 x 254 picture. tools/
 //  tunit_window.py writes the pages (the first of each list in
 //  rtl/tunit_window_pages.svh) and the backgrounds as ROM images. A row is a
 //  list of segments, runs of text in one colour at a column:
 //
-//    row   1024 x 11: {page, row} -> the row's first segment (0: empty)
-//    seg   2048 x 28: [12:0] the segment's first character in the text ROM,
-//          [18:13] its length, [24:19] its column, [26:25] its colour
-//          (0 white, 1 yellow, 2 cyan, 3 gray), [27] the row's last one
-//    text  8192 x 7: the character codes - 32
+//    row   2048 x 11: {page, row} -> the row's first segment (0: empty)
+//    seg   2048 x 29: [13:0] the segment's first character in the text ROM,
+//          [19:14] its length, [25:20] its column, [27:26] its colour
+//          (0 white, 1 yellow, 2 cyan, 3 gray), [28] the row's last one
+//    text  16384 x 7: the character codes - 32
 //    font  768 x 8: {code - 32, glyph row} -> the row's dots, bit x column x
 //    bg    4 x 127 x 200 x 5: the backgrounds (NBA Jam, TE, MK, MK2) at half
 //          the picture's resolution, a palette index per 2 x 2 dots
@@ -49,7 +50,7 @@ module tunit_window #(
 	input            clk,
 	input            ce_pix,
 	input            enable,         // the window is shown
-	input      [4:0] page,           // the page (rtl/tunit_window_pages.svh)
+	input      [5:0] page,           // the page (rtl/tunit_window_pages.svh)
 	input      [1:0] game,           // the background: 0 NBA Jam, 1 TE, 2 MK, 3 MK2
 
 	input      [7:0] r_in,
@@ -73,9 +74,9 @@ localparam integer CX0 = -((X0 + CW - 1) / CW);
 // ROMs
 //----------------------------------------------------------------------------
 
-reg [10:0] row_rom  [0:1023];
-reg [27:0] seg_rom  [0:2047];
-reg  [6:0] text_rom [0:8191];
+reg [10:0] row_rom  [0:2047];
+reg [28:0] seg_rom  [0:2047];
+reg  [6:0] text_rom [0:16383];
 reg  [7:0] font_rom [0:767];
 (* max_depth = 2048 *)                   // 2048 x 5 blocks: 50 M10K
 reg  [4:0] bg_rom   [0:4 * BG_W * BG_H - 1];
@@ -90,14 +91,14 @@ initial begin
 	$readmemh(PAL_HEX, pal_rom);
 end
 
-reg  [9:0] row_a;
+reg [10:0] row_a;
 reg [10:0] seg_a;
-reg [12:0] text_a;
+reg [13:0] text_a;
 reg  [9:0] font_a;
 reg [16:0] bg_a;
 reg  [6:0] pal_a;
 reg [10:0] row_q;
-reg [27:0] seg_q;
+reg [28:0] seg_q;
 reg  [6:0] text_q;
 reg  [7:0] font_q;
 reg  [4:0] bg_q;
@@ -171,7 +172,7 @@ reg  [6:0] f_col;                // the cell fetched (negative: before the grid)
 reg        f_on;
 reg  [1:0] f_colour;
 reg        empty;                // the row has no segments
-reg [12:0] s_text;               // the segment
+reg [13:0] s_text;               // the segment
 reg  [5:0] s_len, s_col;
 reg  [1:0] s_colour;
 reg        s_last;
@@ -214,7 +215,7 @@ always @(posedge clk) begin
 				f_on     <= row_ok && !empty && !f_neg && f_col < 7'(COLS) &&
 				            f_col >= {1'b0, s_col} && f_col < s_end;
 				f_colour <= s_colour;
-				text_a   <= s_text + {7'd0, s_rel[5:0]};
+				text_a   <= s_text + {8'd0, s_rel[5:0]};
 				fs       <= F_TEXT;
 			end
 		F_TEXT:  fs <= F_TEXTQ;
