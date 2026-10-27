@@ -146,9 +146,7 @@ off for an untouched HDMI image.
 ROMs are not included in this repository. Use **merged** ROM sets.
 
 Put the ROMs in `games/mame`. The MRA files go in `_Arcade` (other versions
-in `_Arcade/_alternatives`), the core in `_Arcade/cores`.
-
-Mortal Kombat II Plus goes in `games/hbmame`.
+in `_Arcade/_alternatives`), the core in `_Arcade/cores`.  Mortal Kombat II Plus goes in `games/hbmame`.
 
 ## Credits and references
 
