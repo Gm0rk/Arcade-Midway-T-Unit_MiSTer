@@ -9,6 +9,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/midway_tunit.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_secrets.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_fmoves.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_window.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_mlpage.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/sound/williams_adpcm.sv
 set_global_assignment -name VERILOG_FILE rtl/mc6809/mc6809is.v
 set_global_assignment -name QIP_FILE rtl/jt51/jt51.qip
