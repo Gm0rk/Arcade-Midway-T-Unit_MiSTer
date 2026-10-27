@@ -9,9 +9,8 @@
 //  (254), VSync lines 0-2. Each picture dot carries where it came from:
 //  R = picture line (0-253), G = dot within the line (low 8 bits),
 //  B = 0x80 | dot bit 8. The OSD settings are inputs set by crt_tb.cpp.
-//  vtiming drops blank lines as the 34010 does for the 57/60 Hz Video
-//  Timing on this raster: 277 lines (275-286 dropped) or 263 (275-288 and
-//  3-14 dropped).
+//  vtiming drops blank lines as the 34010 does for the 57 Hz Video Timing on
+//  this raster: 277 lines (275-286 dropped).
 //============================================================================
 
 module tb_crt
@@ -24,7 +23,7 @@ module tb_crt
 	input       [4:0] vshift_osd,
 	input       [3:0] vsize_osd,
 	input             vsmode_osd,
-	input       [1:0] vtiming,      // 0 289 lines, 1 277, 2 263
+	input             vtiming,      // 0 289 lines, 1 277
 
 	output            ce_out,       // CE_PIXEL while CRT Adjust is on
 	output      [7:0] r,
@@ -50,9 +49,7 @@ wire [9:0] px = hcnt - 10'd90;
 always @(posedge clk) if (ce_pix) begin
 	hcnt <= (hcnt == 10'd505) ? 10'd0 : hcnt + 10'd1;
 	if (hcnt == 10'd505)
-		vcnt <= (vtiming == 2'd1 && vcnt == 10'd274) ? 10'd287 :
-		        (vtiming == 2'd2 && vcnt == 10'd274) ? 10'd0 :
-		        (vtiming == 2'd2 && vcnt == 10'd2)   ? 10'd15 :
+		vcnt <= (vtiming && vcnt == 10'd274) ? 10'd287 :
 		        (vcnt == 10'd288) ? 10'd0 : vcnt + 10'd1;
 	vhs <= hcnt < 10'd36;
 	vvs <= vcnt < 10'd3;
