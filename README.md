@@ -75,15 +75,12 @@ Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
   54.7 Hz (games run about 4 % faster, audio pitch is unchanged)
 - CMOS saved as NVRAM: settings, audits and high scores survive power-off
   (saved when the OSD is opened, if the game changed them)
-- DIP switches in the OSD, taken from MAME; changes apply after a reset
-- Service Mode, Service Credit and Tilt in the OSD; pause from a button or
-  while the OSD is open
 - Shortcuts to the hidden menus, screens and debug features of the games that
   have them; the core enters the codes for you
 - Mortal Kombat, Mortal Kombat II: Move List, Finishing Moves and Fixed AI
   Difficulty; Mortal Kombat also has Reptile on demand (see the
   [Mortal Kombat page](docs/MortalKombat.md))
-- Mortal Kombat II Plus: its own Move List and View Secrets (the secret
+- Support for Mortal Kombat II Plus: its own Move List and View Secrets (the secret
   characters, the Kombat Kodes) and Fixed AI Difficulty
 - NBA Jam, NBA Jam Tournament Edition: power-up and Tonight's Match-Up codes
   (the tank game, tournament mode) and a Secret Player List
@@ -94,7 +91,7 @@ Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 |---|---|
 | Video Settings | Aspect ratio, scandoubler, scale, Video Timing, CRT Adjust |
 | Move List | Mortal Kombat games: shows each fighter's moves over the game; with the OSD closed, Left or Right turns the page |
-| Finishing Moves | Mortal Kombat, Mortal Kombat II: enters the chosen fatality at the next FINISH HIM |
+| Finishing Moves | Mortal Kombat, Mortal Kombat II: enters the chosen fatality at the next FINISH HIM/HER |
 | Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II, Mortal Kombat II Plus: the computer opponent's level, Off or 0 (easiest) to 9 |
 | View Secret Players | NBA Jam games: shows the secret players and cheat codes over the game; with the OSD closed, Left or Right turns the page |
 | View Secrets | Mortal Kombat II Plus: shows how to unlock the secret characters, the Kombat Kodes and other secrets; with the OSD closed, Left or Right turns the page |
@@ -109,10 +106,9 @@ Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 ROMs are **not** included in this repository; you need your own dumps of the
 games.
 
-Use **merged** ROM sets from MAME 0.289 (recommended). Files are found by
-CRC. Put the zips in `games/mame`, the MRA files in `_Arcade` (other versions
-in `_Arcade/_alternatives`) and the core in `_Arcade/cores`. Mortal Kombat II
-Plus is a hack that is not in MAME: its `mk2.zip` goes in `games/hbmame`.
+Use **merged** ROM sets. Files are found by CRC. Put the zips in `games/mame`, 
+the MRA files in `_Arcade` (other versions in `_Arcade/_alternatives`) 
+and the core in `_Arcade/cores`. Mortal Kombat II Plus goes in `games/hbmame`.
 
 ## Credits and references
 
