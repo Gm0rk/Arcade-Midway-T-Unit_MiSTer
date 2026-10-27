@@ -17,7 +17,6 @@ module tb_crt
 (
 	input             clk,
 	input             crt_en,
-	input             autow,
 	input       [4:0] hsize_osd,
 	input       [6:0] hpos_osd,
 	input       [4:0] vshift_osd,
@@ -67,7 +66,6 @@ tunit_crt dut
 	.clk         (clk),
 	.ce_pix      (ce_pix),
 	.crt_en      (crt_en),
-	.autow       (autow),
 	.scandoubler (1'b0),
 	.hsize_osd   (hsize_osd),
 	.hpos_osd    (hpos_osd),
