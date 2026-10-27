@@ -44,8 +44,8 @@
 //      the numbers stop making sense (a game reprogramming its raster), the
 //      board's own sync passes through and `centred` is low.
 //
-//  `pic_dots` = a1 - a0, the picture width in dots (0 until measured), is
-//  what CRT Auto-Width uses.
+//  `pic_dots` = a1 - a0, the picture width in dots (0 until measured); the
+//  core leaves it unconnected, the simulation reads it.
 //
 //  The outputs are registers updated on `ce`, so they change one dot after
 //  the dot that decides them; the pulses are therefore triggered on the dot
