@@ -4,6 +4,41 @@ What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's 
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
+## Build 40 (2026-10-27)
+
+**Added**
+- Mortal Kombat II Plus (Beta 2, hack) has a Move List: Off or On on the OSD main menu, paged with Left and Right like the other Move Lists. 17 pages: the 12 fighters, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn, each with its special moves, its finishing moves (fatalities, friendship, babality, Pit / Spikes, the Dead Pool) and the distance each needs. Moves the hack adds are marked +; they need Extra Moves On in the hack's settings. The moves are the MK2+ guide's (Ver. 2.8.50); the ROM in the MRA is MK2+ VER 1.48 (Beta 2), so a move the guide added later may be missing from it.
+- View Secrets (Mortal Kombat II Plus): a second window, Off or On, five pages: how to unlock and select Jade, Noob Saibot and Smoke (and the Hornbuckle fight), how to unlock and play Kintaro and Shao Kahn, the 14 Kombat Kodes with the buttons of each player, and the ending bonuses, the Dead Pool and the settings of the hack's Service Mode that matter.
+- With Move List and View Secrets both On, the one turned On last is shown (from its first page); turn it Off and the other comes back.
+
+**Changed**
+- The MRA flag that hid the Move List, Finishing Moves and Hidden Items for Mortal Kombat II Plus now hides Finishing Moves and Hidden Items only, and shows Plus's own Move List and View Secrets. Only the comment in the Plus MRA changed; its ROM data and checksums are the same.
+- The window's ROMs are larger: 64 pages (was 32), 16384 text characters (was 8192); 44 pages are used, 1541 of 2047 segments and 11071 of 16384 characters. The page module `tunit_mlpage` handles two lists (the Move List or the Secret Player List, and View Secrets) of up to 31 pages each.
+- New OSD bit: View Secrets is status bit 116. Move List for Mortal Kombat II Plus is a second `Move List` line (mask bit 15) on the same status bit 114 as the other games'.
+
+**Docs & tools**
+- README, the Mortal Kombat II page (a new Mortal Kombat II Plus section: the pages, the moves, the unlock steps, the Kombat Kodes, where the data comes from), ExtraContent.md and TestPlan.md (MK2-20 changed; MK2-23 to MK2-26 new: Mortal Kombat II has 26 tests) describe them.
+- New `tools/tunit_plus.py`: the Plus fighters, secrets and Kombat Kodes as data; `--docs` prints the game page's tables. `tools/tunit_window.py` lays out the 22 new pages; `tools/tunit_fmoves.py` and `tools/tunit_secrets.py` make the two OSD lines.
+- `sim/mlpage_test` also checks two lists (66 checks); `sim/window_test` checks all 44 pages.
+
+## Build 39 (2026-10-27)
+
+**Changed**
+- View Secret Players (NBA Jam, NBA Jam Tournament Edition) is Off or On, like the Move List. On shows the window (the players, then the cheat codes); with the OSD closed, Left and Right (either controller) turn the pages, round the end of the list and back, one page a press; open the OSD and set it Off to play on. NBA Jam has two pages, Tournament Edition six. Each page says so under its title (Left / Right: page, OSD: View Secret Players Off). Before, the option picked the page in the OSD. A View Secret Players page saved by an older build is ignored (it comes up Off). This changes the top level and the window pages; it needs a new RBF.
+
+**Docs & tools**
+- README, the NBA Jam and NBA Jam Tournament Edition pages, ExtraContent.md and TestPlan.md (NJ15, TE15) describe the option.
+- `sim/mlpage_test` also checks the six-page and two-page lists (45 checks); `tools/tunit_secrets.py` and `tools/tunit_window.py` make the OSD line and the pages.
+
+## Build 38 (2026-10-27)
+
+**Changed**
+- Move List (Mortal Kombat, Mortal Kombat II) is Off or On. On shows the window; with the OSD closed, Left and Right (either controller) turn the pages, round the end of the list and back, one page a press; open the OSD and set it Off to play on. The game waits while the window is on, as before. Mortal Kombat has two pages, Mortal Kombat II one per fighter, Liu Kang first. Each page says so under its title (Left / Right: page, OSD: Move List Off to play), and Mortal Kombat II's top right shows the page, 1/12 to 12/12. Before, the option picked the list or fighter in the OSD. A Move List choice saved by an older build is ignored (it comes up Off). This changes the top level and the window pages; it needs a new RBF.
+
+**Docs & tools**
+- README, the Mortal Kombat and Mortal Kombat II pages, ExtraContent.md and TestPlan.md (MK15, MK2-16) describe the option.
+- New test bench `sim/mlpage_test` for the page turning (35 checks); `tools/tunit_fmoves.py` and `tools/tunit_window.py` make the OSD line and the pages.
+
 ## Build 37 (2026-10-27)
 
 **Docs**
