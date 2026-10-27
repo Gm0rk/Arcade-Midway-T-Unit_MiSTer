@@ -29,8 +29,8 @@
 //   - H-Size about the middle: CRT Adjust stretches from HSync, so a centring
 //     table moves the content back by -m x H / (base + H) dots.
 //   - the OSD/HDMI window (DE) while CRT Adjust is on; nothing is sent
-//     during sync, and when a V-Shift puts VSync on the picture (57/60 Hz
-//     video timings) the smaller part of the split picture is blanked.
+//     during sync, and when a V-Shift puts VSync on the picture (the 57 Hz
+//     video timing) the smaller part of the split picture is blanked.
 //
 //  All but CRT V-Size carried over from the Y Unit core (itself ported from
 //  Arcade-ITech8 following its notes "CRT Adjust and Auto-Width: Porting
@@ -421,7 +421,7 @@ crt_adjust #(
 //----------------------------------------------------------------------------
 
 // VSync on the picture. With the board's own 289-line frame there are 35
-// blank lines; the 57/60 Hz video timings leave 23/9, so a V-Shift can put
+// blank lines; the 57 Hz video timing leaves 23, so a V-Shift can put
 // VSync on the picture. The picture is then split: lines after VSync are
 // drawn at the top of the new field, lines before it at the bottom of the
 // old one. The smaller part would wrap to the wrong edge of the screen (and
