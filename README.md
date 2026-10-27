@@ -1,15 +1,11 @@
 # Williams/Midway T-Unit for [MiSTer](https://github.com/MiSTer-devel/Main_MiSTer/wiki)
 
-> **AI disclosure:** this core was developed with the help of an AI assistant
-> (Claude, by Anthropic).
+> **AI disclosure:** this core was developed using AI and MAME as a reference.
+> (Claude, by Anthropic - Opus 5.5 & Sonnet 5.5).
 
 An FPGA implementation of the Midway T-Unit arcade board (1993-1994), the
 TMS34010-based platform behind Mortal Kombat (T-Unit revisions), Mortal
 Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
-
-> **Status:** the core is currently undergoing testing. It can be compiled and is playable in its
-> current state, but bugs are expected. Issues and pull requests are not
-> accepted at the moment. No "releases" until testing is complete.
 
 ## Contents
 
@@ -38,7 +34,7 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 
 Each game has its own page: its versions, controls, Secrets (for the NBA
 Jam games with the secret players) and, for the Mortal Kombat games, the
-Move List and Finishing Moves.
+Move List, Finishing Moves and Fixed AI Difficulty.
 Everything the core adds on top of the games is listed in
 [Extra content](docs/ExtraContent.md), core-wide and per game.
 
@@ -57,10 +53,26 @@ verified when its section and the core-wide tests pass (optional tests
 aside). The tests are run on MiSTer hardware, not on an original T-Unit
 arcade PCB.
 
+## Testing setup
+
+The tests behind the status above are run on MiSTer hardware, with this setup
+(the core has not been verified against an original Y Unit board):
+
+| | |
+|---|---|
+| MiSTer | DE10-Nano with the Analog I/O Board and 128 MB SDRAM |
+| Analog connection | Component (YPbPr) |
+| Digital connection | HDMI |
+| Consumer NTSC CRT | Sony KV-27FS120 |
+| Broadcast PVM | Sony PVM-14L5 |
+| Controllers | DualShock 4 (Bluetooth), Xbox 360 (USB) |
+
+> **Not tested:** consumer PAL TVs, and analog connections other than
+> component (YPbPr).
+
 ## Features
 
-- Analog sync centred on a standard 15 kHz screen; CRT Adjust (H-Size,
-  H-Position, V-Shift), CRT V-Size (experimental) and CRT Auto-Width for
+- CRT Adjust (H-Size, H-Position, V-Shift), CRT V-Size (experimental) and CRT Auto-Width for
   analog CRT output
 - Video Timing: the board's own 54.7 Hz, or 57 Hz / 60 Hz frames for TVs
   that do not hold 54.7 Hz. Only blank lines are dropped, so the whole
@@ -93,6 +105,8 @@ arcade PCB.
 - Move List window (Mortal Kombat, Mortal Kombat II): every fighter's special
   moves and finishing moves, with the distance each finishing move needs,
   over the game's title screen
+- Fixed AI Difficulty (Mortal Kombat, Mortal Kombat II): the computer
+  opponent's level held at 0 (easiest) to 9, or Off
 - OSD messages: what a set finishing move is waiting for, whether a code was
   taken, what an option just turned on does (or that the loaded version
   does not have it)
@@ -129,26 +143,12 @@ off for an untouched HDMI image.
 
 ## ROMs
 
-ROMs are not included in this repository; you need your own copies.
+ROMs are not included in this repository. Use **merged** ROM sets.
 
-Use **merged** ROM sets (recommended), following MAME 0.289: one zip per game
-holds every version, and each MRA finds its files there.
-
-| Game | Zip |
-|---|---|
-| Mortal Kombat | `mk.zip` (the same zip as the Y Unit Mortal Kombat sets) |
-| Mortal Kombat II | `mk2.zip` |
-| NBA Jam | `nbajam.zip` |
-| NBA Jam Tournament Edition | `nbajamte.zip` |
-| Judge Dredd | `jdreddp.zip` |
-
-Put the zips in `games/mame`. The MRA files go in `_Arcade` (other versions
+Put the ROMs in `games/mame`. The MRA files go in `_Arcade` (other versions
 in `_Arcade/_alternatives`), the core in `_Arcade/cores`.
 
-Mortal Kombat II Plus (Beta 2, hack) is not in MAME; it comes from HBMAME. Its
-own complete `mk2.zip` goes in `games/hbmame`, next to MAME's `mk2.zip` in
-`games/mame` (which the other Mortal Kombat II versions use). Its OSD has no
-Move List, Finishing Moves or Hidden Items.
+Mortal Kombat II Plus goes in `games/hbmame`.
 
 ## Credits and references
 
@@ -165,6 +165,8 @@ Move List, Finishing Moves or Hidden Items.
   Andrea Bogazzi (@asturur)
 - [Template_MiSTer](https://github.com/MiSTer-devel/Template_MiSTer),
   [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
+  - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
+  the arcade core guidance used while developing and checking this core
 
 ## License
 
