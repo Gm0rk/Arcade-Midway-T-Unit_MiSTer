@@ -13,6 +13,7 @@ Mortal Kombat II (Midway, 1993) on the T-Unit board, with the DCS sound board.
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
 - [Fixed AI Difficulty](#fixed-ai-difficulty)
+- [Cheats](#cheats)
 - [Mortal Kombat II Plus](#mortal-kombat-ii-plus)
 
 ## Versions
@@ -55,7 +56,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, and Fixed AI Difficulty. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the other extras are built on, so its OSD shows no Finishing Moves or Hidden Items.
+Fourteen extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, Fixed AI Difficulty, and four cheats. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the other extras are built on, so its OSD shows no Finishing Moves, Hidden Items or Cheats.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -69,6 +70,10 @@ Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves f
 | Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
 | Move List window | A page per fighter (55 moves in all) with the special moves and finishing moves and their distances, over the game's paused title screen. Set it On in the OSD, close the OSD and turn the pages with Left and Right, from Liu Kang to Raiden and round; open the OSD to set it Off. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
 | Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
+| Infinite Health P1 | Player 1's energy stays full: the game is shown full energy (A1h) and what it writes there is full too, whatever damage it takes, so the bar never drops, there is no knockout, and the bar is still full when you switch the cheat off. Switch it on in the OSD's Cheats menu. Every version | Cheats |
+| Infinite Health P2 | The same for player 2, who in a 1-player game is the computer opponent: it cannot be knocked out while this is on | Cheats |
+| Infinite Round Time | The round clock stops counting: it stays at 99 from the start of the round (or at the time it showed when you switched the cheat on), so a round never ends on time. Switched off, the clock carries on from there. Every version | Cheats |
+| Stop Finishing Move Timer | FINISH HIM waits for you: its window of 168 frames (about 3 seconds) is held open for about 10 minutes. It still ends when a finishing move starts or when the winner hits the loser. Challenger's window already stays open much longer, so the cheat changes little there | Cheats |
 | Plus Move List window (Mortal Kombat II Plus only) | A page per fighter, 17 in all: the 12 fighters, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn. Each lists the special moves and the finishing moves with their distances, over the game's paused title screen; the moves the hack adds are marked +. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The moves are the MK2 Plus guide's (Ver. 2.8.50) | Move List |
 | Plus View Secrets window (Mortal Kombat II Plus only) | Five pages: how to unlock and play Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn; the 14 Kombat Kodes and the buttons for each player; the ending bonuses, the Dead Pool and the hack's settings. With Move List and View Secrets both On, the one turned On last is shown | View Secrets (main menu) |
 
@@ -301,6 +306,40 @@ menu is selected (Service Mode, the Test button or the Test Switch DIP), so
 the diagnostics see the game as it is.
 
 Every Mortal Kombat II version has the option, Mortal Kombat II Plus included.
+
+## Cheats
+
+The OSD's Cheats menu (on the main menu, below Hidden Items) lists four
+cheats. Select one to switch it on or off; a mark shows the ones
+that are on. All are off each time a game loads: the OSD does not keep them
+across loads. All 11 versions in MAME have them; Mortal Kombat II Plus has no
+Cheats menu.
+
+| Cheat | What it does |
+|---|---|
+| Infinite Health P1 | Player 1's energy bar stays full and player 1 cannot be knocked out. The game is shown full energy (A1h) every time it reads player 1's energy, and what it writes there is full too, whatever damage it has taken |
+| Infinite Health P2 | The same for player 2. In a 1-player game player 2 is the computer opponent, who then cannot be knocked out, so a round only ends on time (or not at all with Infinite Round Time on) |
+| Infinite Round Time | The round clock stops counting: it stays at 99 from the start of the round (or at the time it showed when you switched the cheat on), so a round never ends on time. The clock is two digits the game keeps in registers while it counts; the cheat replaces the one instruction that counts the ones digit down, so switching it off lets the clock carry on from where it stopped |
+| Stop Finishing Move Timer | The FINISH HIM window lasts 168 frames (about 3 seconds). With the cheat on it is held open for 32,767 frames (about 10 minutes), so there is time to enter a finishing move by hand, hold a button for Kintaro or the Super Uppercut, or pick one from Finishing Moves |
+
+The FINISH HIM window still ends the way the game ends it: when a finishing
+move starts (it then runs to the end as usual), and when the winner hits the
+other player with any attack. Hit the loser to carry on to the next round or
+the end of the match. Challenger's window already stays open much longer, so
+the cheat changes little there.
+
+Switching an Infinite Health cheat off leaves the bar full. While the cheat is
+on, the core answers the game's reads of the energy word with full energy and
+stores full energy when the game writes it, so the game's own copy is full
+too, not full less the last hit.
+
+A health cheat acts on the game's reads and writes of the energy word: the core
+answers a read with the cheat's value, as it does for the Hidden Items, and
+replaces what the game writes, and only while the game's processes are running.
+The diagnostics' RAM test runs with interrupts off and sees the game as it is.
+Infinite Round Time and Stop Finishing Move Timer each change one word of the
+game's program, when the CPU fetches it as an instruction. Each version has the cheats at its own addresses,
+found in its program ROM by `tools/tunit_cheats.py` and written into its MRA.
 
 ## Mortal Kombat II Plus
 
