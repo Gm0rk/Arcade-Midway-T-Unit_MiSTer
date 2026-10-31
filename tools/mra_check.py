@@ -19,6 +19,18 @@ loaded streams are also compared with what MAME itself loaded, region by
 region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
 
+A Mortal Kombat II set with the extras carries the OSD's Cheats list (<cheats
+size="8" max="8">: Infinite Health P1 and P2, Infinite Round Time, Stop
+Finishing Move Timer; tools/tunit_cheats.py, rtl/tunit_cheats.sv) and no other
+set does. Each cheat is one 8-byte unit; the health units must name the two
+energy words of the program ROM's round start (MOVI full,A0 and MOVE A0 to
+both) with that full value, flagged as written too (flags 2), the round time
+unit the DEC A10 of the clock process (followed by JRNN, MOVK 9,A10, DEC A11,
+and after the clock's start MOVK 9,A11 / MOVK 9,A10) with MOVE A10,A10 (4D4Ah)
+flagged as an instruction word, and the timer unit the 80h (FFh in Challenger)
+after the program ROM's MOVI .,A11 with the 7FFFh patch flagged as an
+instruction word.
+
 ROM index 1's first word must hold only the game id and the flag (bit 8,
 Mortal Kombat II Plus: the OSD shows the hack's Move List and View Secrets and
 hides the Finishing Moves and Hidden Items), and a set with
@@ -146,6 +158,70 @@ def level_scan(prog):
     return rd
 
 
+CHEAT_NAMES = ['Infinite Health P1', 'Infinite Health P2', 'Infinite Round Time', 'Stop Finishing Move Timer']
+
+
+def cheat_checks(root, gid, hides, prog):
+    """Problems with the MRA's <cheats> (see the module text)."""
+    node = root.find('cheats')
+    want = gid == 2 and not hides                    # Mortal Kombat II with the extras
+    if node is None:
+        return ['no <cheats> (every Mortal Kombat II set has them)'] if want else []
+    if not want:
+        return ['<cheats> in a set that has none']
+    errs = []
+    if node.get('size') != '8' or node.get('max') != '8':
+        errs.append('<cheats> size %s max %s, not 8 and 8' % (node.get('size'), node.get('max')))
+    cheats = node.findall('cheat')
+    if [c.get('name') for c in cheats] != CHEAT_NAMES:
+        return errs + ['cheats %s, not %s' % ([c.get('name') for c in cheats], CHEAT_NAMES)]
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+    units = []
+    for c in cheats:
+        raw = bytes.fromhex(''.join((c.text or '').split()))
+        if len(raw) != 8:
+            return errs + ['%s is %d bytes, not one 8-byte unit' % (c.get('name'), len(raw))]
+        lo, hi, val, flags = [raw[i] | raw[i + 1] << 8 for i in range(0, 8, 2)]
+        units.append(((lo | hi << 16) << 4, val, flags))
+    (e1, v1, f1), (e2, v2, f2), (cw, cv, cf), (tw, tv, tf) = units
+    # MOVI full,A0 / MOVE A0,@P1 energy / MOVE A0,@P2 energy (the other fill, FFFFh, is not it)
+    ok = [i for i in range(n - 8)
+          if w[i] == 0x09C0 and w[i + 1] != 0xFFFF and w[i + 2] == 0x0580 and w[i + 3] | w[i + 4] << 16 == e1
+          and w[i + 5] == 0x0580 and w[i + 6] | w[i + 7] << 16 == e2]
+    if len(ok) != 1:
+        errs.append('%d places fill energies %08X and %08X with a full value' % (len(ok), e1, e2))
+    elif v1 != w[ok[0] + 1] or v2 != v1:
+        errs.append('the health cheats read %04X and %04X, the round start fills %04X' % (v1, v2, w[ok[0] + 1]))
+    if f1 != 2 or f2 != 2:
+        errs.append('the health cheats are flagged %d and %d, not 2 (a RAM word whose writes store the value)' % (f1, f2))
+    if e1 & 15 or e2 & 15:
+        errs.append('an energy word is not word aligned')
+    # the round clock: DEC A10 / JRNN / MOVK 9,A10 / DEC A11 after the process's start
+    i = (cw - 0xFF800000) >> 4 if cw >= 0xFF800000 and not cw & 15 else -1
+    if i < 1 or i + 4 > n:
+        errs.append('the round clock word %08X is not in the program ROM' % cw)
+    else:
+        if not (w[i] == 0x142A and (w[i + 1] & 0xFF00) == 0xCF00 and w[i + 2] == 0x192A and w[i + 3] == 0x142B):
+            errs.append('the round clock word %08X is not DEC A10 / JRNN / MOVK 9,A10 / DEC A11' % cw)
+        start = [k for k in range(max(0, i - 0xC0), i)
+                 if w[k] == 0x192B and w[k + 1] == 0x192A and w[k + 2] == 0x058A and w[k + 5] == 0x058B]
+        if len(start) != 1:
+            errs.append('%d clock process starts (MOVK 9,A11 / MOVK 9,A10 / MOVE A10,@ / MOVE A11,@) before %08X' % (len(start), cw))
+        if cv != 0x4D4A or cf != 1:
+            errs.append('the round time cheat is %04X flags %d, not 4D4A (MOVE A10,A10) as an instruction word' % (cv, cf))
+    # the timer: the immediate of the second wait's MOVI .,A11
+    i = (tw - 0xFF800000) >> 4 if tw >= 0xFF800000 and not tw & 15 else -1
+    if i < 1 or i >= n:
+        errs.append('the timer word %08X is not in the program ROM' % tw)
+    else:
+        if w[i - 1] != 0x09CB or w[i] not in (0x0080, 0x00FF):
+            errs.append('the timer word %08X is %04X after %04X, not 80h/FFh after MOVI .,A11' % (tw, w[i], w[i - 1]))
+        if tv != 0x7FFF or tf != 1:
+            errs.append('the timer cheat is %04X flags %d, not 7FFF as an instruction word' % (tv, tf))
+    return errs
+
+
 # region checks: (rom index, stream offset, region, region offset, length)
 def region_checks(setname, streams, regions_dir):
     d = os.path.join(regions_dir, setname)
@@ -254,6 +330,8 @@ def main():
                     got = (t[0x454] | t[0x455] << 8 | t[0x456] << 16 | t[0x457] << 24) << 4
                     if got != lv:
                         msgs.append('rom 1 AI level word is %08X, the program ROM\'s is %08X' % (got, lv))
+        if len(t) >= 2:
+            msgs += cheat_checks(root, t[0] & 7, hides, streams.get(0, b'')[:0x100000])
         status = 'OK' if not msgs else 'FAIL'
         bad += bool(msgs)
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
