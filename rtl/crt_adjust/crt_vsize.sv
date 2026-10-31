@@ -435,10 +435,12 @@ module crt_vsize #(
     reg  [RAW-1:0] rd_addr_t;
     reg  [RAW-1:0] rd_addr_m;
     reg  [23:0]    ring_q;
-    initial begin rd_addr = 0; rd_addr_t = 0; rd_addr_m = 0; ring_q = 0; end
+    reg  [23:0]    ring_q2;     // T-Unit core, Build 49: ring_q one clock later (Cabinet's squares)
+    initial begin rd_addr = 0; rd_addr_t = 0; rd_addr_m = 0; ring_q = 0; ring_q2 = 0; end
     always @(posedge clk) begin
         rd_addr_m <= tube_on ? rd_addr_t : rd_addr;
         ring_q    <= ring[rd_addr_m];
+        ring_q2   <= ring_q;
     end
 
     wire in_window = out_running && (o_cline >= {10'd0, o_de_start}) && (o_px < o_pxcnt);
@@ -602,7 +604,8 @@ module crt_vsize #(
         end
     endfunction
 
-    // ---- pipeline pixel a 8 sottofasi (p_cnt 0..7 tra un CE e l'altro) ----
+    // ---- pipeline pixel a 9 sottofasi (p_cnt 0..8 tra un CE e l'altro;
+    //      upstream: 8 sottofasi, 0..7 — see the Build 49 note below) ----
     reg  [9:0]  t_px, t_px_l;
     reg         t_fetch;
     reg  [7:0]  t_al;
@@ -639,31 +642,40 @@ module crt_vsize #(
             end
         end
         // fasi (indirizzo registrato -> dato A in ring_q durante la fase 3,
-        // dato B durante la fase 4; quadrato calcolato direttamente li`):
+        // dato B durante la fase 4):
+        // T-Unit core, Build 49: the squares are taken from ring_q2, a flip-flop
+        // behind ring_q, one phase later than upstream's (A in ring_q2 during
+        // phase 4, B during phase 5), and the mix and both square-root steps
+        // follow one phase later too. Straight from ring_q the path was the
+        // M10K's read, its output mux in LUTs and the squaring multiplier
+        // into the next DSP's input register: -0.193 ns at 96 MHz in the
+        // Build 48 compilation (the M10K's clock arrives 1.26 ns later than
+        // the DSP's). The result at the pixel enable is the same; the
+        // pipeline needs 9 clocks per pixel instead of 8 (12 in this core).
         case (p_cnt)
             5'd0: rd_addr_t <= line_base(t_slotA) + t_px_l;
             5'd1: rd_addr_t <= line_base(t_slotB) + t_px_l;
-            5'd3: begin
-                t_sqa_r <= ring_q[23:16] * ring_q[23:16];
-                t_sqa_g <= ring_q[15:8]  * ring_q[15:8];
-                t_sqa_b <= ring_q[7:0]   * ring_q[7:0];
-            end
             5'd4: begin
-                t_sqb_r <= ring_q[23:16] * ring_q[23:16];
-                t_sqb_g <= ring_q[15:8]  * ring_q[15:8];
-                t_sqb_b <= ring_q[7:0]   * ring_q[7:0];
+                t_sqa_r <= ring_q2[23:16] * ring_q2[23:16];
+                t_sqa_g <= ring_q2[15:8]  * ring_q2[15:8];
+                t_sqa_b <= ring_q2[7:0]   * ring_q2[7:0];
             end
             5'd5: begin
+                t_sqb_r <= ring_q2[23:16] * ring_q2[23:16];
+                t_sqb_g <= ring_q2[15:8]  * ring_q2[15:8];
+                t_sqb_b <= ring_q2[7:0]   * ring_q2[7:0];
+            end
+            5'd6: begin
                 t_bl_r <= t_mix_r[23:8];
                 t_bl_g <= t_mix_g[23:8];
                 t_bl_b <= t_mix_b[23:8];
             end
-            5'd6: begin
+            5'd7: begin
                 t_h1_r <= isqrt_h(t_bl_r);
                 t_h1_g <= isqrt_h(t_bl_g);
                 t_h1_b <= isqrt_h(t_bl_b);
             end
-            5'd7: begin
+            5'd8: begin
                 t_out   <= {isqrt_l(t_h1_r), isqrt_l(t_h1_g), isqrt_l(t_h1_b)};
                 t_out_v <= t_fetch;
             end
