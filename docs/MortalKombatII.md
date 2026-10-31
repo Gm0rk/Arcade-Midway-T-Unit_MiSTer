@@ -41,10 +41,10 @@ own complete `mk2.zip` (every file, including those that did not change from
 rev L3.1) goes in `games/hbmame`, while MAME's `mk2.zip` stays in `games/mame`
 for the other versions. The hack changes the fighters, their moves and the
 service menu. Its settings are kept apart from rev L3.1's. The core adds
-Fixed AI Difficulty to it and gives it a Move List and View Secrets of its
-own, [described below](#mortal-kombat-ii-plus). The OSD has no Finishing
-Moves or Hidden Items, because the hack changes the moves and the code those
-are built on.
+Fixed AI Difficulty and the [Cheats](#cheats) to it and gives it a Move List
+and View Secrets of its own, [described below](#mortal-kombat-ii-plus). The
+OSD has no Finishing Moves or Hidden Items, because the hack changes the moves
+and the code those are built on.
 
 ## Controls
 
@@ -56,7 +56,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Fourteen extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, Fixed AI Difficulty, and four cheats. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the other extras are built on, so its OSD shows no Finishing Moves, Hidden Items or Cheats.
+Fourteen extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, Fixed AI Difficulty, and four cheats. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty, the four cheats and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the Finishing Moves and Hidden Items are built on, so its OSD shows neither.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -73,7 +73,7 @@ Fourteen extras across the 11 versions in MAME: seven hidden items, Finishing Mo
 | Infinite Health P1 | Player 1's energy stays full: the game is shown full energy (A1h) and what it writes there is full too, whatever damage it takes, so the bar never drops, there is no knockout, and the bar is still full when you switch the cheat off. Switch it on in the OSD's Cheats menu. Every version | Cheats |
 | Infinite Health P2 | The same for player 2, who in a 1-player game is the computer opponent: it cannot be knocked out while this is on | Cheats |
 | Infinite Round Time | The round clock stops counting: it stays at 99 from the start of the round (or at the time it showed when you switched the cheat on), so a round never ends on time. Switched off, the clock carries on from there. Every version | Cheats |
-| Stop Finishing Move Timer | FINISH HIM waits for you: its window of 168 frames (about 3 seconds) is held open for about 10 minutes. It still ends when a finishing move starts or when the winner hits the loser. Challenger's window already stays open much longer, so the cheat changes little there | Cheats |
+| Stop Finishing Move Timer | FINISH HIM waits for you: its window of 168 frames (about 3 seconds) is held open for about 10 minutes. It still ends when a finishing move starts or when the winner hits the loser. Challenger's window already stays open much longer, so the cheat changes little there. In Plus the window is the same 168 frames, or 360 when one of the hack's own options lengthens it; the cheat holds either open | Cheats |
 | Plus Move List window (Mortal Kombat II Plus only) | A page per fighter, 17 in all: the 12 fighters, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn. Each lists the special moves and the finishing moves with their distances, over the game's paused title screen; the moves the hack adds are marked +. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The moves are the MK2 Plus guide's (Ver. 2.8.50) | Move List |
 | Plus View Secrets window (Mortal Kombat II Plus only) | Five pages: how to unlock and play Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn; the 14 Kombat Kodes and the buttons for each player; the ending bonuses, the Dead Pool and the hack's settings. With Move List and View Secrets both On, the one turned On last is shown | View Secrets (main menu) |
 
@@ -312,8 +312,7 @@ Every Mortal Kombat II version has the option, Mortal Kombat II Plus included.
 The OSD's Cheats menu (on the main menu, below Hidden Items) lists four
 cheats. Select one to switch it on or off; a mark shows the ones
 that are on. All are off each time a game loads: the OSD does not keep them
-across loads. All 11 versions in MAME have them; Mortal Kombat II Plus has no
-Cheats menu.
+across loads. All 12 versions have them, Mortal Kombat II Plus included.
 
 | Cheat | What it does |
 |---|---|
@@ -341,6 +340,13 @@ Infinite Round Time and Stop Finishing Move Timer each change one word of the
 game's program, when the CPU fetches it as an instruction. Each version has the cheats at its own addresses,
 found in its program ROM by `tools/tunit_cheats.py` and written into its MRA.
 
+Mortal Kombat II Plus has the same four cheats. Its hack counts the round clock
+and the FINISH HIM window in routines of its own, which also test options of
+the hack, so the cheats act there: Infinite Round Time on the routine's count
+of the ones digit, Stop Finishing Move Timer on the window's length, 168
+frames, and on the longer one of 360 frames that the routine uses when one of
+those options is on. Both are held open.
+
 ## Mortal Kombat II Plus
 
 Mortal Kombat II Plus (Beta 2, hack) adds fighters, moves and secrets to
@@ -351,7 +357,8 @@ turn the pages with Left and Right on either controller (from the last page
 on to the first, and Left from the first to the last); open the OSD and set
 it to Off to play on. If both are On, the one turned On last is shown, from
 its first page; set that one to Off and the other comes back. The windows
-only show; the core does not enter anything for you.
+only show; the core does not enter anything for you. Fixed AI Difficulty and
+the Cheats menu work as for the other versions (see above).
 
 ### Move List
 
