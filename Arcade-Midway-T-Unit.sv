@@ -96,7 +96,7 @@ localparam CONF_STR = {
 	"h5P6O[21],Smoke Fight,Off,On;",
 	"P6-;",
 	"P6-,EJB Menu: attract mode only;",
-	"h5C,Cheats;",
+	"h0C,Cheats;",
 	"O[9],Service Mode,Off,On;",
 	"O[8],Pause when OSD is open,On,Off;",
 	"-;",
@@ -108,8 +108,9 @@ localparam CONF_STR = {
 	"V,v",`BUILD_DATE
 };
 
-// OSD menu mask bits (assigned in "Game configuration"): which secrets the
-// loaded game has; bits 8-11 the fighter picked on the Finishing Moves page;
+// OSD menu mask bits (assigned in "Game configuration"): bit 0 Mortal Kombat
+// II, Plus included (the Cheats line); which secrets the loaded game has;
+// bits 8-11 the fighter picked on the Finishing Moves page;
 // bits 12 and 13 NBA Jam and TE (their own Secrets lines,
 // rtl/tunit_secrets_osd.svh); bit 14 the Fixed AI Difficulty line (MK and
 // MK2, see below); bit 15 Mortal Kombat II Plus (menu_plus). osd_ejb and
@@ -154,7 +155,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({menu_plus, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], 1'b0}),
+	.status_menumask     ({menu_plus, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], menu_mk2}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -306,7 +307,7 @@ always @(posedge clk_sys) begin
 	endcase
 end
 
-// OSD lines and pages of the loaded game (status_menumask bits 2-7, 12, 13, 15)
+// OSD lines and pages of the loaded game (status_menumask bits 0, 2-7, 12, 13, 15)
 assign menu_secrets = (game_id <= G_JDREDDP);
 assign menu_ejb     = (game_id == G_MK) || (game_id == G_MKTURBO) || (game_id == G_MK2);
 assign menu_mk      = (game_id == G_MK) || (game_id == G_MKTURBO);
@@ -751,9 +752,10 @@ tunit_secrets secrets
 // Cheats (Mortal Kombat II)
 //
 // "C,Cheats;" in CONF_STR shows the MRA's <cheats> list (Infinite Health P1,
-// Infinite Health P2, Stop Finishing Move Timer). Main_MiSTer sends every
-// switched-on cheat as one download with index 255 each time the menu
-// toggles one (a lone 2-byte word when none is on); rtl/tunit_cheats.sv
+// Infinite Health P2, Infinite Round Time, Stop Finishing Move Timer), for
+// every Mortal Kombat II set, Plus included (menu mask bit 0). Main_MiSTer
+// sends every switched-on cheat as one download with index 255 each time the
+// menu toggles one (a lone 2-byte word when none is on); rtl/tunit_cheats.sv
 // turns the 8-byte units into 8 more read patches for the board, beside the
 // secrets' 8 (the same compare, rtl/midway_tunit.sv). A ROM set loading
 // clears them: Main starts a new list with every cheat off. The board is
