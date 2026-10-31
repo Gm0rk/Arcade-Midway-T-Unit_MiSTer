@@ -2,13 +2,15 @@
 #
 # release.tcl - Quartus post-flow script: file the finished core
 #
-# After a successful compilation, renames output_files/Arcade-Midway-T-Unit.rbf to
-# Arcade-Midway-T-Unit_YYYYMMDD.rbf (the local date) and moves it to releases/. A
-# second build on the same day replaces that day's file.
+# After a successful compilation, renames output_files/Arcade-Midway-T-Unit.rbf
+# to Arcade-Midway-T-Unit_YYYYMMDD.rbf (the local date) and moves it to
+# releases/. A second build on the same day replaces that day's file.
 #
-# Hooked up in Arcade-Midway-T-Unit.qsf:
-#   set_global_assignment -name POST_FLOW_SCRIPT_FILE "quartus_sh:release.tcl"
-# Quartus runs it from the project folder with
+# Run by post_flow.tcl, which Arcade-Midway-T-Unit.qsf hooks up as the
+# project's one post-flow script:
+#   set_global_assignment -name POST_FLOW_SCRIPT_FILE "quartus_sh:post_flow.tcl"
+# (it can still be hooked up on its own as "quartus_sh:release.tcl"). Quartus
+# runs the script from the project folder with
 #   $quartus(args) = {flow project revision}.
 #
 # A compilation that failed leaves no new core: the script only takes an .rbf
