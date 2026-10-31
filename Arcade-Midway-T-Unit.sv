@@ -232,7 +232,15 @@ wire reset = RESET | status[0] | buttons[1] | rom_download | ~rom_loaded | (boot
 // board's half-second boot hold ends, and from power-up until the first ROM set is complete. The
 // board's picture is gated to black and its stopped raster is replaced by
 // the core's own black frames (see "video while a ROM set loads" below).
-wire load_black = dl_other | ~rom_loaded | (boot_hold != 26'd0);
+//
+// load_black comes from a register (one clock after the terms, which changes
+// nothing on a picture): the 26-bit compare of boot_hold sat in front of the
+// black gating of every pixel into the CRT V-Size ring RAM, and in the
+// Build 48 compilation 165 of the 600 worst paths (+0.157 ns the best) were
+// boot_hold -> that RAM.
+wire load_black_c = dl_other | ~rom_loaded | (boot_hold != 26'd0);
+reg  load_black = 1'b1;
+always @(posedge clk_sys) load_black <= load_black_c;
 
 //////////////////////////////////////////////////////////////////
 // Game configuration
