@@ -51,7 +51,7 @@ set_global_assignment -name ALM_REGISTER_PACKING_EFFORT MEDIUM
 set_global_assignment -name SEED 1
 
 # report the worst-case paths of each clock in the timing report
-# (output_files/*.sta.rpt); tools/timing_paths.tcl lists more
+# (output_files/*.sta.rpt); tools/timing_paths.tcl lists more (run after each build)
 set_global_assignment -name TIMEQUEST_DO_REPORT_TIMING ON
 
 # hps_io's confstr_rom fills its ROM with one loop step per CONF_STR byte;
@@ -61,9 +61,10 @@ set_global_assignment -name TIMEQUEST_DO_REPORT_TIMING ON
 # string must stay below that.
 set_global_assignment -name VERILOG_CONSTANT_LOOP_LIMIT 10240
 
-# after a successful build: output_files/Arcade-Midway-T-Unit.rbf ->
-# releases/Arcade-Midway-T-Unit_YYYYMMDD.rbf (release.tcl)
-set_global_assignment -name POST_FLOW_SCRIPT_FILE "quartus_sh:release.tcl"
+# after a successful build (post_flow.tcl): output_files/Arcade-Midway-T-Unit.rbf ->
+# releases/Arcade-Midway-T-Unit_YYYYMMDD.rbf (release.tcl), and the worst
+# timing paths -> output_files/Arcade-Midway-T-Unit.paths.txt (tools/timing_paths.tcl)
+set_global_assignment -name POST_FLOW_SCRIPT_FILE "quartus_sh:post_flow.tcl"
 
 #set_global_assignment -name VERILOG_MACRO "MISTER_FB=1"
 
