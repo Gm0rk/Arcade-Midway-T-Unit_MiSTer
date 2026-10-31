@@ -56,6 +56,7 @@ import hbmame_sets
 import tunit_layout as L
 import tunit_secrets
 import tunit_fmoves
+import tunit_cheats
 
 RBF = 'Arcade-Midway-T-Unit'
 MAME_VERSION = '0289'
@@ -284,6 +285,7 @@ def main():
         out += st[3][2]
         out.append('\t</romstruct>')
 
+        cheat_out = []                  # the <cheats> block (Mortal Kombat II sets)
         out.append('\t<rom index="1">')
         if getattr(g, 'hide_extras', False):
             # the OSD shows the hack's own Move List and View Secrets but no
@@ -324,6 +326,16 @@ def main():
                 out.append('\t\t</part>')
             elif fm_notes:
                 out.append('\t\t<!-- finishing moves: %s -->' % escape('; '.join(fm_notes)))
+            ck, ck_notes = tunit_cheats.build(gid, prog)
+            if ck:
+                # the OSD's Cheats menu (tools/tunit_cheats.py, rtl/tunit_cheats.sv)
+                cheat_out.append('\t<!-- cheats (rtl/tunit_cheats.sv): %s -->' % escape('; '.join(ck_notes)))
+                cheat_out.append('\t<cheats size="%d" max="%d">' % (tunit_cheats.CHEAT_SIZE, tunit_cheats.CHEAT_MAX))
+                for name, data in ck:
+                    cheat_out.append('\t\t<cheat name="%s">%s</cheat>' % (escape(name), ' '.join(data.hex().upper()[i:i + 4] for i in range(0, len(data) * 2, 4))))
+                cheat_out.append('\t</cheats>')
+            elif ck_notes:
+                cheat_out.append('\t<!-- cheats: %s -->' % escape('; '.join(ck_notes)))
         else:
             out.append('\t\t<part>%02X</part>' % gid)
         out.append('\t</rom>')
@@ -343,6 +355,7 @@ def main():
             out += rom_xml(idx, zipattr, pieces, md5, comments)
 
         out.append('\t<nvram index="2" size="%d"/>' % NVRAM_SIZE)
+        out += cheat_out
         out.append('</misterromdescription>')
 
         if g.parent:
