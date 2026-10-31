@@ -96,6 +96,7 @@ localparam CONF_STR = {
 	"h5P6O[21],Smoke Fight,Off,On;",
 	"P6-;",
 	"P6-,EJB Menu: attract mode only;",
+	"h5C,Cheats;",
 	"O[9],Service Mode,Off,On;",
 	"O[8],Pause when OSD is open,On,Off;",
 	"-;",
@@ -211,12 +212,13 @@ end
 // The NVRAM file follows the ROMs in a separate transfer. Hold the board in
 // reset for half a second after a download so the game never boots on an
 // empty CMOS that is about to be replaced. Not for the DIP switches (index
-// 254): Main_MiSTer sends them again each time one changes on the OSD, and
-// the game goes on (it reads most of them at power-up; Service Credit and
-// Tilt act at once).
+// 254) or the cheats (index 255): Main_MiSTer sends them again each time one
+// changes on the OSD, and the game goes on (it reads most of the DIP switches
+// at power-up; Service Credit and Tilt act at once; a cheat acts at once).
+wire dl_other = ioctl_download && ioctl_index != 16'd254 && ioctl_index != 16'd255;
 reg  [25:0] boot_hold;
 always @(posedge clk_sys) begin
-	if (ioctl_download && ioctl_index != 16'd254)
+	if (dl_other)
 		boot_hold <= 26'd48_000_000;
 	else if (boot_hold != 26'd0)
 		boot_hold <= boot_hold - 26'd1;
@@ -226,11 +228,11 @@ wire reset = RESET | status[0] | buttons[1] | rom_download | ~rom_loaded | (boot
 
 // The picture is black while a ROM set loads (the "Sending ROM" box then sits
 // on black). Black from the first byte of a download (not the DIP switches'
-// index 254, re-sent while a game runs) until the board's half-second boot
-// hold ends, and from power-up until the first ROM set is complete. The
+// index 254 or the cheats' index 255, re-sent while a game runs) until the
+// board's half-second boot hold ends, and from power-up until the first ROM set is complete. The
 // board's picture is gated to black and its stopped raster is replaced by
 // the core's own black frames (see "video while a ROM set loads" below).
-wire load_black = (ioctl_download && ioctl_index != 16'd254) | ~rom_loaded | (boot_hold != 26'd0);
+wire load_black = dl_other | ~rom_loaded | (boot_hold != 26'd0);
 
 //////////////////////////////////////////////////////////////////
 // Game configuration
@@ -688,6 +690,11 @@ wire [223:0] pt_addr;
 wire [127:0] pt_data;
 wire   [7:0] pt_en;
 wire   [7:0] pt_fetch;           // entry is program code: instruction fetches only
+wire [223:0] ck_addr;            // the OSD cheats' entries (rtl/tunit_cheats.sv)
+wire [127:0] ck_data;
+wire   [7:0] ck_en;
+wire   [7:0] ck_fetch;
+wire   [7:0] ck_store;           // entry also replaces the value the CPU writes
 wire         cpu_rd;             // the board's completed CPU reads (a code's success)
 wire         cpu_wr;             // and writes (the finishing-move player follows the fight)
 wire  [27:0] cpu_wa;
@@ -730,6 +737,40 @@ tunit_secrets secrets
 	.pt_data    (pt_data),
 	.pt_en      (pt_en),
 	.pt_fetch   (pt_fetch)
+);
+
+//////////////////////////////////////////////////////////////////
+// Cheats (Mortal Kombat II)
+//
+// "C,Cheats;" in CONF_STR shows the MRA's <cheats> list (Infinite Health P1,
+// Infinite Health P2, Stop Finishing Move Timer). Main_MiSTer sends every
+// switched-on cheat as one download with index 255 each time the menu
+// toggles one (a lone 2-byte word when none is on); rtl/tunit_cheats.sv
+// turns the 8-byte units into 8 more read patches for the board, beside the
+// secrets' 8 (the same compare, rtl/midway_tunit.sv). A ROM set loading
+// clears them: Main starts a new list with every cheat off. The board is
+// not reset for a cheat download (see boot_hold). tools/tunit_cheats.py
+// makes the units for the MRAs.
+//////////////////////////////////////////////////////////////////
+reg  cheats_dl_d = 1'b0;
+wire cheats_dl   = ioctl_download && ioctl_index == 16'd255;
+always @(posedge clk_sys) cheats_dl_d <= cheats_dl;
+
+tunit_cheats cheats
+(
+	.clk        (clk_sys),
+	.clear      (rom_download),
+
+	.dl_start   (cheats_dl & ~cheats_dl_d),
+	.dl_wr      (ioctl_wr && ioctl_index == 16'd255 && ioctl_addr[26:6] == 21'd0),
+	.dl_addr    (ioctl_addr[5:1]),
+	.dl_data    (ioctl_dout),
+
+	.ck_addr    (ck_addr),
+	.ck_data    (ck_data),
+	.ck_en      (ck_en),
+	.ck_fetch   (ck_fetch),
+	.ck_store   (ck_store)
 );
 
 //////////////////////////////////////////////////////////////////
@@ -981,10 +1022,11 @@ midway_tunit board
 
 	.in_ports       (in_ports),
 
-	.pt_addr        (pt_addr),
-	.pt_data        (pt_data),
-	.pt_en          (pt_en),
-	.pt_fetch       (pt_fetch),         // program code patches: instruction fetches only
+	.pt_addr        ({ck_addr, pt_addr}),
+	.pt_data        ({ck_data, pt_data}),
+	.pt_en          ({ck_en, pt_en}),
+	.pt_fetch       ({ck_fetch, pt_fetch}),         // program code patches: instruction fetches only
+	.pt_store       ({ck_store, 8'd0}),             // cheat entries that also replace the CPU's writes
 
 	.lvl_on         (lvl_on),           // Fixed AI Difficulty
 	.lvl_addr       (lvl_wa),
@@ -1043,7 +1085,8 @@ midway_tunit board
 	.dbg_rd         (cpu_rd),
 	.dbg_wa         (cpu_wa),
 	.dbg_wdata      (cpu_wd),
-	.dbg_rdata      ()
+	.dbg_rdata      (),
+	.dbg_ie         ()
 );
 
 assign DDRAM_CLK = clk_sys;
