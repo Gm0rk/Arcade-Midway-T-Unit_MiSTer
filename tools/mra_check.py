@@ -19,17 +19,20 @@ loaded streams are also compared with what MAME itself loaded, region by
 region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
 
-A Mortal Kombat II set with the extras carries the OSD's Cheats list (<cheats
-size="8" max="8">: Infinite Health P1 and P2, Infinite Round Time, Stop
-Finishing Move Timer; tools/tunit_cheats.py, rtl/tunit_cheats.sv) and no other
-set does. Each cheat is one 8-byte unit; the health units must name the two
-energy words of the program ROM's round start (MOVI full,A0 and MOVE A0 to
-both) with that full value, flagged as written too (flags 2), the round time
-unit the DEC A10 of the clock process (followed by JRNN, MOVK 9,A10, DEC A11,
-and after the clock's start MOVK 9,A11 / MOVK 9,A10) with MOVE A10,A10 (4D4Ah)
-flagged as an instruction word, and the timer unit the 80h (FFh in Challenger)
-after the program ROM's MOVI .,A11 with the 7FFFh patch flagged as an
-instruction word.
+Every Mortal Kombat II set (Mortal Kombat II Plus too) carries the OSD's
+Cheats list (<cheats size="8" max="8">: Infinite Health P1 and P2, Infinite
+Round Time, Stop Finishing Move Timer; tools/tunit_cheats.py,
+rtl/tunit_cheats.sv) and no other set does. The health and round time cheats
+are one 8-byte unit each; the health units must name the two energy words of
+the program ROM's round start (MOVI full,A0 and MOVE A0 to both) with that
+full value, flagged as written too (flags 2), the round time unit the DEC A10
+of the clock process (followed by JRNN, MOVK 9,A10, DEC A11, and after the
+clock's start MOVK 9,A11 / MOVK 9,A10; in Plus the same four with long jumps,
+DEC A10 / JANN to the word after DEC A11 / MOVK 9,A10 / JA to DEC A11) with
+MOVE A10,A10 (4D4Ah) flagged as an instruction word, and the timer cheat the
+80h (FFh in Challenger) after the program ROM's MOVI .,A11 with the 7FFFh
+patch flagged as an instruction word; Plus has two timer units, the 80h and
+the 140h of its own routine, each after a MOVI .,A11.
 
 ROM index 1's first word must hold only the game id and the flag (bit 8,
 Mortal Kombat II Plus: the OSD shows the hack's Move List and View Secrets and
@@ -164,7 +167,7 @@ CHEAT_NAMES = ['Infinite Health P1', 'Infinite Health P2', 'Infinite Round Time'
 def cheat_checks(root, gid, hides, prog):
     """Problems with the MRA's <cheats> (see the module text)."""
     node = root.find('cheats')
-    want = gid == 2 and not hides                    # Mortal Kombat II with the extras
+    want = gid == 2                                  # Mortal Kombat II, Plus included
     if node is None:
         return ['no <cheats> (every Mortal Kombat II set has them)'] if want else []
     if not want:
@@ -177,14 +180,22 @@ def cheat_checks(root, gid, hides, prog):
         return errs + ['cheats %s, not %s' % ([c.get('name') for c in cheats], CHEAT_NAMES)]
     n = len(prog) // 2
     w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
-    units = []
+    units = []                                       # per cheat: [(bit address, value, flags), ...]
     for c in cheats:
         raw = bytes.fromhex(''.join((c.text or '').split()))
-        if len(raw) != 8:
-            return errs + ['%s is %d bytes, not one 8-byte unit' % (c.get('name'), len(raw))]
-        lo, hi, val, flags = [raw[i] | raw[i + 1] << 8 for i in range(0, 8, 2)]
-        units.append(((lo | hi << 16) << 4, val, flags))
-    (e1, v1, f1), (e2, v2, f2), (cw, cv, cf), (tw, tv, tf) = units
+        if len(raw) % 8 or not raw:
+            return errs + ['%s is %d bytes, not 8-byte units' % (c.get('name'), len(raw))]
+        us = []
+        for k in range(0, len(raw), 8):
+            lo, hi, val, flags = [raw[k + i] | raw[k + i + 1] << 8 for i in range(0, 8, 2)]
+            us.append(((lo | hi << 16) << 4, val, flags))
+        units.append(us)
+    if sum(len(u) for u in units) > 8:
+        errs.append('%d units, the board takes 8' % sum(len(u) for u in units))
+    want_units = [1, 1, 1, 2 if hides else 1]        # Plus: the timer's 80h and 140h
+    if [len(u) for u in units] != want_units:
+        return errs + ['units per cheat %s, not %s' % ([len(u) for u in units], want_units)]
+    (e1, v1, f1), (e2, v2, f2), (cw, cv, cf) = units[0][0], units[1][0], units[2][0]
     # MOVI full,A0 / MOVE A0,@P1 energy / MOVE A0,@P2 energy (the other fill, FFFFh, is not it)
     ok = [i for i in range(n - 8)
           if w[i] == 0x09C0 and w[i + 1] != 0xFFFF and w[i + 2] == 0x0580 and w[i + 3] | w[i + 4] << 16 == e1
@@ -197,26 +208,41 @@ def cheat_checks(root, gid, hides, prog):
         errs.append('the health cheats are flagged %d and %d, not 2 (a RAM word whose writes store the value)' % (f1, f2))
     if e1 & 15 or e2 & 15:
         errs.append('an energy word is not word aligned')
-    # the round clock: DEC A10 / JRNN / MOVK 9,A10 / DEC A11 after the process's start
+    # the round clock: DEC A10 / JRNN / MOVK 9,A10 / DEC A11 after the process's start (Plus: the same
+    # with JANN and JA, the DEC A11 being the word its jumps name)
     i = (cw - 0xFF800000) >> 4 if cw >= 0xFF800000 and not cw & 15 else -1
-    if i < 1 or i + 4 > n:
+    if i < 1 or i + 8 > n:
         errs.append('the round clock word %08X is not in the program ROM' % cw)
     else:
-        if not (w[i] == 0x142A and (w[i + 1] & 0xFF00) == 0xCF00 and w[i + 2] == 0x192A and w[i + 3] == 0x142B):
-            errs.append('the round clock word %08X is not DEC A10 / JRNN / MOVK 9,A10 / DEC A11' % cw)
-        start = [k for k in range(max(0, i - 0xC0), i)
+        near = i                                     # a word of the process, where it counts
+        if w[i] == 0x142A and (w[i + 1] & 0xFF00) == 0xCF00 and w[i + 2] == 0x192A and w[i + 3] == 0x142B:
+            pass
+        elif (w[i] == 0x142A and w[i + 1] == 0xCF80 and w[i + 4] == 0x192A and w[i + 5] == 0xC080):
+            dst_n, dst_j = w[i + 2] | w[i + 3] << 16, w[i + 6] | w[i + 7] << 16     # JANN, JA targets
+            d = (dst_j - 0xFF800000) >> 4 if dst_j >= 0xFF800000 and not dst_j & 15 else -1
+            if d < 1 or d + 2 > n or w[d] != 0x142B or dst_n != dst_j + 16:
+                errs.append('the round clock word %08X: its jumps go to %08X and %08X, not DEC A11 and the word after it'
+                            % (cw, dst_n, dst_j))
+            else:
+                near = d
+        else:
+            errs.append('the round clock word %08X is not DEC A10 / JRNN / MOVK 9,A10 / DEC A11 (or DEC A10 / JANN / MOVK 9,A10 / JA)' % cw)
+        start = [k for k in range(max(0, near - 0xC0), near)
                  if w[k] == 0x192B and w[k + 1] == 0x192A and w[k + 2] == 0x058A and w[k + 5] == 0x058B]
         if len(start) != 1:
             errs.append('%d clock process starts (MOVK 9,A11 / MOVK 9,A10 / MOVE A10,@ / MOVE A11,@) before %08X' % (len(start), cw))
         if cv != 0x4D4A or cf != 1:
             errs.append('the round time cheat is %04X flags %d, not 4D4A (MOVE A10,A10) as an instruction word' % (cv, cf))
-    # the timer: the immediate of the second wait's MOVI .,A11
-    i = (tw - 0xFF800000) >> 4 if tw >= 0xFF800000 and not tw & 15 else -1
-    if i < 1 or i >= n:
-        errs.append('the timer word %08X is not in the program ROM' % tw)
-    else:
-        if w[i - 1] != 0x09CB or w[i] not in (0x0080, 0x00FF):
-            errs.append('the timer word %08X is %04X after %04X, not 80h/FFh after MOVI .,A11' % (tw, w[i], w[i - 1]))
+    # the timer: the immediate of the second wait's MOVI .,A11 (Plus: the hack's, 80h and then 140h)
+    for k, (tw, tv, tf) in enumerate(units[3]):
+        i = (tw - 0xFF800000) >> 4 if tw >= 0xFF800000 and not tw & 15 else -1
+        if i < 1 or i >= n:
+            errs.append('the timer word %08X is not in the program ROM' % tw)
+            continue
+        ok_imm = (0x0080, 0x00FF) if k == 0 else (0x0140,)
+        if w[i - 1] != 0x09CB or w[i] not in ok_imm:
+            errs.append('the timer word %08X is %04X after %04X, not %s after MOVI .,A11'
+                        % (tw, w[i], w[i - 1], '/'.join('%02Xh' % v for v in ok_imm)))
         if tv != 0x7FFF or tf != 1:
             errs.append('the timer cheat is %04X flags %d, not 7FFF as an instruction word' % (tv, tf))
     return errs
