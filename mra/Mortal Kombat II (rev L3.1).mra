@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II (rev L3.1)</name>
-	<mratimestamp>20261026</mratimestamp>
+	<mratimestamp>20261029</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2</setname>
 	<year>1993</year>
@@ -89,4 +89,11 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150 -->
+	<cheats size="8" max="8">
+		<cheat name="Infinite Health P1">2F60 1000 A100 0200</cheat>
+		<cheat name="Infinite Health P2">EC60 1000 A100 0200</cheat>
+		<cheat name="Infinite Round Time">FA19 F80F 4A4D 0100</cheat>
+		<cheat name="Stop Finishing Move Timer">151F F80F FF7F 0100</cheat>
+	</cheats>
 </misterromdescription>
