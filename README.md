@@ -51,19 +51,21 @@ MRAs.
 
 ## Timing and resources
 
-<!-- Fill the - cells from the Quartus reports of the latest compilation. -->
+<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 49's). -->
 Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
-5CSEBA6U23I7), timing model Slow 1100 mV 100 C.
+5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Figures are from the
+compilation of Build 49 (2026-10-30). Timing is met on every clock, and so is
+every hold, recovery, removal and minimum pulse width check.
 
 | Clock | Frequency | Setup slack |
 |---|---|---|
-| System (core PLL) | 96 MHz | - |
+| System (core PLL) | 96 MHz | +0.416 ns |
 
 | Resource | Used |
 |---|---|
-| Logic (ALMs) | - / 41,910 |
-| Block RAM (M10K blocks) | - / 553 |
-| DSP blocks | - / 112 |
+| Logic (ALMs) | 32,705 / 41,910 |
+| Block RAM (M10K blocks) | 405 / 553 |
+| DSP blocks | 67 / 112 |
 
 ## Features
 
