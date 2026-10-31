@@ -7,6 +7,7 @@ set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_vram.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_video.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/midway_tunit.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_secrets.sv
+set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_cheats.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_fmoves.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_window.sv
 set_global_assignment -name SYSTEMVERILOG_FILE rtl/tunit_mlpage.sv
