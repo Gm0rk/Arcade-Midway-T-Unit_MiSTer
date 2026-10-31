@@ -51,21 +51,21 @@ MRAs.
 
 ## Timing and resources
 
-<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 49's). -->
+<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 50's). -->
 Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Figures are from the
-compilation of Build 49 (2026-10-30). Timing is met on every clock, and so is
+compilation of Build 50 (2026-10-30). Timing is met on every clock, and so is
 every hold, recovery, removal and minimum pulse width check.
 
 | Clock | Frequency | Setup slack |
 |---|---|---|
-| System (core PLL) | 96 MHz | +0.416 ns |
+| System (core PLL) | 96 MHz | +0.148 ns |
 
-| Resource | Used |
-|---|---|
-| Logic (ALMs) | 32,705 / 41,910 |
-| Block RAM (M10K blocks) | 405 / 553 |
-| DSP blocks | 67 / 112 |
+| Resource | Used | Percent used |
+|---|---|---|
+| Logic (ALMs) | 32,709 / 41,910 | 78 % |
+| Block RAM (M10K blocks) | 405 / 553 | 73 % |
+| DSP blocks | 67 / 112 | 60 % |
 
 ## Features
 
@@ -86,7 +86,7 @@ every hold, recovery, removal and minimum pulse width check.
   Infinite Round Time and Stop Finishing Move Timer (see the
   [Mortal Kombat II page](docs/MortalKombatII.md))
 - Support for Mortal Kombat II Plus: its own Move List and View Secrets (the secret
-  characters, the Kombat Kodes) and Fixed AI Difficulty
+  characters, the Kombat Kodes), Fixed AI Difficulty and the same Cheats menu
 - NBA Jam, NBA Jam Tournament Edition: power-up and Tonight's Match-Up codes
   (the tank game, tournament mode) and a Secret Player List
 
@@ -98,7 +98,7 @@ every hold, recovery, removal and minimum pulse width check.
 | Move List | Mortal Kombat games: shows each fighter's moves over the game; with the OSD closed, Left or Right turns the page |
 | Finishing Moves | Mortal Kombat, Mortal Kombat II: enters the chosen fatality at the next FINISH HIM/HER |
 | Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II, Mortal Kombat II Plus: the computer opponent's level, Off or 0 (easiest) to 9 |
-| Cheats | Mortal Kombat II (not Plus): Infinite Health P1, Infinite Health P2, Infinite Round Time, Stop Finishing Move Timer; select one to switch it on or off (a mark shows it is on; all are off after a game loads) |
+| Cheats | Mortal Kombat II, Mortal Kombat II Plus included: Infinite Health P1, Infinite Health P2, Infinite Round Time, Stop Finishing Move Timer; select one to switch it on or off (a mark shows it is on; all are off after a game loads) |
 | View Secret Players | NBA Jam games: shows the secret players and cheat codes over the game; with the OSD closed, Left or Right turns the page |
 | View Secrets | Mortal Kombat II Plus: shows how to unlock the secret characters, the Kombat Kodes and other secrets; with the OSD closed, Left or Right turns the page |
 | DIP Switches | The game's DIP switches, with Service Credit and Tilt |
