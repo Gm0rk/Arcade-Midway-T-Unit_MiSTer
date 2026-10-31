@@ -66,6 +66,10 @@
 //  --lvlwatch  log the CPU's reads and writes of the word at bit address ADDR
 //              (hex; with --level, its address): frame, R or W, value read
 //              or written, to stderr (the first 400), and a summary at the end
+//  --ramwatch  A,B,..: bit addresses (hex) of main RAM words: log each CPU write
+//              (frame, data, interrupt enable) and each write the board hands
+//              to the SDRAM model (frame, data), to stderr (the first 400),
+//              and the first frame the CPU runs with interrupts enabled
 //  --vtiming   the OSD's Video Timing: 0 native 289-line frames (54.7 Hz),
 //              1 277 lines (57 Hz)
 //  --lines     write a line per frame: frame, lines from one VSync to the
@@ -84,6 +88,8 @@
 #include <cstdint>
 #include <string>
 #include <vector>
+#include <map>
+#include <algorithm>
 #include <set>
 #include <deque>
 
@@ -252,15 +258,20 @@ static std::vector<uint8_t> load(const char *path) {
 }
 
 struct Press { int frame, port, bit, len; };
+struct CheatSend { int frame; std::vector<uint16_t> words; };
 
 int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
-	std::string info, osds, dcslog, linespath, dcstrace, dcsstate;
+	std::string info, osds, dcslog, linespath, dcstrace, dcsstate, cheats;
 	int frames = 100, dsw = -1, vtiming = 0;
 	bool lvl_on = false, lvl_watch = false; uint32_t lvl_addr = 0; int lvl_val = 0;
 	long lvl_r = 0, lvl_w = 0, lvl_hist[16] = {0}, lvl_lines = 0;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
+	int rdhist = 0;                          // --rdhist N: tally main RAM reads (by interrupt enable) in frames 0..N
+	std::vector<uint32_t> rw_addr;           // --ramwatch: word addresses
+	long rw_lines = 0; int ie_first = -1;
+	std::map<uint32_t, std::pair<long, long>> rdh;
 	Ddr ddr;
 	for (int i = 1; i < argc; i++) {
 		std::string a = argv[i];
@@ -296,6 +307,17 @@ int main(int argc, char **argv) {
 			lvl_val = c == std::string::npos ? 0 : atoi(v.substr(c + 1).c_str());
 		}
 		else if (a == "--lines") linespath = next();
+		else if (a == "--cheat") cheats = next();
+		else if (a == "--rdhist") rdhist = atoi(next().c_str());
+		else if (a == "--ramwatch") {
+			std::string v = next();
+			for (size_t p = 0; p < v.size();) {
+				size_t e = v.find(',', p);
+				rw_addr.push_back(strtoul(v.substr(p, e == std::string::npos ? std::string::npos : e - p).c_str(), nullptr, 16) >> 4);
+				if (e == std::string::npos) break;
+				p = e + 1;
+			}
+		}
 	}
 
 	top = new Vsim_top;
@@ -347,6 +369,30 @@ int main(int argc, char **argv) {
 		if (e == std::string::npos) break;
 		p = e + 1;
 	}
+	// --cheat "FRAME:HEX;FRAME:HEX": at the frame the cheat module takes a
+	// download with ROM index 255 whose bytes are HEX (units of 8 bytes; 0000
+	// is the lone word Main sends when no cheat is on)
+	std::vector<CheatSend> ck_send;
+	for (size_t p = 0; p < cheats.size();) {
+		size_t e = cheats.find(';', p);
+		std::string item = cheats.substr(p, e == std::string::npos ? std::string::npos : e - p);
+		size_t c = item.find(':');
+		if (c != std::string::npos) {
+			CheatSend cs;
+			cs.frame = atoi(item.c_str());
+			for (size_t k = c + 1; k + 4 <= item.size(); k += 4) {
+				// bytes are little-endian in the stream: "AABB" is word 0xBBAA
+				unsigned b0 = strtoul(item.substr(k, 2).c_str(), nullptr, 16);
+				unsigned b1 = strtoul(item.substr(k + 2, 2).c_str(), nullptr, 16);
+				cs.words.push_back((uint16_t)(b0 | (b1 << 8)));
+			}
+			ck_send.push_back(cs);
+		}
+		if (e == std::string::npos) break;
+		p = e + 1;
+	}
+	size_t ck_next = 0;                      // next entry of ck_send to start
+	int ck_pos = -1;                         // word of the current one being sent
 	std::vector<uint8_t> info_d;
 	if (!info.empty()) info_d = load(info.c_str());
 
@@ -382,6 +428,7 @@ int main(int argc, char **argv) {
 	top->in_ports = ((uint64_t)dsw << 48) | 0xFFFFFFFFFFFFull;
 	top->info_start = 0; top->info_wr = 0; top->info_addr = 0; top->info_data = 0;
 	top->osd_trig = 0; top->osd_opt = 0;
+	top->ck_start = 0; top->ck_wr = 0; top->ck_waddr = 0; top->ck_wdata = 0;
 	top->pause = 0;
 	top->vtiming = vtiming & 1;
 	top->lvl_on = lvl_on; top->lvl_addr = lvl_addr; top->lvl_val = lvl_val & 15;
@@ -443,6 +490,23 @@ int main(int argc, char **argv) {
 			top->info_wr = 1;
 			top->info_addr = (uint32_t)(cyc - 200);
 			top->info_data = info_d[i] | (info_d[i + 1] << 8);
+		}
+
+		// the cheats download: a start pulse, then a word per clock
+		top->ck_start = 0; top->ck_wr = 0;
+		if (ck_pos >= 0) {
+			auto &w = ck_send[ck_next - 1].words;
+			if (ck_pos < (int)w.size()) {
+				top->ck_wr = 1;
+				top->ck_waddr = ck_pos & 31;
+				top->ck_wdata = w[ck_pos];
+				ck_pos++;
+			} else ck_pos = -1;
+		}
+		else if (ck_next < ck_send.size() && (int)(charged / CYC_PER_FRAME) > ck_send[ck_next].frame) {
+			top->ck_start = 1;
+			ck_next++;
+			ck_pos = 0;
 		}
 
 		// inputs: MAME's ports take a value frames.lua sets at its frame
@@ -515,6 +579,19 @@ int main(int argc, char **argv) {
 			if (rd) { lvl_r++; lvl_hist[v & 15]++; } else lvl_w++;
 			if (lvl_lines++ < 400) fprintf(stderr, "lvl %d %c %04X\n", fr.frame, rd ? 'R' : 'W', v);
 		}
+		if (!rw_addr.empty()) {
+			if (ie_first < 0 && top->dbg_ie && top->dbg_retire) { ie_first = fr.frame; fprintf(stderr, "ramwatch: first frame with interrupts enabled %d\n", ie_first); }
+			if (top->dbg_wr)
+				for (uint32_t w : rw_addr)
+					if (top->dbg_wa == w && rw_lines++ < 400) fprintf(stderr, "cpuW %d %07X %04X ie=%d\n", fr.frame, w, top->dbg_wdata, top->dbg_ie);
+			if (top->dbg_sdwr)
+				for (uint32_t w : rw_addr)
+					if (top->dbg_sdwa == 0x800000u + (w & 0x3FFFF) && rw_lines++ < 400) fprintf(stderr, "sdW   %d %07X %04X\n", fr.frame, w, top->dbg_sdwd);
+		}
+		if (rdhist && top->dbg_rd && fr.frame <= rdhist && (top->dbg_wa >> 18) == 0x004) {
+			auto &t = rdh[top->dbg_wa];
+			if (top->dbg_ie) t.second++; else t.first++;
+		}
 		if (wf && top->dbg_wr && fr.frame >= wr_a && fr.frame <= wr_b) {
 			uint32_t wa = top->dbg_wa;
 			bool ram = (wa >> 18) == 0x004, vram = (wa >> 18) == 0;
@@ -585,6 +662,12 @@ int main(int argc, char **argv) {
 			fprintf(stderr, "frame %d  cycles %llu  instructions %llu  pc %08X\n", fr.frame,
 			        (unsigned long long)cyc, (unsigned long long)retired, top->dbg_pc);
 		}
+	}
+	if (rdhist) {
+		std::vector<std::pair<uint32_t, std::pair<long, long>>> v(rdh.begin(), rdh.end());
+		std::sort(v.begin(), v.end(), [](auto &a, auto &b) { return a.second.second > b.second.second; });
+		for (size_t i = 0; i < v.size() && i < 20; i++)
+			fprintf(stderr, "rdhist %08X (bit %08X)  IE0 %ld  IE1 %ld\n", v[i].first, v[i].first << 4, v[i].second.first, v[i].second.second);
 	}
 	w.close();
 	if (dcsf) fclose(dcsf);

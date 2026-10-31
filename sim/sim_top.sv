@@ -2,7 +2,7 @@
 //  Full-board simulation top (Verilator)
 //
 //  The T-Unit board, the ADPCM sound board, the secrets module (code player
-//  and read patches) and the real SDRAM controller with a chip model, as
+//  and read patches), the cheats module and the real SDRAM controller with a chip model, as
 //  Arcade-Midway-T-Unit.sv wires them; the DDR3 port,
 //  ROM loading (straight into the SDRAM model), inputs, frames and audio
 //  are handled by the C++ harness (sim/sim_main.cpp). The SDRAM write
@@ -39,6 +39,12 @@ module sim_top
 	input      [15:0] info_data,
 	input       [1:0] osd_trig,
 	input      [10:0] osd_opt,
+
+	// OSD cheats: a download as ROM index 255 (a start pulse, then words)
+	input             ck_start,
+	input             ck_wr,
+	input       [4:0] ck_waddr,
+	input      [15:0] ck_wdata,
 
 	// Fixed AI Difficulty (MK, MK2): the level word's word address and the level
 	input             lvl_on,
@@ -90,7 +96,11 @@ module sim_top
 	output            dbg_rd,
 	output     [27:0] dbg_wa,
 	output     [15:0] dbg_wdata,
-	output     [15:0] dbg_rdata
+	output     [15:0] dbg_rdata,
+	output            dbg_ie,
+	output            dbg_sdwr,        // the board's RAM write goes to the SDRAM model (one clock)
+	output     [24:1] dbg_sdwa,
+	output     [15:0] dbg_sdwd
 );
 
 wire [24:3] cpu_sd_addr, dma_sd_addr, snd_sd_addr, oki_sd_addr;
@@ -132,6 +142,11 @@ wire [223:0] pt_addr;
 wire [127:0] pt_data;
 wire   [7:0] pt_en;
 wire   [7:0] pt_fetch;
+wire [223:0] ck_addr;
+wire [127:0] ck_data;
+wire   [7:0] ck_en;
+wire   [7:0] ck_fetch;
+wire   [7:0] ck_store;
 reg         vb_d;
 always @(posedge clk) vb_d <= vid_vb;
 
@@ -155,6 +170,21 @@ tunit_secrets secrets
 	.pt_data    (pt_data),
 	.pt_en      (pt_en),
 	.pt_fetch   (pt_fetch)
+);
+
+tunit_cheats cheats
+(
+	.clk        (clk),
+	.clear      (1'b0),
+	.dl_start   (ck_start),
+	.dl_wr      (ck_wr),
+	.dl_addr    (ck_waddr),
+	.dl_data    (ck_wdata),
+	.ck_addr    (ck_addr),
+	.ck_data    (ck_data),
+	.ck_en      (ck_en),
+	.ck_fetch   (ck_fetch),
+	.ck_store   (ck_store)
 );
 
 wire [63:0] ports = {in_ports[63:22],
@@ -181,10 +211,11 @@ midway_tunit board
 
 	.in_ports       (ports),
 
-	.pt_addr        (pt_addr),
-	.pt_data        (pt_data),
-	.pt_en          (pt_en),
-	.pt_fetch       (pt_fetch),         // program code patches: instruction fetches only
+	.pt_addr        ({ck_addr, pt_addr}),
+	.pt_data        ({ck_data, pt_data}),
+	.pt_en          ({ck_en, pt_en}),
+	.pt_fetch       ({ck_fetch, pt_fetch}),   // program code patches: instruction fetches only
+	.pt_store       ({ck_store, 8'd0}),       // cheat entries that also replace the CPU's writes
 
 	.lvl_on         (lvl_on),
 	.lvl_addr       (lvl_addr),
@@ -243,7 +274,8 @@ midway_tunit board
 	.dbg_rd         (dbg_rd),
 	.dbg_wa         (dbg_wa),
 	.dbg_wdata      (dbg_wdata),
-	.dbg_rdata      (dbg_rdata)
+	.dbg_rdata      (dbg_rdata),
+	.dbg_ie         (dbg_ie)
 );
 
 williams_adpcm sound
@@ -298,6 +330,10 @@ reg  [24:1] sd_wr_addr;
 reg  [15:0] sd_wr_data;
 reg         sd_wr_req = 1'b0;
 reg         sd_wr_busy = 1'b0;
+
+assign dbg_sdwr = ~sd_wr_busy & (ram_wr_req != ram_wr_ack);
+assign dbg_sdwa = ram_wr_addr;
+assign dbg_sdwd = ram_wr_data;
 
 always @(posedge clk) begin
 	if (sd_wr_busy) begin
