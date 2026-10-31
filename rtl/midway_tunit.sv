@@ -68,11 +68,13 @@ module midway_tunit
 	// inputs (active low as the CPU reads them): IN0, IN1, IN2, DSW
 	input      [63:0] in_ports,
 
-	// read patches (tunit_secrets.sv): 8 word addresses and values, enables
-	input     [223:0] pt_addr,
-	input     [127:0] pt_data,
-	input       [7:0] pt_en,
-	input       [7:0] pt_fetch,      // entry applies to instruction fetches only (program code)
+	// read patches: entries 0-7 from tunit_secrets.sv (OSD secrets), 8-15 from
+	// tunit_cheats.sv (OSD cheats): word addresses and values, enables
+	input     [447:0] pt_addr,       // 16 x 28-bit word addresses: 8 OSD secrets, 8 cheats
+	input     [255:0] pt_data,
+	input      [15:0] pt_en,
+	input      [15:0] pt_fetch,      // entry applies to instruction fetches only (program code)
+	input      [15:0] pt_store,      // entry also replaces the value the CPU writes to the word (main RAM)
 
 	// Fixed AI Difficulty (MK, MK2): while lvl_on, the CPU's reads of the
 	// game's AI level word return lvl_val (see "Read patches")
@@ -142,7 +144,8 @@ module midway_tunit
 	output            dbg_rd,        // one pulse per CPU read as it completes
 	output     [27:0] dbg_wa,        // its word address (bit address >> 4)
 	output     [15:0] dbg_wdata,
-	output     [15:0] dbg_rdata
+	output     [15:0] dbg_rdata,
+	output            dbg_ie         // the CPU's interrupt enable with them (simulation: --rdhist)
 );
 
 // SDRAM byte addresses of the regions
@@ -325,6 +328,7 @@ assign dbg_rd    = cpu_ce & mem_ack & mem_rd;
 assign dbg_wa    = mem_addr;
 assign dbg_wdata = mem_wdata;
 assign dbg_rdata = cpu_rdata;
+assign dbg_ie    = b_ie;
 
 //----------------------------------------------------------------------------
 // CPU bus, registered on the board side
@@ -365,7 +369,7 @@ end
 wire [27:0] wa = b_addr;
 
 //----------------------------------------------------------------------------
-// Read patches (OSD secrets, tunit_secrets.sv)
+// Read patches (OSD secrets, tunit_secrets.sv; OSD cheats, tunit_cheats.sv)
 //
 // A CPU read of a word in the patch table returns the table's value instead
 // of memory: program ROM words (instruction fetches included) and RAM
@@ -385,6 +389,21 @@ wire [27:0] wa = b_addr;
 // 2.00's at every power-up, the diagnostics') run with interrupts off and
 // so read back what they wrote.
 //
+// The OSD cheats are 8 more entries of the same kind (pt_*[15:8]), switched
+// by the Cheats menu instead of the secrets' options: Infinite Health P1 and
+// P2 (the energy words, read as full: main RAM entries, the games read them
+// from their processes with interrupts enabled), Stop Finishing Move Timer
+// (the FINISH HIM routine's wait) and Infinite Round Time (the instruction
+// that counts the round clock down), both program ROM entries.
+//
+// An entry marked pt_store also replaces the value the CPU writes to the
+// word (the same compare, on the CPU's own address and interrupt enable, so
+// it is ready with the registered copy). Infinite Health uses it: the game
+// works out the new energy from the full value it reads and writes the
+// result, and without this the game's own copy is left at full less the last
+// hit, which is what the bar showed when the cheat was switched off. With
+// it every write stores full, so the bar stays full when the cheat goes off.
+//
 // Fixed AI Difficulty is one more entry of the same kind, with its value
 // from the OSD (lvl_val, 0 to 9) instead of the table: MK and MK2 keep their
 // CPU opponent's level in one main RAM word (the AI picks entries of its
@@ -402,7 +421,7 @@ reg  [15:0] pt_q;
 integer     pt_i;
 always @(posedge clk) begin
 	pt_hit <= 1'b0;
-	for (pt_i = 0; pt_i < 8; pt_i = pt_i + 1)
+	for (pt_i = 0; pt_i < 16; pt_i = pt_i + 1)
 		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28] &&
 		    (pt_fetch[pt_i] ? (b_pc == wa) : ((wa[27:18] != 10'h004) || b_ie))) begin   // 0x004: main RAM
 			pt_hit <= 1'b1;
@@ -415,6 +434,24 @@ always @(posedge clk) begin
 end
 
 assign cpu_rdata = pt_hit ? pt_q : mem_rdata;
+
+// write patches: the value stored for a CPU write to a pt_store entry's word,
+// decoded from the CPU's own address on the clock b_addr takes it, so it is
+// valid whenever the registered copy is
+reg         wp_hit;
+reg  [15:0] wp_q;
+integer     wp_i;
+always @(posedge clk) begin
+	wp_hit <= 1'b0;
+	for (wp_i = 0; wp_i < 16; wp_i = wp_i + 1)
+		if (pt_store[wp_i] && pt_en[wp_i] && mem_addr == pt_addr[28 * wp_i +: 28] &&
+		    ((mem_addr[27:18] != 10'h004) || cpu_st[21])) begin
+			wp_hit <= 1'b1;
+			wp_q   <= pt_data[16 * wp_i +: 16];
+		end
+end
+
+wire [15:0] ram_wdata = wp_hit ? wp_q : b_wdata;   // the data of a main RAM write
 
 localparam P_NONE = 3'd0, P_MK = 3'd1, P_NBAJAM = 3'd2, P_NBAJAMTE = 3'd3,
            P_JDREDD = 3'd4, P_MK2 = 3'd5;
@@ -899,7 +936,7 @@ always @(*) begin
 	wq_in   = {clr_addr - 18'd1, 16'h0000};   // clr_addr has already moved on
 	if (bstate == S_IDLE && req && !c_clr && !b_srt && b_wr && sel_ram && !sel_prot && !wq_full && !clr_busy && !clr_push) begin
 		wq_push = 1'b1;
-		wq_in   = {wa[17:0], b_wdata};
+		wq_in   = {wa[17:0], ram_wdata};
 	end
 end
 
@@ -1115,7 +1152,7 @@ always @(posedge clk) begin
 					mc_wa <= ram_line[11:0];
 					mc_wt <= mc_tq;
 					mc_wd <= mc_dq;
-					mc_wd[{wa[1:0], 4'b0000} +: 16] <= b_wdata;
+					mc_wd[{wa[1:0], 4'b0000} +: 16] <= ram_wdata;
 				end
 				mem_ack <= 1'b1;
 				bstate  <= S_IDLE;
