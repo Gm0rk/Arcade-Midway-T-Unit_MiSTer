@@ -21,7 +21,7 @@ Beyond the arcade board itself, the core adds 12 core-wide features and a set of
 | Secrets pages | The hidden menus, screens and debug features the programmers left in each game, as OSD items. The core enters the control codes for you |
 | Information windows | Pages drawn over the game's dimmed title screen while the game waits: the Move List (Mortal Kombat games), the Secret Player List (NBA Jam games) and View Secrets (Mortal Kombat II Plus). Set one On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off |
 | OSD messages | When the OSD closes, a message says whether a code was taken, what a set finishing move is waiting for, what an option just turned on does, or that the loaded version does not have it |
-| MRAs | 30 MRAs for the five games (5 parents, 25 alternatives), each carrying its own table of patches and code positions, built for MAME 0.289. One is for a hack that is not in MAME, Mortal Kombat II Plus, whose OSD has its own Move List and View Secrets and Fixed AI Difficulty, but no Finishing Moves or Hidden Items, and whose zip goes in `games/hbmame` |
+| MRAs | 30 MRAs for the five games (5 parents, 25 alternatives), each carrying its own table of patches and code positions (the Mortal Kombat II versions, also their Cheats list), built for MAME 0.289. One is for a hack that is not in MAME, Mortal Kombat II Plus, whose OSD has its own Move List and View Secrets and Fixed AI Difficulty, but no Finishing Moves, Hidden Items or Cheats, and whose zip goes in `games/hbmame` |
 
 ## Mortal Kombat
 
@@ -40,7 +40,7 @@ Eight extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, thr
 
 ## Mortal Kombat II
 
-Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, and Fixed AI Difficulty. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the other extras are built on, so its OSD shows no Finishing Moves or Hidden Items.
+Fourteen extras across the 11 versions in MAME: seven hidden items, Finishing Moves for all 12 fighters, a Move List window, Fixed AI Difficulty, and four cheats. Revision limits are noted per row. Mortal Kombat II Plus (Beta 2, hack) has Fixed AI Difficulty and two windows of its own, a Move List and View Secrets: it adds fighters, moves and secrets and changes the code the other extras are built on, so its OSD shows no Finishing Moves, Hidden Items or Cheats.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -54,6 +54,10 @@ Ten extras across the 11 versions in MAME: seven hidden items, Finishing Moves f
 | Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
 | Move List window | A page per fighter (55 moves in all) with the special moves and finishing moves and their distances, over the game's paused title screen. Set it On in the OSD, close the OSD and turn the pages with Left and Right, from Liu Kang to Raiden and round; open the OSD to set it Off. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
 | Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
+| Infinite Health P1 | Player 1's energy stays full: the game is shown full energy (A1h) and what it writes there is full too, whatever damage it takes, so the bar never drops, there is no knockout, and the bar is still full when you switch the cheat off. Switch it on in the OSD's Cheats menu. Every version | Cheats |
+| Infinite Health P2 | The same for player 2, who in a 1-player game is the computer opponent: it cannot be knocked out while this is on | Cheats |
+| Infinite Round Time | The round clock stops counting: it stays at 99 from the start of the round (or at the time it showed when you switched the cheat on), so a round never ends on time. Switched off, the clock carries on from there. Every version | Cheats |
+| Stop Finishing Move Timer | FINISH HIM waits for you: its window of 168 frames (about 3 seconds) is held open for about 10 minutes. It still ends when a finishing move starts or when the winner hits the loser. Challenger's window already stays open much longer, so the cheat changes little there | Cheats |
 | Plus Move List window (Mortal Kombat II Plus only) | A page per fighter, 17 in all: the 12 fighters, then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn. Each lists the special moves and the finishing moves with their distances, over the game's paused title screen; the moves the hack adds are marked +. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The moves are the MK2 Plus guide's (Ver. 2.8.50) | Move List |
 | Plus View Secrets window (Mortal Kombat II Plus only) | Five pages: how to unlock and play Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn; the 14 Kombat Kodes and the buttons for each player; the ending bonuses, the Dead Pool and the hack's settings. With Move List and View Secrets both On, the one turned On last is shown | View Secrets (main menu) |
 
