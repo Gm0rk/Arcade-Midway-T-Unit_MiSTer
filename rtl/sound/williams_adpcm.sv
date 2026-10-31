@@ -292,9 +292,18 @@ reg  [7:0] ym_din;
 wire [7:0] ym_dout;
 wire signed [15:0] ym_l, ym_r;
 
+// jt51 gets its reset through a register. `reset` is a long expression of
+// the top level (the ROM download test on ioctl_index, the boot hold counter)
+// and jt51 takes it deep into its envelope and phase generators: straight from
+// there it was the second group of paths that missed 96 MHz in the Build 47
+// compilation (-0.612 ns). The register passes the reset on as it is, one clock
+// later.
+reg        ym_rst;
+always @(posedge clk) ym_rst <= reset;
+
 jt51 ym
 (
-	.rst     (reset),
+	.rst     (ym_rst),
 	.clk     (clk),
 	.cen     (fm_cen),
 	.cen_p1  (fm_cen_p1),
