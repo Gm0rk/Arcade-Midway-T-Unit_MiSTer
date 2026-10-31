@@ -80,6 +80,9 @@ Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 - Mortal Kombat, Mortal Kombat II: Move List, Finishing Moves and Fixed AI
   Difficulty; Mortal Kombat also has Reptile on demand (see the
   [Mortal Kombat page](docs/MortalKombat.md))
+- Mortal Kombat II: a Cheats menu with Infinite Health P1, Infinite Health P2,
+  Infinite Round Time and Stop Finishing Move Timer (see the
+  [Mortal Kombat II page](docs/MortalKombatII.md))
 - Support for Mortal Kombat II Plus: its own Move List and View Secrets (the secret
   characters, the Kombat Kodes) and Fixed AI Difficulty
 - NBA Jam, NBA Jam Tournament Edition: power-up and Tonight's Match-Up codes
@@ -93,6 +96,7 @@ Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 | Move List | Mortal Kombat games: shows each fighter's moves over the game; with the OSD closed, Left or Right turns the page |
 | Finishing Moves | Mortal Kombat, Mortal Kombat II: enters the chosen fatality at the next FINISH HIM/HER |
 | Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II, Mortal Kombat II Plus: the computer opponent's level, Off or 0 (easiest) to 9 |
+| Cheats | Mortal Kombat II (not Plus): Infinite Health P1, Infinite Health P2, Infinite Round Time, Stop Finishing Move Timer; select one to switch it on or off (a mark shows it is on; all are off after a game loads) |
 | View Secret Players | NBA Jam games: shows the secret players and cheat codes over the game; with the OSD closed, Left or Right turns the page |
 | View Secrets | Mortal Kombat II Plus: shows how to unlock the secret characters, the Kombat Kodes and other secrets; with the OSD closed, Left or Right turns the page |
 | DIP Switches | The game's DIP switches, with Service Credit and Tilt |
