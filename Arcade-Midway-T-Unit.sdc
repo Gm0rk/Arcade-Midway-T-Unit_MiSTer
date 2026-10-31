@@ -33,3 +33,13 @@ set_multicycle_path -hold  -end 1 -to [get_registers {*|jt51_pg:u_pg|keycode_II[
 # another have two clocks. Paths into it and out of it keep the normal check.
 set_multicycle_path -setup -end 2 -from [get_registers {*|dcs_board:board|*}] -to [get_registers {*|dcs_board:board|*}]
 set_multicycle_path -hold  -end 1 -from [get_registers {*|dcs_board:board|*}] -to [get_registers {*|dcs_board:board|*}]
+
+# HQ2x scandoubler filter (sys/hq2x.sv, used when Scandoubler Fx is HQ2x):
+# every register of its Blend stage changes only while the scandoubler's
+# ce_x4i is high. ce_x4i comes at a quarter of the pixel length (12 clocks at
+# 96 MHz / 8 MHz, ce_pix in rtl/midway_tunit.sv, so every 3 clocks) and once
+# more at each HSync edge, which is in the blanking. Paths from one Blend
+# register to another therefore have more than one clock. (Same constraint as
+# the Y Unit core, whose pixel clock is also 8 MHz.)
+set_multicycle_path -setup -end 2 -from [get_registers {*|Hq2x:Hq2x|Blend:blender|*}] -to [get_registers {*|Hq2x:Hq2x|Blend:blender|*}]
+set_multicycle_path -hold  -end 1 -from [get_registers {*|Hq2x:Hq2x|Blend:blender|*}] -to [get_registers {*|Hq2x:Hq2x|Blend:blender|*}]
