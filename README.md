@@ -51,19 +51,19 @@ MRAs.
 
 ## Timing and resources
 
-<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 50's). -->
+<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 56's). -->
 Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Figures are from the
-compilation of Build 50 (2026-10-30). Timing is met on every clock, and so is
+compilation of Build 56 (2026-11-01). Timing is met on every clock, and so is
 every hold, recovery, removal and minimum pulse width check.
 
 | Clock | Frequency | Setup slack |
 |---|---|---|
-| System (core PLL) | 96 MHz | +0.148 ns |
+| System (core PLL) | 96 MHz | +0.132 ns |
 
 | Resource | Used | Percent used |
 |---|---|---|
-| Logic (ALMs) | 32,709 / 41,910 | 78 % |
+| Logic (ALMs) | 32,431 / 41,910 | 77 % |
 | Block RAM (M10K blocks) | 405 / 553 | 73 % |
 | DSP blocks | 67 / 112 | 60 % |
 
@@ -82,13 +82,13 @@ every hold, recovery, removal and minimum pulse width check.
 - Mortal Kombat, Mortal Kombat II: Move List, Finishing Moves and Fixed AI
   Difficulty; Mortal Kombat also has Reptile on demand (see the
   [Mortal Kombat page](docs/MortalKombat.md))
-- Mortal Kombat II: a Cheats menu with Infinite Health P1, Infinite Health P2,
-  Infinite Round Time and Stop Finishing Move Timer (see the
-  [Mortal Kombat II page](docs/MortalKombatII.md))
+- A Cheats menu for every game: 24 cheats for Mortal Kombat, 44 for Mortal
+  Kombat II, 26 for NBA Jam, up to 30 for NBA Jam Tournament Edition and 9 for
+  Judge Dredd (infinite health, energy, lives, time and turbo, invincibility,
+  power-ups, night mode and more; the list is on each game's page)
 - Support for Mortal Kombat II Plus: its own Move List and View Secrets (the secret
-  characters, the Kombat Kodes), Fixed AI Difficulty and the same Cheats menu
-- NBA Jam, NBA Jam Tournament Edition: power-up and Tonight's Match-Up codes
-  (the tank game, tournament mode) and a Secret Player List
+  characters, the Kombat Kodes), Fixed AI Difficulty and four Cheats
+- NBA Jam, NBA Jam Tournament Edition: a Secret Player List with the cheat codes
 
 ## OSD
 
@@ -98,11 +98,11 @@ every hold, recovery, removal and minimum pulse width check.
 | Move List | Mortal Kombat games: shows each fighter's moves over the game; with the OSD closed, Left or Right turns the page |
 | Finishing Moves | Mortal Kombat, Mortal Kombat II: enters the chosen fatality at the next FINISH HIM/HER |
 | Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II, Mortal Kombat II Plus: the computer opponent's level, Off or 0 (easiest) to 9 |
-| Cheats | Mortal Kombat II, Mortal Kombat II Plus included: Infinite Health P1, Infinite Health P2, Infinite Round Time, Stop Finishing Move Timer; select one to switch it on or off (a mark shows it is on; all are off after a game loads) |
+| Cheats | Every game (Mortal Kombat II Plus included): select a cheat to switch it on or off (a mark shows it is on; all are off after a game loads); at most 8 cheat units can be on at once, and the game's page lists each cheat with the units it uses |
 | View Secret Players | NBA Jam games: shows the secret players and cheat codes over the game; with the OSD closed, Left or Right turns the page |
 | View Secrets | Mortal Kombat II Plus: shows how to unlock the secret characters, the Kombat Kodes and other secrets; with the OSD closed, Left or Right turns the page |
 | DIP Switches | The game's DIP switches, with Service Credit and Tilt |
-| Hidden Items | Hidden menus, cheats and extras, for the games that have them (named Secret Menus for Judge Dredd and Cheat Codes & Hidden Items for the NBA Jam games) |
+| Hidden Items | Hidden menus and screens, for the games that have them (named Secret Menus for Judge Dredd and Cheat Codes & Hidden Items for the NBA Jam games) |
 | Service Mode | The cabinet's test switch |
 | Pause when OSD is open | On by default |
 | Reset / Reset and close OSD | Reset keeps the OSD open |
@@ -133,6 +133,24 @@ and the core in `_Arcade/cores`. Mortal Kombat II Plus goes in `games/hbmame`.
   [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
 - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
   the arcade core guidance used while developing and checking this core
+- Cheats: the MAME cheat collection (cheat.txt, release 27 July 2025 for MAME
+  0.279, https://www.mamecheat.co.uk) kept by Martin Pugh (Pugsy). The names
+  its cheat.txt credits for the sets whose cheats the Cheats menu uses:
+  - Mortal Kombat (mk): Abystus; Steph and ugetab; Pugsy (Clues, Secret Game
+    Over, CPU Fatality, EJB Menu); nolberto82 (Hit Anywhere, One Button
+    Fatalities)
+  - Mortal Kombat II (mk2): ugetab; Pugsy (Clues, Secret Game Over, CPU
+    Fatality, EJB Menu); nolberto82 (Hit Anywhere, Jade Low Kick Requirement,
+    One Key Fatals); CLE (Automatic Fatality, Automatic Stage Fatality);
+    syndromtr (the others)
+  - NBA Jam (nbajam): Abystus (most of them); Pugsy (Invincibility on 3D Tank
+    Game, Computer Assistance Off)
+  - NBA Jam Tournament Edition: syndromtr, Abystus and Pugsy (nbajamte);
+    syndromtr and Abystus (nbajamte1, nbajamte2a, nbajamte3)
+  - Judge Dredd (jdreddp), NBA Jam rev 2.00 (nbajamr2) and the Tournament
+    Edition sets nbajamte2, nbajamte3a and nbajamte4 are not in cheat.txt's
+    list; their files point to it for the contributors. The cheats the core
+    found in each game's program itself are not from the collection
 
 ## License
 
