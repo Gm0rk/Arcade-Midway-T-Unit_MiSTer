@@ -482,36 +482,19 @@ def nba_codes(p, notes):
         notes.append('secret menu code, second part %08X (%d presses)' % (tab, len(vals)))
     else:
         notes.append('secret menu code (no second part)')
-    return [(code, None), matchup_code(p, notes)], None
+    return [(code, None)], None
 
 
-def matchup_code(p, notes):
-    """Code 2 of NBA Jam / TE, played on the Tonight's Match-Up screen and
-    held until the CPU takes it: NBA Jam's tank game or TE's tournament mode
-    (or None)."""
-    # tank game: MOVE @IN0,A0 / ANDI 7072h,A0 (P1 Down + buttons, P2 buttons)
-    # / JRNE / (3.01: the game mode and a once-a-game flag) / JA tank
-    for i in p.find([0x05A0, 0x0000, 0x0160, 0x0B80, 0x8F8D, 0xFFFF, X]):
-        if p.w[i + 6] >> 8 != 0xCB:
-            continue
-        for k in range(i + 7, i + 24):
-            if p.w[k] == 0xC080:
-                tank = p.u32(k + 1)
-                notes.append('tank game %08X' % tank)
-                return [(0x7072, 250, 0), (0x7072, 250, 0), (0, 2, 0)], tank, True
-    # tournament mode: CALLA (joystick) / CMPI 8h,A0 (Right) / JRNE / MOVK 1,A0
-    # / MOVE A0,@tournament / MOVI FFFFh,A0
-    h = p.find([0x0D5F, X, X, 0x0B40, 0xFFF7, X, 0x1820, 0x0580, X, X, 0x09C0, 0xFFFF])
-    if len(h) == 1 and p.w[h[0] + 5] >> 8 == 0xCB:
-        done = bit_address(h[0] + 6)
-        notes.append('tournament mode %08X' % done)
-        return [(0x0078, 30, 0), (0, 2, 0)], done, True
-    return None
-
-
-def nba_extras(p, te, notes):
-    """NBA Jam / TE power-ups: the read patches."""
-    patches = []
+def nba_vars(p, te, notes):
+    """NBA Jam / TE power-up variables, found in the program: a dict with
+    'big' (the word of the four players' big head bits, one bit each) and,
+    when the tip-off code was found, 'flag' (interceptions / TE: quick hands,
+    a bit per player), 'c' (the four players' code counters, one word each
+    10h bits apart), 'shot', 'nocpu' and, for TE, 'tourn', 'baby', 'max' (max
+    power: a bit per player); 'cnt' / 'huge' are the bit addresses of the
+    counter check's branch (power-up defense, TE: goaltending) and of TE's
+    huge heads check. An empty dict if the variables were not found."""
+    v_ = {}
     # the variables the matchup screen clears: CLR A0 / MOVE A0,@c0 .. @c3
     # (each player's code counter, 10h apart) / MOVE A0,@shot (/ TE:
     # @tournament, @baby, @max power) / MMTM
@@ -545,7 +528,7 @@ def nba_extras(p, te, notes):
     huge = p.find([0x0B21, X, X, 0x8421, 0x0B41, 0xFFF9, 0xCA03]) if te else []
     if len(tip) != 1:
         if len(bh) == 1:
-            patches.append((bh[0] >> 4, TE_BIG if te else NJ_BIG, 0x000F))
+            v_['big'] = bh[0]
             notes.append('power-ups: big heads %08X only' % bh[0])
         else:
             notes.append('power-ups: variables not found')
@@ -557,30 +540,67 @@ def nba_extras(p, te, notes):
         flag, big = p.u32(t0 + 13), p.u32(t0 + 25)
         if p.u32(t0 + 6) != c[0]:
             notes.append('power-ups: counters differ (%08X, %08X)' % (p.u32(t0 + 6), c[0]))
+        v_.update(big=big, flag=flag, c=c)
         if te:
-            patches += [(big >> 4, TE_BIG, 0x000F), (flag >> 4, TE_QUICK, 0x000F)]
             if len(v) >= 4:
-                patches += [(v[0] >> 4, TE_SHOT, 0x0001), (v[2] >> 4, TE_BABY, 0x0001),
-                            (v[3] >> 4, TE_MAX, 0x000F)]
+                v_.update(shot=v[0], tourn=v[1], baby=v[2], max=v[3])
             if len(huge) == 1:
-                patches.append((bit_address(huge[0] + 6) >> 4, TE_HUGE, JRUC | 3))
+                v_['huge'] = bit_address(huge[0] + 6)
             else:
                 notes.append('huge heads check not found')
-        else:
-            patches += [(big >> 4, NJ_BIG, 0x000F), (flag >> 4, NJ_INT, 0x000F)]
-            if v:
-                patches.append((v[0] >> 4, NJ_SHOT, 0x0001))
+        elif v:
+            v_['shot'] = v[0]
         if len(cnt) == 1:
-            patches.append((bit_address(cnt[0] + 6) >> 4, TE_GOAL if te else NJ_DEF, NOP))
+            v_['cnt'] = bit_address(cnt[0] + 6)
         else:
             notes.append('%s check not found' % ('goaltending' if te else 'defense'))
         if len(na) == 1:
-            patches.append((p.u32(na[0] + 2) >> 4, TE_NOCPU if te else NJ_NOCPU, 0x0001))
+            v_['nocpu'] = p.u32(na[0] + 2)
         else:
             notes.append('no assistance flag not found')
-        notes.append('power-ups: counters %08X, big heads %08X, %s %08X, %d patches'
-                     % (c[0], big, 'quick hands' if te else 'interceptions', flag, len(patches)))
+    return v_
+
+
+def nba_extras(p, te, notes):
+    """NBA Jam / TE power-ups: the read patches (the table's option codes)."""
+    v = nba_vars(p, te, notes)
+    patches = []
+    if 'flag' not in v:
+        if 'big' in v:
+            patches.append((v['big'] >> 4, TE_BIG if te else NJ_BIG, 0x000F))
+        return patches
+    if te:
+        patches += [(v['big'] >> 4, TE_BIG, 0x000F), (v['flag'] >> 4, TE_QUICK, 0x000F)]
+        if 'max' in v:
+            patches += [(v['shot'] >> 4, TE_SHOT, 0x0001), (v['baby'] >> 4, TE_BABY, 0x0001),
+                        (v['max'] >> 4, TE_MAX, 0x000F)]
+        if 'huge' in v:
+            patches.append((v['huge'] >> 4, TE_HUGE, JRUC | 3))
+    else:
+        patches += [(v['big'] >> 4, NJ_BIG, 0x000F), (v['flag'] >> 4, NJ_INT, 0x000F)]
+        if 'shot' in v:
+            patches.append((v['shot'] >> 4, NJ_SHOT, 0x0001))
+    if 'cnt' in v:
+        patches.append((v['cnt'] >> 4, TE_GOAL if te else NJ_DEF, NOP))
+    if 'nocpu' in v:
+        patches.append((v['nocpu'] >> 4, TE_NOCPU if te else NJ_NOCPU, 0x0001))
+    notes.append('power-ups: counters %08X, big heads %08X, %s %08X, %d patches'
+                 % (v['c'][0], v['big'], 'quick hands' if te else 'interceptions', v['flag'], len(patches)))
     return patches
+
+
+def nba_tank(p):
+    """Bit address of the JRNE that skips NBA Jam's hidden tank game unless
+    the buttons are held (a NOP starts the game), or None."""
+    # tank game: MOVE @IN0,A0 / ANDI 7072h,A0 (P1 Down + buttons, P2 buttons)
+    # / JRNE / (3.01: the game mode and a once-a-game flag) / JA tank
+    for i in p.find([0x05A0, 0x0000, 0x0160, 0x0B80, 0x8F8D, 0xFFFF, X]):
+        if p.w[i + 6] >> 8 != 0xCB:
+            continue
+        for k in range(i + 7, i + 24):
+            if p.w[k] == 0xC080:
+                return bit_address(i + 6)
+    return None
 
 
 def jd_codes(p, notes):
@@ -626,10 +646,19 @@ def hidden_table(gid):
             ['the OSD shows the Plus Move List and View Secrets, and no Finishing Moves or Hidden Items, for this set: no patches or codes'])
 
 
-def build(gid, prog_bytes):
-    """Table bytes and notes for a set: game id gid, its maincpu region."""
-    p = Prog(prog_bytes)
-    notes = []
+# The options that are cheats now (the OSD's Cheats menu, tools/tunit_cheats.py):
+# their patches are no longer in the table
+MOVED = {
+    G_MK: (OPT_REP_HINT,), G_MKTURBO: (OPT_REP_HINT,),
+    G_MK2: (OPT_HITBOX, OPT_PONG, OPT_NOOB, OPT_JADE, OPT_SMOKE),
+    G_NBAJAM: (NJ_BIG, NJ_DEF, NJ_INT, NJ_SHOT, NJ_NOCPU),
+    G_NBAJAMTE: (TE_BIG, TE_HUGE, TE_BABY, TE_MAX, TE_QUICK, TE_GOAL, TE_SHOT),
+}
+
+
+def collect(gid, p, notes):
+    """(codes, patches) of a set: every patch the finders know, the moved ones
+    included. A patch is (word address, option code, value)."""
     if gid in (G_MK, G_MKTURBO):
         codes, patches = mk_codes(p, notes)
         rp = mk_reptile(p, notes)
@@ -643,7 +672,15 @@ def build(gid, prog_bytes):
         codes, patches = jd_codes(p, notes)
     else:
         codes, patches = [], None
-    patches = patches or []
+    return codes, patches or []
+
+
+def build(gid, prog_bytes):
+    """Table bytes and notes for a set: game id gid, its maincpu region."""
+    p = Prog(prog_bytes)
+    notes = []
+    codes, patches = collect(gid, p, notes)
+    patches = [t for t in patches if t[1] not in MOVED.get(gid, ())]
     if len(patches) > N_PATCH:
         raise ValueError('too many patches')
     if len(set(a for a, _, _ in patches)) != len(patches):
@@ -754,11 +791,12 @@ def cheats_docs(game):
 def osd_lines():
     """The NBA Jam / TE lines of the OSD: View Secret Players in the main
     menu (Off or On: the window of rtl/tunit_window.sv, its pages turned
-    with Left and Right), then the Cheat Codes & Hidden Items page: the secret menu code (R[14]), the power-ups in alphabetical
-    order, and the code played on the Tonight's Match-Up screen (R[15]).
-    Lines both games have test the NBA mask bit; the others the game's own
-    bit."""
-    nj, te, nba = MASK_NJ, MASK_TE, MASK_NBA
+    with Left and Right), then the Cheat Codes & Hidden Items page: the
+    secret menu code (R[14]) and, for TE, No CPU Assistance. The power-ups,
+    the tank game and tournament mode are cheats of the Cheats menu now
+    (tools/tunit_cheats.py). Lines both games have test the NBA mask bit; the
+    others the game's own bit."""
+    te, nba = MASK_TE, MASK_NBA
     pg = 'P%d' % OSD_PAGE
     sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
     import tunit_window
@@ -769,20 +807,7 @@ def osd_lines():
             'h%s%s,Cheat Codes & Hidden Items;' % (nba, pg),
             '%s-;' % pg,
             '%sR[14],Open Secret Menu (Attract);' % pg,
-            'h%s%sO[%d],Baby Size Players,Off,On;' % (te, pg, OSD_BABY),
-            'h%s%sO[%d],Big Heads,Off,On;' % (nj, pg, OSD_HEADS),
-            'h%s%sO[%d:%d],Head Size,Normal,Big,Huge;' % (te, pg, OSD_HEADS + 1, OSD_HEADS),
-            'h%s%sO[%d],Max Power,Off,On;' % (te, pg, OSD_MAX),
-            '%sO[%d],No CPU Assistance,Off,On;' % (pg, OSD_NOCPU),
-            'h%s%sO[%d],Power-Up Defense,Off,On;' % (nj, pg, OSD_DEF),
-            'h%s%sO[%d],Power-Up Goaltending,Off,On;' % (te, pg, OSD_DEF),
-            'h%s%sO[%d],Power-Up Interceptions,Off,On;' % (nj, pg, OSD_INT),
-            'h%s%sO[%d],Quick Hands,Off,On;' % (te, pg, OSD_INT),
-            '%sO[%d],Shot Percentage,Off,On;' % (pg, OSD_SHOT),
-            '%s-;' % pg,
-            "%s-,Pick on Tonight's Match-Up:;" % pg,
-            'h%s%sR[15],Tank Game;' % (nj, pg),
-            'h%s%sR[15],Tournament Mode;' % (te, pg)]
+            'h%s%sO[%d],No CPU Assistance,Off,On;' % (te, pg, OSD_NOCPU)]
 
 
 def plus_osd_lines():
