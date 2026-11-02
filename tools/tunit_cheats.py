@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
-"""MiSTer cheats (the OSD's Cheats menu) for the Mortal Kombat II sets,
-Mortal Kombat II Plus (Beta 2, hack) included.
+"""MiSTer cheats (the OSD's Cheats menu) for Mortal Kombat, Mortal Kombat II
+(Mortal Kombat II Plus, Beta 2, hack, included), NBA Jam, NBA Jam
+Tournament Edition and Judge Dredd.
 
 Main_MiSTer builds the Cheats menu from the MRA's <cheats> element:
 
@@ -18,21 +19,44 @@ menu names are 27 characters at most.
 Unit (four 16-bit words, little-endian, as the other tables):
 
     word 0   word address bits 15-0 (bit address >> 4)
-    word 1   word address bits 27-16
-    word 2   value the CPU reads
-    word 3   bit 0: a program ROM word, patched for instruction fetches only
-                    (the secrets' pt_fetch); 0: a main RAM variable, patched
-                    while the CPU has interrupts enabled
-             bit 1: the CPU's writes to the word store the value too (a main
-                    RAM variable; rtl/midway_tunit.sv pt_store)
+    word 1   bits 11-0: word address bits 27-16
+             bit 12: a program ROM word, patched for instruction fetches only
+                     (the secrets' pt_fetch); 0: a main RAM variable, patched
+                     while the CPU has interrupts enabled
+             bit 13: the CPU's writes to the word store the value too (a main
+                     RAM variable; rtl/midway_tunit.sv pt_store), and the
+                     board writes the value to the word once when it goes on
+             bit 14: a one-shot write: no read patch, the board writes the
+                     whole word once when the cheat first appears in the list
+    word 2   the value the CPU reads (or writes, for a one-shot)
+    word 3   mask: the CPU reads the value in the bits the mask covers and the
+             game's own value in the others (FFFF: the whole word; 00FF or
+             FF00: a byte; one bit of a player's flag word). Not used by an
+             entry with bit 13 or 14, which take the whole word.
 
-The cheats (Mortal Kombat II, found in each set's program by the code around
-the round state and the energy bars; no other tool is needed):
+Where the cheats come from:
+
+  - tools/tunit_cheats_data.py: the MAME cheat files (plugin XMLs) of mk, mk2,
+    nbajam, nbajamr2 and the nbajamte sets, the picks of
+    Midway-T-Unit-cheat-picker.xlsx (tools/cheat_import/ turns the files into
+    it), and all of jdreddp's (Judge Dredd's only set). A file has the
+    addresses of its own set only.
+  - the finders, for every set of the game: the OSD items that moved here (the
+    power-ups of the four players of NBA Jam and TE, Tank Game, Tournament
+    Mode, Shot Percentage, Baby Size, Huge Heads, Computer Assistance; MK
+    Reptile Hints; MK2 Hitboxes, Jade, Smoke, Pong and Noob Saibot) are found
+    in each revision's program by tools/tunit_secrets.py, and the Mortal
+    Kombat II cheats below are found by the code around the round state and
+    the energy bars; no other tool is needed.
+
+The Mortal Kombat II cheats (found in each set's program):
 
     Infinite Health P1 / P2   the energy word reads full (A1h in every set
-                              seen) and the game's writes to it store full
-                              too, so the game's own copy stays full and the
-                              bar stays full when the cheat is switched off
+                              seen), the game's writes to it store full too,
+                              and the board writes full to it once when the
+                              cheat is switched on (a fighter already hurt),
+                              so the game's own copy stays full and the bar
+                              stays full when the cheat is switched off
     Infinite Round Time       the round clock (two digit registers of the
                               clock process, A11 tens and A10 ones, shown
                               from RAM words that the time-over test reads)
@@ -44,6 +68,7 @@ the round state and the energy bars; no other tool is needed):
                               minutes). The wait still ends when a finishing
                               move starts or the winner hits the loser, as
                               in the game
+    P1 / P2 Drain all Energy   a one-shot: the energy word is set to 1
 
 Run with the folder of the MAME ROM images (simroms: <set>_rom0.bin) to list
 what each set gets.
@@ -54,7 +79,9 @@ import struct
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from tunit_secrets import Prog, X, G_MK2          # noqa: E402
+import tunit_secrets as S                           # noqa: E402
+from tunit_secrets import Prog, X, G_MK, G_MKTURBO, G_MK2, G_NBAJAM, G_NBAJAMTE, G_JDREDDP   # noqa: E402
+import tunit_cheats_data                            # noqa: E402
 
 CHEAT_SIZE = 8            # bytes per unit (the MRA's <cheats size>)
 CHEAT_MAX = 8             # units switched on at once (<cheats max>, rtl/tunit_cheats.sv)
@@ -66,11 +93,31 @@ MOVE_A10_A10 = 0x4D4A     # replaces DEC A10 (142Ah): same size, the flags of A1
 PLAYER_GAP = 0xBD0        # bits between the two players' variables (P2 - P1), as in every set
 
 
-def unit(bit_addr, value, fetch=False, store=False):
-    """One 8-byte unit."""
+def unit(bit_addr, value, fetch=False, store=False, poke=False, mask=0xFFFF):
+    """One 8-byte unit. A store entry and a one-shot take the whole word."""
+    if bit_addr & 0xF:
+        raise ValueError('bit address %08X is not a word' % bit_addr)
+    if (store or poke) and mask != 0xFFFF:
+        raise ValueError('a store entry or a one-shot covers the whole word')
+    if poke and (fetch or store):
+        raise ValueError('a one-shot is a plain write of main RAM')
     wa = bit_addr >> 4
-    flags = (1 if fetch else 0) | (2 if store else 0)
-    return struct.pack('<4H', wa & 0xFFFF, wa >> 16, value & 0xFFFF, flags)
+    flags = (1 if fetch else 0) | (2 if store else 0) | (4 if poke else 0)
+    return struct.pack('<4H', wa & 0xFFFF, ((wa >> 16) & 0xFFF) | (flags << 12), value & 0xFFFF, mask & 0xFFFF)
+
+
+ROM_BASE = 0xFF800000     # bit address of the first word of the program image
+
+
+def patch_unit(word_addr, value):
+    """A unit for a patch of tools/tunit_secrets.py (a word address): a
+    program ROM word (fetches only) or a main RAM word."""
+    return unit(word_addr << 4, value, fetch=(word_addr << 4) >= ROM_BASE)
+
+
+def flag_bit(addr, bit, name=None):
+    """A unit that sets one bit of a flag word (the four players' bits)."""
+    return unit(addr, 1 << bit, mask=1 << bit)
 
 
 def fight_words(p):
@@ -185,12 +232,8 @@ def round_clock(p):
     return 0xFF800000 + 16 * hack[0]
 
 
-def build(gid, prog_bytes):
-    """([(menu name, bytes)], notes) for a set's program (the maincpu region)."""
-    if gid != G_MK2:
-        return [], []
-    notes = []
-    p = Prog(prog_bytes)
+def mk2_cheats(p, notes, drains=True):
+    """The Mortal Kombat II cheats found in the program: [(menu name, [unit])]."""
     r = fight_words(p)
     if not r:
         return [], ['fight variables not found: no cheats']
@@ -201,37 +244,141 @@ def build(gid, prog_bytes):
     elif (r['p1e'] | r['p2e']) & 0xF:
         notes.append('energy not word aligned: no health cheats')
     else:
-        out.append(('Infinite Health P1', unit(r['p1e'], full, store=True)))
-        out.append(('Infinite Health P2', unit(r['p2e'], full, store=True)))
+        out.append(('Infinite Health P1', [unit(r['p1e'], full, store=True)]))
+        out.append(('Infinite Health P2', [unit(r['p2e'], full, store=True)]))
+        if drains:
+            out.append(('P1 Drain all Energy Now!', [unit(r['p1e'], 1, poke=True)]))
+            out.append(('P2 Drain all Energy Now!', [unit(r['p2e'], 1, poke=True)]))
         notes.append('energy P1 %08X, P2 %08X, full %02Xh' % (r['p1e'], r['p2e'], full))
     c = round_clock(p)
     if c is None:
         notes.append('round clock not found: no time cheat')
     else:
-        out.append(('Infinite Round Time', unit(c, MOVE_A10_A10, True)))
+        out.append(('Infinite Round Time', [unit(c, MOVE_A10_A10, True)]))
         notes.append('round clock DEC A10 %08X' % c)
     w = finish_wait(p, r)
     if w is None:
         notes.append('FINISH HIM wait not found: no timer cheat')
     else:
-        out.append(('Stop Finishing Move Timer', b''.join(unit(a, TIMER_VALUE, True) for a in w)))
+        out.append(('Stop Finishing Move Timer', [unit(a, TIMER_VALUE, True) for a in w]))
         notes.append('FINISH HIM wait ' + ', '.join('%08X' % a for a in w))
-    for name, data in out:
-        assert len(name) <= NAME_MAX and len(data) % CHEAT_SIZE == 0
-    assert sum(len(d) for _, d in out) <= CHEAT_SIZE * CHEAT_MAX
     return out, notes
+
+
+def secret_cheats(gid, p, notes):
+    """The OSD items that moved to the Cheats menu, from the finders of
+    tools/tunit_secrets.py (every revision of the set has its own addresses)."""
+    snotes = []
+    out = []
+    _, patches = S.collect(gid, p, snotes)
+
+    def by(opt):
+        return [patch_unit(a, v) for a, o, v in patches if o == opt]
+
+    def add(name, units):
+        if units:
+            out.append((name, units))
+
+    if gid in (G_MK, G_MKTURBO):
+        add('Always have Reptile Clues', by(S.OPT_REP_HINT))
+    elif gid == G_MK2:
+        add('Show Hitboxes', by(S.OPT_HITBOX))
+        add('Jade Fight no Low Kick', by(S.OPT_JADE))
+        add('Press Start To Fight Smoke', by(S.OPT_SMOKE))
+        add('Always Play Pong', by(S.OPT_PONG))
+        add('Winner Battles Noob Saibot', by(S.OPT_NOOB))
+    elif gid in (G_NBAJAM, G_NBAJAMTE):
+        te = gid == G_NBAJAMTE
+        v = S.nba_vars(p, te, snotes)
+        for pl in range(4):
+            if 'big' in v:
+                add('P%d Big/Huge Head' % (pl + 1) if te else 'P%d Big Head' % (pl + 1), [flag_bit(v['big'], pl)])
+            if 'flag' in v:
+                add('P%d Quick Hands' % (pl + 1) if te else 'P%d Powerup Intercept' % (pl + 1), [flag_bit(v['flag'], pl)])
+                if te and 'max' in v:
+                    add('P%d Max Power' % (pl + 1), [flag_bit(v['max'], pl)])
+                if 'cnt' in v:
+                    add('P%d Powerup Goal Tending' % (pl + 1) if te else 'P%d Powerup Defense' % (pl + 1),
+                        [unit(v['c'][pl], 0x18 if te else 0x08)])
+        if 'shot' in v:
+            add('Shot Percentage', [unit(v['shot'], 1)])
+        if te:
+            if 'baby' in v:
+                add('Baby Size Players', [unit(v['baby'], 1)])
+            if 'tourn' in v:
+                add('Tournament Mode', [unit(v['tourn'], 1)])
+            if 'huge' in v:
+                add('Huge Heads', [unit(v['huge'], S.JRUC | 3, True)])
+        else:
+            if 'nocpu' in v:
+                add('Computer Assistance Turned', [unit(v['nocpu'], 1)])
+            tank = S.nba_tank(p)
+            if tank:
+                add('Play Hidden 3D Tank Game', [unit(tank, S.NOP, True)])
+    for n in snotes:
+        if (n.startswith(('power-ups', 'Reptile')) or 'not found' in n) and n not in notes:
+            notes.append(n)
+    return out
+
+
+def data_cheats(setname):
+    """The cheats of the MAME cheat files for a set: [(menu name, [unit])]."""
+    out = []
+    for name, us in tunit_cheats_data.CHEATS.get(setname, []):
+        out.append((name, [unit(a, v, fetch='F' in fl, store='S' in fl, poke='P' in fl, mask=m)
+                           for a, v, m, fl in us]))
+    return out
+
+
+def build(gid, prog_bytes, setname='', plus=False):
+    """([(menu name, bytes)], notes) for a set's program (the maincpu region);
+    plus: Mortal Kombat II Plus (the hack hides the items, only its energy,
+    clock and timer cheats are made)."""
+    if gid not in (G_MK, G_MKTURBO, G_MK2, G_NBAJAM, G_NBAJAMTE, G_JDREDDP):
+        return [], []
+    notes = []
+    p = Prog(prog_bytes)
+    cheats = []
+    if gid == G_MK2:
+        cheats, notes = mk2_cheats(p, notes, drains=not plus)
+    if not plus:
+        cheats += secret_cheats(gid, p, notes)
+        cheats += data_cheats(setname)
+    seen = set()
+    out = []
+    for name, us in sorted(cheats, key=lambda c: c[0].lower()):
+        if name in seen:
+            raise ValueError('%s: two cheats named %r' % (setname, name))
+        seen.add(name)
+        data = b''.join(us)
+        assert len(name) <= NAME_MAX and len(data) % CHEAT_SIZE == 0 and len(us) <= CHEAT_MAX, name
+        out.append((name, data))
+    if out:
+        notes.append('%d cheats' % len(out))
+    return out, notes
+
+
+SETS = {                  # simroms set name prefix -> game id
+    'mktturbo': G_MKTURBO, 'mk2': G_MK2, 'mk': G_MK, 'nbajamte': G_NBAJAMTE, 'nbajam': G_NBAJAM,
+    'jdreddp': G_JDREDDP,
+}
 
 
 def main():
     d = sys.argv[1] if len(sys.argv) > 1 else 'simroms'
     for f in sorted(os.listdir(d)):
-        if f.startswith('mk2') and f.endswith('_rom0.bin'):
-            with open(os.path.join(d, f), 'rb') as fh:
-                prog = fh.read(0x100000)
-            cheats, notes = build(G_MK2, prog)
-            print('%-12s %s' % (f[:-9], '; '.join(notes)))
-            for name, data in cheats:
-                print('    %-27s %s' % (name, data.hex().upper()))
+        if not f.endswith('_rom0.bin'):
+            continue
+        name = f[:-9]
+        gid = next((g for k, g in SETS.items() if name.startswith(k)), None)
+        if gid is None:
+            continue
+        with open(os.path.join(d, f), 'rb') as fh:
+            prog = fh.read(0x100000)
+        cheats, notes = build(gid, prog, name)
+        print('%-12s %s' % (name, '; '.join(notes)))
+        for cname, data in cheats:
+            print('    %-27s %s' % (cname, data.hex().upper()))
 
 
 if __name__ == '__main__':
