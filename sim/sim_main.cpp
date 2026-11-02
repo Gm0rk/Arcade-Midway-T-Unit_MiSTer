@@ -8,6 +8,7 @@
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
 //            [--info mk_rom1.bin] [--osd "500:0:1;..."]
 //            [--vtiming 0|1] [--lines lines.txt] [--level ADDR:N] [--lvlwatch ADDR]
+//             [--lvldemo PC]
 //            [--dcslog samples.bin] [--dcstrace dsp.txt:A:B]
 //            [--dcsstate regs.bin:A:B]
 //
@@ -65,11 +66,19 @@
 //              level 0-9
 //  --lvlwatch  log the CPU's reads and writes of the word at bit address ADDR
 //              (hex; with --level, its address): frame, R or W, value read
-//              or written, to stderr (the first 400), and a summary at the end
+//              or written, and for a write the CPU's PC (just after the
+//              store), to stderr (the first 400), and a summary at the end
+//  --lvldemo   PC (hex bit address): the CPU's PC just after the demo fights'
+//              store of the level; the pin is off while that store was the
+//              last write of the word (0: none, the default)
 //  --ramwatch  A,B,..: bit addresses (hex) of main RAM words: log each CPU write
 //              (frame, data, interrupt enable) and each write the board hands
 //              to the SDRAM model (frame, data), to stderr (the first 400),
 //              and the first frame the CPU runs with interrupts enabled
+//  LOG_FROM, LOG_MAX (environment): --lvlwatch and --ramwatch log from this
+//              frame (default 0), at most this many lines (default 400)
+//  CK_GAP      (environment): clocks to wait after a --cheat send before the next
+//              one may start (default 0)
 //  --vtiming   the OSD's Video Timing: 0 native 289-line frames (54.7 Hz),
 //              1 277 lines (57 Hz)
 //  --lines     write a line per frame: frame, lines from one VSync to the
@@ -265,9 +274,13 @@ int main(int argc, char **argv) {
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
 	std::string info, osds, dcslog, linespath, dcstrace, dcsstate, cheats;
 	int frames = 100, dsw = -1, vtiming = 0;
-	bool lvl_on = false, lvl_watch = false; uint32_t lvl_addr = 0; int lvl_val = 0;
+	bool lvl_on = false, lvl_watch = false; uint32_t lvl_addr = 0, lvl_dpc = 0; int lvl_val = 0;
 	long lvl_r = 0, lvl_w = 0, lvl_hist[16] = {0}, lvl_lines = 0;
+	bool lvl_demo_d = false;
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
+	// LOG_FROM / LOG_MAX (environment): --lvlwatch and --ramwatch log from this frame, at most this many lines (default 0, 400)
+	int log_from = getenv("LOG_FROM") ? atoi(getenv("LOG_FROM")) : 0;
+	int log_max  = getenv("LOG_MAX") ? atoi(getenv("LOG_MAX")) : 400;
 	int rdhist = 0;                          // --rdhist N: tally main RAM reads (by interrupt enable) in frames 0..N
 	std::vector<uint32_t> rw_addr;           // --ramwatch: word addresses
 	long rw_lines = 0; int ie_first = -1;
@@ -299,6 +312,7 @@ int main(int argc, char **argv) {
 		else if (a == "--dcstrace") dcstrace = next();
 		else if (a == "--dcsstate") dcsstate = next();
 		else if (a == "--vtiming") vtiming = atoi(next().c_str());
+		else if (a == "--lvldemo") lvl_dpc = strtoul(next().c_str(), nullptr, 16) >> 4;
 		else if (a == "--lvlwatch") { lvl_watch = true; lvl_addr = strtoul(next().c_str(), nullptr, 16) >> 4; }
 		else if (a == "--level") {
 			lvl_watch = true;
@@ -393,6 +407,8 @@ int main(int argc, char **argv) {
 	}
 	size_t ck_next = 0;                      // next entry of ck_send to start
 	int ck_pos = -1;                         // word of the current one being sent
+	uint64_t ck_done = 0;                    // clock the last send finished
+	uint64_t ck_gap = getenv("CK_GAP") ? strtoull(getenv("CK_GAP"), nullptr, 10) : 0;   // clocks between sends (environment CK_GAP)
 	std::vector<uint8_t> info_d;
 	if (!info.empty()) info_d = load(info.c_str());
 
@@ -431,7 +447,7 @@ int main(int argc, char **argv) {
 	top->ck_start = 0; top->ck_wr = 0; top->ck_waddr = 0; top->ck_wdata = 0;
 	top->pause = 0;
 	top->vtiming = vtiming & 1;
-	top->lvl_on = lvl_on; top->lvl_addr = lvl_addr; top->lvl_val = lvl_val & 15;
+	top->lvl_on = lvl_on; top->lvl_addr = lvl_addr; top->lvl_dpc = lvl_dpc; top->lvl_val = lvl_val & 15;
 	top->ram_clr_req = 0;
 	top->snd_off = nosound;
 	top->reset = 1;
@@ -501,9 +517,9 @@ int main(int argc, char **argv) {
 				top->ck_waddr = ck_pos & 31;
 				top->ck_wdata = w[ck_pos];
 				ck_pos++;
-			} else ck_pos = -1;
+			} else { ck_pos = -1; ck_done = cyc; }
 		}
-		else if (ck_next < ck_send.size() && (int)(charged / CYC_PER_FRAME) > ck_send[ck_next].frame) {
+		else if (ck_next < ck_send.size() && (int)(charged / CYC_PER_FRAME) > ck_send[ck_next].frame && cyc - ck_done >= ck_gap) {
 			top->ck_start = 1;
 			ck_next++;
 			ck_pos = 0;
@@ -573,20 +589,27 @@ int main(int argc, char **argv) {
 			fprintf(wf, "%d %d %s %llu\n", fr.frame, fr.y, top->dbg_blit_busy ? "blit-start" : "blit-end",
 			        (unsigned long long)cyc);
 		blit_d = top->dbg_blit_busy;
+		if (lvl_watch && top->dbg_lvl_demo != lvl_demo_d) {
+			lvl_demo_d = top->dbg_lvl_demo;
+			if (fr.frame >= log_from && lvl_lines++ < log_max) fprintf(stderr, "lvl %d demo flag %d\n", fr.frame, (int)lvl_demo_d);
+		}
 		if (lvl_watch && (top->dbg_rd || top->dbg_wr) && top->dbg_wa == lvl_addr) {
 			bool rd = top->dbg_rd;
 			unsigned v = rd ? top->dbg_rdata : top->dbg_wdata;
 			if (rd) { lvl_r++; lvl_hist[v & 15]++; } else lvl_w++;
-			if (lvl_lines++ < 400) fprintf(stderr, "lvl %d %c %04X\n", fr.frame, rd ? 'R' : 'W', v);
+			if (fr.frame >= log_from && lvl_lines++ < log_max) {
+				if (rd) fprintf(stderr, "lvl %d R %04X\n", fr.frame, v);
+				else    fprintf(stderr, "lvl %d W %04X pc %08X\n", fr.frame, v, (unsigned)top->dbg_pc);
+			}
 		}
 		if (!rw_addr.empty()) {
 			if (ie_first < 0 && top->dbg_ie && top->dbg_retire) { ie_first = fr.frame; fprintf(stderr, "ramwatch: first frame with interrupts enabled %d\n", ie_first); }
 			if (top->dbg_wr)
 				for (uint32_t w : rw_addr)
-					if (top->dbg_wa == w && rw_lines++ < 400) fprintf(stderr, "cpuW %d %07X %04X ie=%d\n", fr.frame, w, top->dbg_wdata, top->dbg_ie);
+					if (top->dbg_wa == w && fr.frame >= log_from && rw_lines++ < log_max) fprintf(stderr, "cpuW %d %07X %04X ie=%d\n", fr.frame, w, top->dbg_wdata, top->dbg_ie);
 			if (top->dbg_sdwr)
 				for (uint32_t w : rw_addr)
-					if (top->dbg_sdwa == 0x800000u + (w & 0x3FFFF) && rw_lines++ < 400) fprintf(stderr, "sdW   %d %07X %04X\n", fr.frame, w, top->dbg_sdwd);
+					if (top->dbg_sdwa == 0x800000u + (w & 0x3FFFF) && fr.frame >= log_from && rw_lines++ < log_max) fprintf(stderr, "sdW   %d %07X %04X\n", fr.frame, w, top->dbg_sdwd);
 		}
 		if (rdhist && top->dbg_rd && fr.frame <= rdhist && (top->dbg_wa >> 18) == 0x004) {
 			auto &t = rdh[top->dbg_wa];
