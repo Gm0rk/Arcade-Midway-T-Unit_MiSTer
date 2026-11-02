@@ -10,20 +10,7 @@
 	"h6P7,Cheat Codes & Hidden Items;", \
 	"P7-;", \
 	"P7R[14],Open Secret Menu (Attract);", \
-	"hDP7O[54],Baby Size Players,Off,On;", \
-	"hCP7O[48],Big Heads,Off,On;", \
-	"hDP7O[49:48],Head Size,Normal,Big,Huge;", \
-	"hDP7O[55],Max Power,Off,On;", \
-	"P7O[53],No CPU Assistance,Off,On;", \
-	"hCP7O[50],Power-Up Defense,Off,On;", \
-	"hDP7O[50],Power-Up Goaltending,Off,On;", \
-	"hCP7O[51],Power-Up Interceptions,Off,On;", \
-	"hDP7O[51],Quick Hands,Off,On;", \
-	"P7O[52],Shot Percentage,Off,On;", \
-	"P7-;", \
-	"P7-,Pick on Tonight's Match-Up:;", \
-	"hCP7R[15],Tank Game;", \
-	"hDP7R[15],Tournament Mode;"
+	"hDP7O[53],No CPU Assistance,Off,On;"
 
 `define PLUS_OSD \
 	"hFO[116],View Secrets,Off,On;"
