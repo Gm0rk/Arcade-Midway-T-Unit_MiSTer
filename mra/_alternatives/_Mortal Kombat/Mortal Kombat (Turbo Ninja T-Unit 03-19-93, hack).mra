@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat (Turbo Ninja T-Unit 03/19/93, hack)</name>
-	<mratimestamp>20261026</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mktturbo</setname>
 	<year>1992</year>
@@ -33,8 +33,8 @@ rom index 3 (SDRAM 0xD00000):
 	<rom index="1">
 		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFDD1530 (27 presses), menu FFDD0D40; Reptile check FFCB1FF0, flag 01052940, 5 patches -->
 		<part>
-		01 00 01 00 03 B2 FC 1F E0 0D 04 B2 FC 1F 60 09 C4 B8 FC 2F 00 03 2E A1 FC 3F 00 03 32 A1 FC 3F
-		09 C0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 8C 00 D4 D0 FD 0F D4 D0 FD 0F
+		01 00 01 00 03 B2 FC 1F E0 0D 04 B2 FC 1F 60 09 C4 B8 FC 2F 00 03 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 8C 00 D4 D0 FD 0F D4 D0 FD 0F
 		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
@@ -50,12 +50,12 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 30 00 02 00 10 00 F0 00 00 00 02 80
 		</part>
-		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 010519E0, P1 character 01051290, object pointer 01051230, stage 01051820, finish flag 01051880; Reptile flag 01052940; AI level word 010519C0 -->
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 010519E0, P1 character 01051290, object pointer 01051230, stage 01051820, finish flag 01051880; Reptile flag 01052940; AI level word 010519C0; demo store PC FFCB3E30 -->
 		<part repeat="524">00</part>
 		<part>
 		01 00 00 00 9E 51 10 00 29 51 10 00 57 51 10 00 30 51 10 00 5E 51 10 00 23 51 10 00 51 51 10 00
 		27 51 10 00 55 51 10 00 82 51 10 00 88 51 10 00 90 42 DF FF 90 42 DF FF 70 54 CE FF 09 0E 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 94 52 10 00 9C 51 10 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 94 52 10 00 9C 51 10 00 E3 B3 FC 0F
 		</part>
 	</rom>
 	<rom index="0" zip="mktturbo.zip|mk.zip" md5="34c10c90b3178d74736bd3114b02fc70" type="merged">
@@ -94,4 +94,8 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="7b7ec3b6" name="sl1_mortal_kombat_u13_sound_rom.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): Reptile check FFCB1FF0, flag 01052940, 5 patches; 1 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="Always have Reptile Clues">2EA1 FC1F 0003 FFFF 32A1 FC1F 09C0 FFFF</cheat>
+	</cheats>
 </misterromdescription>
