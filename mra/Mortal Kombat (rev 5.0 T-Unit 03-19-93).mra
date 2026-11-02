@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat (rev 5.0 T-Unit 03/19/93)</name>
-	<mratimestamp>20261026</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk</setname>
 	<year>1992</year>
@@ -33,8 +33,8 @@ rom index 3 (SDRAM 0xD00000):
 	<rom index="1">
 		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFDD1530 (27 presses), menu FFDD0D40; Reptile check FFCB1FF0, flag 01052940, 6 patches -->
 		<part>
-		00 00 01 00 03 B2 FC 1F E0 0D 04 B2 FC 1F 60 09 C4 B8 FC 2F 00 03 0E B2 FC 2F 00 03 2E A1 FC 3F
-		00 03 32 A1 FC 3F 09 C0 00 00 00 00 00 00 00 00 00 00 00 00 20 00 8C 00 D4 D0 FD 0F D4 D0 FD 0F
+		00 00 01 00 03 B2 FC 1F E0 0D 04 B2 FC 1F 60 09 C4 B8 FC 2F 00 03 0E B2 FC 2F 00 03 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 8C 00 D4 D0 FD 0F D4 D0 FD 0F
 		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
@@ -50,12 +50,12 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 30 00 02 00 10 00 F0 00 00 00 02 80
 		</part>
-		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 010519E0, P1 character 01051290, object pointer 01051230, stage 01051820, finish flag 01051880; Reptile flag 01052940; AI level word 010519C0 -->
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 010519E0, P1 character 01051290, object pointer 01051230, stage 01051820, finish flag 01051880; Reptile flag 01052940; AI level word 010519C0; demo store PC FFCB3E30 -->
 		<part repeat="524">00</part>
 		<part>
 		01 00 00 00 9E 51 10 00 29 51 10 00 57 51 10 00 30 51 10 00 5E 51 10 00 23 51 10 00 51 51 10 00
 		27 51 10 00 55 51 10 00 82 51 10 00 88 51 10 00 90 42 DF FF 90 42 DF FF 70 54 CE FF 09 0E 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 94 52 10 00 9C 51 10 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 94 52 10 00 9C 51 10 00 E3 B3 FC 0F
 		</part>
 	</rom>
 	<rom index="0" zip="mk.zip" md5="fcc62085553706fb2a37ceb16fbcca48" type="merged">
@@ -94,4 +94,31 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="7b7ec3b6" name="sl1_mortal_kombat_u13_sound_rom.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): Reptile check FFCB1FF0, flag 01052940, 6 patches; 24 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="Always Get Fatality Bonus">21AC FC1F 0003 FFFF</cheat>
+		<cheat name="Always have Reptile Clues">2EA1 FC1F 0003 FFFF 32A1 FC1F 09C0 FFFF</cheat>
+		<cheat name="Always Secret Game Over">05A6 FC1F 3CC0 FFFF</cheat>
+		<cheat name="Attract Mode Volume Never">9E8C FC1F 00C0 FFFF</cheat>
+		<cheat name="Bloody Floors">A9E7 FD1F 0003 FFFF</cheat>
+		<cheat name="Break Test Your Might">ADBE FD1F 0000 FFFF</cheat>
+		<cheat name="CPU Performs Fatalities">84AE FD1F 0003 FFFF</cheat>
+		<cheat name="CPU Players Won't Block">D570 FD1F 10C0 FFFF 937F FD1F 14C0 FFFF E290 FD1F 0BC0 FFFF</cheat>
+		<cheat name="Disable Blocking">23EF FC1F 0003 FFFF</cheat>
+		<cheat name="Enable Single Round Matches">0EA0 FC1F 01C0 FFFF</cheat>
+		<cheat name="Get Double Flawless Bonus">3251 1000 0200 FF00</cheat>
+		<cheat name="Hit Anywhere (Both Players)">0DEF FC1F 04C0 FFFF</cheat>
+		<cheat name="I Am Reptile. Find Me!">AEA1 FC1F 4019 FFFF</cheat>
+		<cheat name="Infinite Fatality Time">14A1 FC1F F0C0 FFFF</cheat>
+		<cheat name="Infinite Time">899F FC1F E2C0 FFFF 8A9F FC1F 0003 FFFF</cheat>
+		<cheat name="Night Mode">CC98 FC1F 04C0 FFFF</cheat>
+		<cheat name="One Button Fatalities">AF9B FD1F 08C0 FFFF 809A FD1F 01C0 FFFF DA9C FD1F 06C0 FFFF 299B FD1F 0FC0 FFFF 1F9C FD1F 0CC0 FFFF 499B FD1F 08C0 FFFF 1B9A FD1F 01C0 FFFF</cheat>
+		<cheat name="P1 Drain All Energy Now!">3051 1040 0000 FFFF</cheat>
+		<cheat name="P1 Infinite Energy">3051 1020 A100 FFFF</cheat>
+		<cheat name="P2 Drain All Energy Now!">5E51 1040 0000 FFFF 8651 1040 0200 FFFF</cheat>
+		<cheat name="P2 Infinite Energy">5E51 1020 A100 FFFF</cheat>
+		<cheat name="Pit Bottom in Stage Lineup">4BB1 FC1F F5FF FFFF</cheat>
+		<cheat name="Single Opponent Endurance">77A4 FC1F 69C0 FFFF</cheat>
+		<cheat name="View Ending after 1P Match">12A0 FC1F 3FC0 FFFF 87A0 FC1F 0003 FFFF</cheat>
+	</cheats>
 </misterromdescription>
