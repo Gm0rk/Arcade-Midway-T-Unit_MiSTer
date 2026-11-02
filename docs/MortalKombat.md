@@ -14,6 +14,7 @@ board. The earlier Y Unit revisions are not part of this core.
 - [Secrets](#secrets)
 - [Finishing Moves](#finishing-moves)
 - [Fixed AI Difficulty](#fixed-ai-difficulty)
+- [Cheats](#cheats)
 
 ## Versions
 
@@ -37,7 +38,7 @@ mapped; Block does the same.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Eight extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, three Reptile options, Finishing Moves, a Move List window, and Fixed AI Difficulty.
+Eight extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, two Reptile options, Finishing Moves, a Move List window, Fixed AI Difficulty, and a Cheats menu (24 cheats on rev 5.0, one on the others).
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
@@ -45,10 +46,10 @@ Eight extras on rev 5.0, rev 4.0 and the Turbo Ninja hack: two hidden menus, thr
 | EJB Menu (Copyright Screen) | The same menu, reached through the hidden "This is Mortal Kombat" copyright screen | Hidden Items |
 | Reptile Fight Next | Reptile fights after the next match you win in a 1-player game. Select again to cancel; used up when his fight starts | Hidden Items |
 | Moon Silhouettes Always | Every match on The Pit has the silhouettes crossing the moon, and with them the chance to win flawless, never Block, finish with a fatality, and meet Reptile | Hidden Items |
-| Reptile Hints Always | Reptile drops in with a hint before every round | Hidden Items |
 | Finishing Moves | Pick a fighter's fatality or The Pit (7 fighters). At the next FINISH HIM that fighter wins, the core takes the winner's controls and enters the move, waiting for the right distance. A message says when it is too far or too close, on the wrong stage, or not taken | Finishing Moves |
 | Move List window | Every fighter's special moves, fatality and the distance each needs, over the game's paused title screen: page 1 (Johnny Cage, Kano, Sub-Zero, Sonya), page 2 (Raiden, Liu Kang, Scorpion). Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. Distances are given as Close, Sweep, Jump, Half screen, Full screen | Move List |
-| Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
+| Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games; the demo fights between games keep the game's own level. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
+| Cheats menu | 24 cheats on rev 5.0 (infinite time and energy for both players, drain a player's energy, one-button fatalities, no blocking, hit anywhere, night mode, secret screens and more) and Always have Reptile Clues (Reptile drops in with a hint before every round) on all three versions. The list is on the Mortal Kombat page | Cheats |
 
 <!-- extra-content:end -->
 
@@ -99,7 +100,6 @@ attract mode moves to its next screen; the core then enters the code again
 | EJB Menu (Copyright Screen) | The same menu, after a hidden copyright screen ("This is Mortal Kombat") |
 | Moon Silhouettes Always | Every match on The Pit has the silhouettes crossing the moon, and with them the chance: a flawless, no-Block win there finished with a fatality brings Reptile |
 | Reptile Fight Next | Reptile comes after the next match you win in a 1-player game, wherever it is and however you won. Select it again to cancel; it is used up when his fight starts |
-| Reptile Hints Always | Reptile drops in with a hint before every round |
 
 ### Reptile
 
@@ -116,14 +116,15 @@ cabinet plays in the CMOS (the Green Ninja Counter audit) and sends him at
 2000.
 
 Messages: "Reptile fight set: win a match in a 1-player game" and "Reptile
-fight cleared"; when the OSD closes, what an Always option just turned on.
-The two Always options stay on until you turn them off. The core changes a
+fight cleared"; when the OSD closes, what Moon Silhouettes Always just turned
+on. Moon Silhouettes Always stays on until you turn it off, and so does
+Always have Reptile Clues in the [Cheats](#cheats) menu. The core changes a
 few of the game's instructions as the CPU fetches them (nothing is written
 to the ROM or the CMOS, and the game's own reads of its ROM still see the
 original), so turning an option off puts the game back at once. One
 difference with the real hints: when Reptile shows up by himself the game
-also clears its audits (the EJB Menu's bookkeeping); with Reptile Hints
-Always the core skips that, so the audits are kept.
+also clears its audits (the EJB Menu's bookkeeping); with Always have
+Reptile Clues the core skips that, so the audits are kept.
 
 Turbo Ninja changed the rules: no silhouettes and no flawless rounds are
 needed, and a match on one other stage can bring him as well as The Pit
@@ -177,11 +178,64 @@ main menu below Finishing Moves) pins the computer opponent's level. The game
 keeps that level in one number, 0 (easiest) to 9, and raises it after matches
 you win and lowers it after matches you lose; the computer's play follows it.
 With the option on, the computer plays at the level you picked whatever the
-game thinks the level is, through wins and losses in 1-player games. Set it
-to Off and the game's own level is back at once. A change takes effect as the
-game next reads the level.
+game thinks the level is, through wins and losses in 1-player games. The demo
+fights that play between games are left alone: they run at the level the game
+gives them, as in the original, so the attract mode looks the same with the
+option on. Set it to Off and the game's own level is back at once. A change
+takes effect as the game next reads the level.
 
 The option pins the level; it does not change how the computer plays at a
 given level. It has no effect on 2-player fights, and it is off while the test
 menu is selected (Service Mode, the Test button or the Test Switch DIP), so
 the diagnostics see the game as it is.
+
+## Cheats
+
+The OSD's Cheats menu (on the main menu, below Hidden Items) lists the cheats
+of the loaded version: 24 on rev 5.0, and Always have Reptile Clues alone on
+rev 4.0 and the Turbo Ninja hack. Select one to switch it on or off; a mark
+shows the ones that are on. All are off each time a game loads: the OSD does
+not keep them across loads.
+
+Always have Reptile Clues makes Reptile drop in with a hint before every round (see [Reptile](#reptile)). The core
+finds its code in each version's program. The other 23 are from MAME's cheat
+file for rev 5.0; its addresses are for that revision only, so the other two
+versions do not have them. The names are MAME's, cut to the 27 characters the
+OSD shows. Versions are named by their MAME set (see [Versions](#versions)).
+
+| Cheat | Units | Versions |
+|---|---|---|
+| Always Get Fatality Bonus | 1 | mk |
+| Always have Reptile Clues | 2 | All |
+| Always Secret Game Over | 1 | mk |
+| Attract Mode Volume Never | 1 | mk |
+| Bloody Floors | 1 | mk |
+| Break Test Your Might | 1 | mk |
+| CPU Performs Fatalities | 1 | mk |
+| CPU Players Won't Block | 3 | mk |
+| Disable Blocking | 1 | mk |
+| Enable Single Round Matches | 1 | mk |
+| Get Double Flawless Bonus | 1 | mk |
+| Hit Anywhere (Both Players) | 1 | mk |
+| I Am Reptile. Find Me! | 1 | mk |
+| Infinite Fatality Time | 1 | mk |
+| Infinite Time | 2 | mk |
+| Night Mode | 1 | mk |
+| One Button Fatalities | 7 | mk |
+| P1 Drain All Energy Now! | 1 | mk |
+| P1 Infinite Energy | 1 | mk |
+| P2 Drain All Energy Now! | 2 | mk |
+| P2 Infinite Energy | 1 | mk |
+| Pit Bottom in Stage Lineup | 1 | mk |
+| Single Opponent Endurance | 1 | mk |
+| View Ending after 1P Match | 2 | mk |
+
+How a cheat acts: one that sets a value makes the game read that value from the word it names, or only the bits of the word it covers (one byte, one player's flag), whenever the CPU reads it while the game runs with interrupts on; the game's own value is never written over, so switching the cheat off gives the game back at once, and the diagnostics' RAM test sees the game as it is. One that changes the game's program replaces a word of it as the CPU fetches it as an instruction; nothing is written to the ROM. The Units column is how many of the core's 8 cheat entries a cheat uses: switch cheats on until their units add up to 8 at most; the menu refuses a switch-on that would pass 8.
+
+P1 Drain All Energy Now! and P2 Drain All Energy Now! act once: switching one
+on makes the board write the empty energy into the game, and switching
+another cheat on or off does not repeat it. Switch it off and on to do it
+again. Leave the player's Infinite Energy off while you use it, or the bar is
+full again at once. P1 Infinite Energy and P2 Infinite Energy show the game
+full energy (A1h) and store full energy when the game writes it, and once
+when switched on, so the bar is still full when they are switched off.
