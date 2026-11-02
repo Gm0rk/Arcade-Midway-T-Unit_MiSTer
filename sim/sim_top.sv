@@ -49,6 +49,7 @@ module sim_top
 	// Fixed AI Difficulty (MK, MK2): the level word's word address and the level
 	input             lvl_on,
 	input      [27:0] lvl_addr,
+	input      [27:0] lvl_dpc,
 	input       [3:0] lvl_val,
 
 	// DDR3 (C++ model)
@@ -98,6 +99,7 @@ module sim_top
 	output     [15:0] dbg_wdata,
 	output     [15:0] dbg_rdata,
 	output            dbg_ie,
+	output            dbg_lvl_demo,
 	output            dbg_sdwr,        // the board's RAM write goes to the SDRAM model (one clock)
 	output     [24:1] dbg_sdwa,
 	output     [15:0] dbg_sdwd
@@ -147,6 +149,9 @@ wire [127:0] ck_data;
 wire   [7:0] ck_en;
 wire   [7:0] ck_fetch;
 wire   [7:0] ck_store;
+wire [127:0] ck_mask;
+wire   [7:0] ck_pk;
+wire   [7:0] ck_fire;
 reg         vb_d;
 always @(posedge clk) vb_d <= vid_vb;
 
@@ -182,9 +187,12 @@ tunit_cheats cheats
 	.dl_data    (ck_wdata),
 	.ck_addr    (ck_addr),
 	.ck_data    (ck_data),
+	.ck_mask    (ck_mask),
 	.ck_en      (ck_en),
 	.ck_fetch   (ck_fetch),
-	.ck_store   (ck_store)
+	.ck_store   (ck_store),
+	.ck_pk      (ck_pk),
+	.ck_fire    (ck_fire)
 );
 
 wire [63:0] ports = {in_ports[63:22],
@@ -216,9 +224,13 @@ midway_tunit board
 	.pt_en          ({ck_en, pt_en}),
 	.pt_fetch       ({ck_fetch, pt_fetch}),   // program code patches: instruction fetches only
 	.pt_store       ({ck_store, 8'd0}),       // cheat entries that also replace the CPU's writes
+	.pt_mask        ({ck_mask, {8{16'hFFFF}}}),
+	.pt_pk          (ck_pk),
+	.pt_fire        (ck_fire),
 
 	.lvl_on         (lvl_on),
 	.lvl_addr       (lvl_addr),
+	.lvl_dpc        (lvl_dpc),
 	.lvl_val        (lvl_val),
 
 	.snd_wr         (snd_wr),
@@ -275,7 +287,8 @@ midway_tunit board
 	.dbg_wa         (dbg_wa),
 	.dbg_wdata      (dbg_wdata),
 	.dbg_rdata      (dbg_rdata),
-	.dbg_ie         (dbg_ie)
+	.dbg_ie         (dbg_ie),
+	.dbg_lvl_demo   (dbg_lvl_demo)
 );
 
 williams_adpcm sound
