@@ -75,11 +75,16 @@ module midway_tunit
 	input      [15:0] pt_en,
 	input      [15:0] pt_fetch,      // entry applies to instruction fetches only (program code)
 	input      [15:0] pt_store,      // entry also replaces the value the CPU writes to the word (main RAM)
+	input     [255:0] pt_mask,       // 16 x 16-bit: the bits of the word the entry's value covers (FFFF: all)
+	input       [7:0] pt_pk,         // cheat entries 8-15: a one-shot write is in the entry (no read patch)
+	input       [7:0] pt_fire,       // one clock: that one-shot is new (tunit_cheats.sv)
 
 	// Fixed AI Difficulty (MK, MK2): while lvl_on, the CPU's reads of the
 	// game's AI level word return lvl_val (see "Read patches")
 	input             lvl_on,
 	input      [27:0] lvl_addr,      // the level word's word address (bit address >> 4)
+	input      [27:0] lvl_dpc,       // the CPU's PC (word address) as the demo fights' store of the level
+	                                 // completes (0: none); the pin is off for the demo fights
 	input       [3:0] lvl_val,       // 0 (easiest) to 9
 
 	// sound board
@@ -145,7 +150,8 @@ module midway_tunit
 	output     [27:0] dbg_wa,        // its word address (bit address >> 4)
 	output     [15:0] dbg_wdata,
 	output     [15:0] dbg_rdata,
-	output            dbg_ie         // the CPU's interrupt enable with them (simulation: --rdhist)
+	output            dbg_ie,        // the CPU's interrupt enable with them (simulation: --rdhist)
+	output            dbg_lvl_demo   // Fixed AI Difficulty: the demo fights' store was the level word's last write
 );
 
 // SDRAM byte addresses of the regions
@@ -329,6 +335,7 @@ assign dbg_wa    = mem_addr;
 assign dbg_wdata = mem_wdata;
 assign dbg_rdata = cpu_rdata;
 assign dbg_ie    = b_ie;
+assign dbg_lvl_demo = lvl_demo;
 
 //----------------------------------------------------------------------------
 // CPU bus, registered on the board side
@@ -396,6 +403,13 @@ wire [27:0] wa = b_addr;
 // (the FINISH HIM routine's wait) and Infinite Round Time (the instruction
 // that counts the round clock down), both program ROM entries.
 //
+// An entry has a mask (pt_mask): the CPU reads the entry's value in the bits
+// the mask covers and the game's own value in the others, so a cheat can hold
+// one byte of a word (the other byte of the game's variable stays its own) or
+// one bit of a flag word (the four players' bits of a power-up). Entries that
+// hit the same word combine: the covered bits are ORed. The secrets' entries
+// and the entries with pt_store cover the whole word.
+//
 // An entry marked pt_store also replaces the value the CPU writes to the
 // word (the same compare, on the CPU's own address and interrupt enable, so
 // it is ready with the registered copy). Infinite Health uses it: the game
@@ -403,6 +417,9 @@ wire [27:0] wa = b_addr;
 // result, and without this the game's own copy is left at full less the last
 // hit, which is what the bar showed when the cheat was switched off. With
 // it every write stores full, so the bar stays full when the cheat goes off.
+// A fighter who was already hurt when the cheat went on keeps the lower copy
+// until the next hit, so an entry that goes on also writes its value to the
+// word once (see "Cheat pokes" below).
 //
 // Fixed AI Difficulty is one more entry of the same kind, with its value
 // from the OSD (lvl_val, 0 to 9) instead of the table: MK and MK2 keep their
@@ -414,26 +431,50 @@ wire [27:0] wa = b_addr;
 // the option does not show it), so Off hands the game's own value back at
 // once, and in the diagnostics' RAM test (interrupts off, MAME) the word
 // reads what the test wrote.
+//
+// The demo fights between games are the exception: the attract mode sets
+// two random fighters up and stores 5 in the level word with one store of
+// its own (MOVK 5,A0 / MOVE A0,@level,0; the MRA gives the CPU's PC just
+// after it, lvl_dpc), and they play at that 5 as without the option. lvl_demo
+// follows the last write to the level word: set when that write is the
+// demo's store, clear for any other (the game start that follows the demo,
+// the adjust routine, the RAM clear at power-up), and while it is set the
+// pin is off. The write is looked at on the clock after it completes, when
+// the registered copy of its address and PC still holds it.
 //----------------------------------------------------------------------------
 
-reg         pt_hit;
-reg  [15:0] pt_q;
+reg         lvl_wr_q = 1'b0;    // a CPU write completed on the previous clock
+reg         lvl_demo = 1'b0;    // the level word was last written by the demo fights' store
+reg  [15:0] pt_q = 16'd0;       // the matching entries' values (ORed; 0 outside their masks)
+reg  [15:0] pt_k = 16'hFFFF;    // the bits of the game's own value that are kept
+reg  [15:0] pt_q_n, pt_k_n;
 integer     pt_i;
 always @(posedge clk) begin
-	pt_hit <= 1'b0;
+	pt_q_n = 16'd0;
+	pt_k_n = 16'hFFFF;
 	for (pt_i = 0; pt_i < 16; pt_i = pt_i + 1)
 		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28] &&
 		    (pt_fetch[pt_i] ? (b_pc == wa) : ((wa[27:18] != 10'h004) || b_ie))) begin   // 0x004: main RAM
-			pt_hit <= 1'b1;
-			pt_q   <= pt_data[16 * pt_i +: 16];
+			pt_q_n = pt_q_n | pt_data[16 * pt_i +: 16];
+			pt_k_n = pt_k_n & ~pt_mask[16 * pt_i +: 16];
 		end
-	if (lvl_on && wa == lvl_addr && b_ie) begin
-		pt_hit <= 1'b1;
-		pt_q   <= {12'd0, lvl_val};
+	if (lvl_on && !lvl_demo && wa == lvl_addr && b_ie) begin
+		pt_q_n = {12'd0, lvl_val};
+		pt_k_n = 16'd0;
 	end
+	pt_q <= pt_q_n;
+	pt_k <= pt_k_n;
 end
 
-assign cpu_rdata = pt_hit ? pt_q : mem_rdata;
+always @(posedge clk) begin
+	lvl_wr_q <= cpu_ce & mem_ack & mem_wr;
+	if (cpu_reset)
+		lvl_demo <= 1'b0;
+	else if (lvl_wr_q && b_addr == lvl_addr)
+		lvl_demo <= (lvl_dpc != 28'd0) && (b_pc == lvl_dpc);
+end
+
+assign cpu_rdata = (mem_rdata & pt_k) | pt_q;
 
 // write patches: the value stored for a CPU write to a pt_store entry's word,
 // decoded from the CPU's own address on the clock b_addr takes it, so it is
@@ -920,6 +961,7 @@ localparam S_RAMWR   = 4'd10;    // RAM cache update (write)
 localparam S_RAMMISS = 4'd11;    // wait for the write queue, then fetch the line
 localparam S_RAMFILL = 4'd12;
 localparam S_NBAW    = 4'd13;    // NBA Jam protection write: the table value is ready
+localparam S_POKE    = 4'd14;    // a cheat poke: the cached line is dropped
 
 reg   [3:0] bstate;
 reg         bram_pal;            // S_BRAM: palette (else CMOS)
@@ -930,13 +972,93 @@ reg         vram_sent;
 // taken (b_stale), the same request is not served again.
 wire        req = (b_rd | b_wr) & ~mem_ack & ~b_stale;
 
-// write queue entries from the CPU and from the RAM clear
+//----------------------------------------------------------------------------
+// Cheat pokes
+//
+// A cheat entry with pt_store (Infinite Health) keeps the game's own copy of
+// the word full by replacing what the game writes, but a copy that was lower
+// when the cheat went on stayed there until the fighter was hit again, and
+// came back to the bar when the cheat went off (a fighter not being hit: the
+// bar dropped to what it had been). So when such an entry becomes enabled the
+// board writes its value to the word once: into the write queue, as a CPU
+// write would go, and the cached line of the word is dropped (tag cleared in
+// S_POKE) so that the next read fetches it from the SDRAM after the queue.
+// It waits for a clock in which the bus state machine is idle and no CPU
+// request is in front of it; the CPU's request then waits one more clock in
+// S_IDLE. A toggle of any cheat sends the whole list again, so every entry
+// that stays on is poked again, to the value it already makes the game read.
+// A one-shot entry (pt_pk: no read patch, a whole word of main RAM written
+// once, Drain All Energy Now) is poked when tunit_cheats.sv says it is new
+// (pt_fire), and not again when another toggle sends the list again.
+// pk_now: the entries that apply (main RAM words, not program code).
+//----------------------------------------------------------------------------
+
+wire  [7:0] pk_st  = pt_en[15:8] & pt_store[15:8] & ~pt_fetch[15:8];   // store entries: poked when they go on
+wire  [7:0] pk_now = pk_st | pt_pk;                                      // entries that apply
+reg   [7:0] pk_prev = 8'd0;
+reg   [7:0] pk_pend = 8'd0;             // entries that went on and wait to be picked
+reg   [7:0] pk_oh   = 8'd0;             // the entry picked (one-hot), read while pk_pick is up
+reg         pk_pick = 1'b0;
+reg         pk_rdy  = 1'b0;             // pk_wa/pk_wd hold a poke
+reg  [17:0] pk_wa;                      // its word address in the 512 KB RAM
+reg  [15:0] pk_wd;
+
+// The pick is two registered steps (a variable index into the 16 entries
+// made adders in front of pk_rdy: Build 51 missed the 96 MHz clock by 0.012 ns
+// there): the lowest pending entry as a one-hot, then, with constant indexes,
+// its address and value and whether it is a main RAM word (word address bits
+// 27-18 = 004h).
+reg   [7:0] pk_low;                     // the lowest pending entry
+reg         pk_seen;
+reg   [7:0] pk_ram;
+reg  [17:0] pk_wa_n;
+reg  [15:0] pk_wd_n;
+integer     pk_i;
+always @(*) begin
+	pk_seen = 1'b0;
+	pk_wa_n = 18'd0;
+	pk_wd_n = 16'd0;
+	for (pk_i = 0; pk_i < 8; pk_i = pk_i + 1) begin
+		pk_low[pk_i] = pk_pend[pk_i] & ~pk_seen;
+		pk_seen      = pk_seen | pk_pend[pk_i];
+		pk_ram[pk_i] = (pt_addr[28 * (8 + pk_i) + 18 +: 10] == 10'h004);
+		if (pk_oh[pk_i]) begin
+			pk_wa_n = pk_wa_n | pt_addr[28 * (8 + pk_i) +: 18];
+			pk_wd_n = pk_wd_n | pt_data[16 * (8 + pk_i) +: 16];
+		end
+	end
+end
+
+wire        pk_s1 = !pk_rdy && !pk_pick && pk_seen;
+wire        pk_go = pk_rdy && bstate == S_IDLE && !req && !cpu_reset && !wq_full && !clr_push;
+
+always @(posedge clk) begin
+	pk_prev <= pk_st;
+	pk_pend <= (pk_pend & ~(pk_s1 ? pk_low : 8'd0)) | (pk_st & ~pk_prev) | pt_fire;
+	pk_pick <= pk_s1;
+	if (pk_s1)
+		pk_oh <= pk_low;
+	if (pk_go)
+		pk_rdy <= 1'b0;
+	if (pk_pick) begin
+		pk_wa  <= pk_wa_n;
+		pk_wd  <= pk_wd_n;
+		// dropped when the entry is off again or is not a main RAM word
+		pk_rdy <= |(pk_oh & pk_now & pk_ram);
+	end
+end
+
+// write queue entries from the CPU, the cheat pokes and the RAM clear
 always @(*) begin
 	wq_push = clr_push;
 	wq_in   = {clr_addr - 18'd1, 16'h0000};   // clr_addr has already moved on
 	if (bstate == S_IDLE && req && !c_clr && !b_srt && b_wr && sel_ram && !sel_prot && !wq_full && !clr_busy && !clr_push) begin
 		wq_push = 1'b1;
 		wq_in   = {wa[17:0], ram_wdata};
+	end
+	else if (pk_go) begin
+		wq_push = 1'b1;
+		wq_in   = {pk_wa, pk_wd};
 	end
 end
 
@@ -1123,6 +1245,21 @@ always @(posedge clk) begin
 							mem_rdata <= 16'hFFFF;
 					end
 				end
+			end
+			else if (pk_go) begin
+				// a cheat poke: the entry's value went into the write queue
+				// (above); the cached line of the word is dropped, so the next
+				// read fetches it from the SDRAM after the queue
+				mc_we  <= 1'b1;
+				mc_wa  <= pk_wa[13:2];
+				mc_wt  <= 5'd0;
+				bstate <= S_POKE;
+			end
+
+			S_POKE: begin
+				// the cache write lands in this clock; a request waits in S_IDLE
+				// until the next one, so its tag read is after the write
+				bstate <= S_IDLE;
 			end
 
 			S_NBAW: begin
