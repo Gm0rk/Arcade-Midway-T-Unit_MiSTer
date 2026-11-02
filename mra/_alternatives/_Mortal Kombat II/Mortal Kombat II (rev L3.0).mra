@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II (rev L3.0)</name>
-	<mratimestamp>20261029</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2r30</setname>
 	<year>1993</year>
@@ -35,8 +35,8 @@ rom index 3 (SDRAM 0xD00000):
 	<rom index="1">
 		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA1D4E0 (27 presses), menu FFA1D3A0; security screen branches FFA1DA90 FFA1DAC0; hitbox flag 01061FB0; battle counter 01061B40; Noob Saibot check FFA188F0 (50 wins); Jade check FFA199F0 (battle 10); Smoke check FFA19FD0 (stage 7) -->
 		<part>
-		02 00 01 00 A9 1D FA 1F 00 03 AC 1D FA 1F 00 03 FB 61 10 20 01 00 B4 61 10 30 FA 00 A5 18 FA 6F
-		00 00 A4 19 FA 7F 00 03 DA 19 FA 7F 06 C0 11 1A FA 8F 12 C0 20 00 00 00 3A 1D FA 0F 00 00 00 00
+		02 00 01 00 A9 1D FA 1F 00 03 AC 1D FA 1F 00 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 3A 1D FA 0F 00 00 00 00
 		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
@@ -45,12 +45,12 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 80
 		</part>
-		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; AI level word 01061AD0 -->
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; AI level word 01061AD0; demo store PC FF827BA0 -->
 		<part repeat="744">00</part>
 		<part>
 		01 00 00 00 B0 61 10 00 28 60 10 00 E5 60 10 00 2F 60 10 00 EC 60 10 00 22 60 10 00 DF 60 10 00
 		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 C0 27 8C FF 10 7E A1 FF 70 F2 82 FF 09 0E 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AD 61 10 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AD 61 10 00 BA 27 F8 0F
 		</part>
 	</rom>
 	<rom index="0" zip="mk2r30.zip|mk2.zip" md5="100a3bb7a5520b0283da316ddc0aa849" type="merged">
@@ -89,11 +89,18 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
-	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150 -->
+	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150; 11 cheats -->
 	<cheats size="8" max="8">
-		<cheat name="Infinite Health P1">2F60 1000 A100 0200</cheat>
-		<cheat name="Infinite Health P2">EC60 1000 A100 0200</cheat>
-		<cheat name="Infinite Round Time">FA19 F80F 4A4D 0100</cheat>
-		<cheat name="Stop Finishing Move Timer">151F F80F FF7F 0100</cheat>
+		<cheat name="Always Play Pong">B461 1000 FA00 FFFF</cheat>
+		<cheat name="Infinite Health P1">2F60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Health P2">EC60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Round Time">FA19 F81F 4A4D FFFF</cheat>
+		<cheat name="Jade Fight no Low Kick">A419 FA1F 0003 FFFF DA19 FA1F 06C0 FFFF</cheat>
+		<cheat name="P1 Drain all Energy Now!">2F60 1040 0100 FFFF</cheat>
+		<cheat name="P2 Drain all Energy Now!">EC60 1040 0100 FFFF</cheat>
+		<cheat name="Press Start To Fight Smoke">111A FA1F 12C0 FFFF</cheat>
+		<cheat name="Show Hitboxes">FB61 1000 0100 FFFF</cheat>
+		<cheat name="Stop Finishing Move Timer">151F F81F FF7F FFFF</cheat>
+		<cheat name="Winner Battles Noob Saibot">A518 FA1F 0000 FFFF</cheat>
 	</cheats>
 </misterromdescription>
