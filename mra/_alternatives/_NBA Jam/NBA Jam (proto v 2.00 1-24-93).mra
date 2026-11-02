@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam (proto v 2.00 1/24/93)</name>
-	<mratimestamp>20261015</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajamp2</setname>
 	<year>1993</year>
@@ -30,7 +30,7 @@ rom index 3 (SDRAM 0xD00000):
 	<rom index="1">
 		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code (no second part); power-ups: big heads 010E0740 only -->
 		<part>
-		03 00 01 00 74 E0 10 10 0F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		03 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
 		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 80
 		</part>
@@ -80,4 +80,11 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="248800c2" name="p1_nba_jam_u13_sound_rom.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): power-ups: big heads 010E0740 only; 4 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="P1 Big Head">74E0 1000 0100 0100</cheat>
+		<cheat name="P2 Big Head">74E0 1000 0200 0200</cheat>
+		<cheat name="P3 Big Head">74E0 1000 0400 0400</cheat>
+		<cheat name="P4 Big Head">74E0 1000 0800 0800</cheat>
+	</cheats>
 </misterromdescription>
