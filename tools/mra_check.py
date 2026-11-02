@@ -19,11 +19,17 @@ loaded streams are also compared with what MAME itself loaded, region by
 region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
 
-Every Mortal Kombat II set (Mortal Kombat II Plus too) carries the OSD's
-Cheats list (<cheats size="8" max="8">: Infinite Health P1 and P2, Infinite
-Round Time, Stop Finishing Move Timer; tools/tunit_cheats.py,
-rtl/tunit_cheats.sv) and no other set does. The health and round time cheats
-are one 8-byte unit each; the health units must name the two energy words of
+Every set carries the OSD's Cheats list (<cheats size="8"
+max="8">; tools/tunit_cheats.py, rtl/tunit_cheats.sv).
+Every cheat is whole 8-byte units (at most 8) with a name of 27 characters at
+most, two cheats of a set never have one name, and every unit is legal (a
+word address of the program ROM with the instruction-word flag, or of main RAM
+without it; no unused flag bit; a store entry or a one-shot covering the whole
+word, a one-shot being a RAM word alone; the value inside the mask). The
+cheats are also made again from the loaded program ROM and must equal the
+MRA's (the MRA is not stale). The Mortal Kombat II sets are checked on their
+own from the program ROM: Infinite Health P1 and P2 and Infinite Round Time,
+Stop Finishing Move Timer (Plus has these four only). The health units must name the two energy words of
 the program ROM's round start (MOVI full,A0 and MOVE A0 to both) with that
 full value, flagged as written too (flags 2), the round time unit the DEC A10
 of the clock process (followed by JRNN, MOVK 9,A10, DEC A11, and after the
@@ -32,17 +38,20 @@ DEC A10 / JANN to the word after DEC A11 / MOVK 9,A10 / JA to DEC A11) with
 MOVE A10,A10 (4D4Ah) flagged as an instruction word, and the timer cheat the
 80h (FFh in Challenger) after the program ROM's MOVI .,A11 with the 7FFFh
 patch flagged as an instruction word; Plus has two timer units, the 80h and
-the 140h of its own routine, each after a MOVI .,A11.
+the 140h of its own routine, each after a MOVI .,A11. The drain cheats are
+one-shots of those two energy words.
 
 ROM index 1's first word must hold only the game id and the flag (bit 8,
 Mortal Kombat II Plus: the OSD shows the hack's Move List and View Secrets and
 hides the Finishing Moves and Hidden Items), and a set with
 the flag has no table after the format word but the AI level word (bytes
-0x454-0x457, zeros before it). Every MK and MK2 set must carry the AI level
+0x454-0x45B, zeros before them). Every MK and MK2 set must carry the AI level
 word (Fixed AI Difficulty) there, and it must be the one an independent scan
 of the loaded program ROM finds: the routine that reads the CPU opponent's
 level, adds to it, clamps it to 0..9 and writes it back (exactly one in the
-ROM, with the same word read and written).
+ROM, with the same word read and written). Behind it comes the PC after the
+demo fights' store of the level (bytes 0x458-0x45B), which the scan finds as
+MOVK 5,A0 / MOVE A0,@level,0 (exactly one in the ROM).
 
 With --out, the loaded streams are written as <set>_rom0.bin / _rom3.bin
 for the simulator, and the game id / secrets table as <set>_rom1.bin
@@ -161,41 +170,108 @@ def level_scan(prog):
     return rd
 
 
-CHEAT_NAMES = ['Infinite Health P1', 'Infinite Health P2', 'Infinite Round Time', 'Stop Finishing Move Timer']
+def demo_scan(prog, lv):
+    """The bit address of the instruction after the demo fights' store of the
+    level (MOVK 5,A0 / MOVE A0,@level,0; exactly one in the ROM), or an error
+    text. Written here on its own, not taken from tools/tunit_fmoves.py."""
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+    pat = [0x18A0, 0x0580, lv & 0xFFFF, lv >> 16]
+    hits = [i for i in range(n - 4) if w[i:i + 4] == pat]
+    if len(hits) != 1:
+        return '%d demo stores of the AI level in the program ROM, not 1' % len(hits)
+    return 0xFF800000 + (hits[0] + 4) * 16
 
 
-def cheat_checks(root, gid, hides, prog):
+MK2_CHEATS = ['Infinite Health P1', 'Infinite Health P2', 'Infinite Round Time', 'Stop Finishing Move Timer']
+F_FETCH, F_STORE, F_POKE = 1, 2, 4
+
+
+def parse_cheats(node):
+    """({name: [(bit address, value, flags, mask), ...]}, [problems]) of a <cheats> element."""
+    cheats, errs = {}, []
+    for c in node.findall('cheat'):
+        name = c.get('name')
+        raw = bytes.fromhex(''.join((c.text or '').split()))
+        if len(raw) % 8 or not raw:
+            errs.append('%s is %d bytes, not 8-byte units' % (name, len(raw)))
+            continue
+        if name in cheats:
+            errs.append('two cheats named %r' % name)
+        us = []
+        for k in range(0, len(raw), 8):
+            lo, hi, val, mask = [raw[k + i] | raw[k + i + 1] << 8 for i in range(0, 8, 2)]
+            us.append((((hi & 0xFFF) << 16 | lo) << 4, val, hi >> 12, mask))
+        cheats[name] = us
+    return cheats, errs
+
+
+def cheat_checks(root, gid, hides, prog, setname=''):
     """Problems with the MRA's <cheats> (see the module text)."""
     node = root.find('cheats')
-    want = gid == 2                                  # Mortal Kombat II, Plus included
     if node is None:
-        return ['no <cheats> (every Mortal Kombat II set has them)'] if want else []
-    if not want:
-        return ['<cheats> in a set that has none']
+        return ['no <cheats> (every set has them)']
     errs = []
     if node.get('size') != '8' or node.get('max') != '8':
         errs.append('<cheats> size %s max %s, not 8 and 8' % (node.get('size'), node.get('max')))
-    cheats = node.findall('cheat')
-    if [c.get('name') for c in cheats] != CHEAT_NAMES:
-        return errs + ['cheats %s, not %s' % ([c.get('name') for c in cheats], CHEAT_NAMES)]
     n = len(prog) // 2
     w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
-    units = []                                       # per cheat: [(bit address, value, flags), ...]
-    for c in cheats:
-        raw = bytes.fromhex(''.join((c.text or '').split()))
-        if len(raw) % 8 or not raw:
-            return errs + ['%s is %d bytes, not 8-byte units' % (c.get('name'), len(raw))]
-        us = []
-        for k in range(0, len(raw), 8):
-            lo, hi, val, flags = [raw[k + i] | raw[k + i + 1] << 8 for i in range(0, 8, 2)]
-            us.append(((lo | hi << 16) << 4, val, flags))
-        units.append(us)
-    if sum(len(u) for u in units) > 8:
-        errs.append('%d units, the board takes 8' % sum(len(u) for u in units))
+    allc, e = parse_cheats(node)
+    errs += e
+    for name, us in allc.items():
+        if len(name) > 27:
+            errs.append('%r is %d characters, the OSD shows 27' % (name, len(name)))
+        if len(us) > 8:
+            errs.append('%r has %d units, the board takes 8' % (name, len(us)))
+        for a, v, fl, m in us:
+            where = '%r unit %08X' % (name, a)
+            rom = a >= 0xFF800000
+            if a & 15:
+                errs.append('%s is not word aligned' % where)
+            if fl & 8:
+                errs.append('%s has the unused flag bit' % where)
+            if bool(fl & F_FETCH) != rom:
+                errs.append('%s: %s but flagged %d' % (where, 'program ROM' if rom else 'main RAM', fl))
+            if rom and not 0 <= (a - 0xFF800000) >> 4 < n:
+                errs.append('%s is not in the program ROM' % where)
+            if not rom and not 0x01000000 <= a < 0x01400000:
+                errs.append('%s is not main RAM (01000000-013FFFFF)' % where)
+            if fl & (F_STORE | F_POKE) and m != 0xFFFF:
+                errs.append('%s: a store entry or one-shot covers the whole word, mask is %04X' % (where, m))
+            if fl & F_POKE and fl & (F_FETCH | F_STORE):
+                errs.append('%s: a one-shot is a plain RAM write, flags %d' % (where, fl))
+            if v & ~m & 0xFFFF and not fl & F_POKE:
+                errs.append('%s: value %04X outside the mask %04X' % (where, v, m))
+    # the cheats made again from the program ROM
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import tunit_cheats
+    again, _ = tunit_cheats.build(gid, prog, setname, plus=hides)
+    mine = dict(again)
+    got = {name: b''.join(bytes.fromhex(''.join((c.text or '').split())) for c in node.findall('cheat') if c.get('name') == name)
+           for name in allc}
+    if set(mine) != set(got):
+        errs.append('cheats differ from the generator\'s: only in the MRA %s, only in the generator %s'
+                    % (sorted(set(got) - set(mine)), sorted(set(mine) - set(got))))
+    else:
+        for name in mine:
+            if mine[name] != got[name]:
+                errs.append('%r differs from the generator\'s units' % name)
+    if gid == 2:
+        errs += mk2_cheat_checks(allc, hides, w, n)
+    return errs
+
+
+def mk2_cheat_checks(allc, hides, w, n):
+    """The Mortal Kombat II cheats against an independent scan of the program."""
+    errs = []
+    for name in MK2_CHEATS:
+        if name not in allc:
+            return errs + ['no cheat %r' % name]
     want_units = [1, 1, 1, 2 if hides else 1]        # Plus: the timer's 80h and 140h
+    units = [allc[name] for name in MK2_CHEATS]
     if [len(u) for u in units] != want_units:
         return errs + ['units per cheat %s, not %s' % ([len(u) for u in units], want_units)]
-    (e1, v1, f1), (e2, v2, f2), (cw, cv, cf) = units[0][0], units[1][0], units[2][0]
+    (e1, v1, f1, _), (e2, v2, f2, _), (cw, cv, cf, _) = units[0][0], units[1][0], units[2][0]
     # MOVI full,A0 / MOVE A0,@P1 energy / MOVE A0,@P2 energy (the other fill, FFFFh, is not it)
     ok = [i for i in range(n - 8)
           if w[i] == 0x09C0 and w[i + 1] != 0xFFFF and w[i + 2] == 0x0580 and w[i + 3] | w[i + 4] << 16 == e1
@@ -204,10 +280,16 @@ def cheat_checks(root, gid, hides, prog):
         errs.append('%d places fill energies %08X and %08X with a full value' % (len(ok), e1, e2))
     elif v1 != w[ok[0] + 1] or v2 != v1:
         errs.append('the health cheats read %04X and %04X, the round start fills %04X' % (v1, v2, w[ok[0] + 1]))
-    if f1 != 2 or f2 != 2:
+    if f1 != F_STORE or f2 != F_STORE:
         errs.append('the health cheats are flagged %d and %d, not 2 (a RAM word whose writes store the value)' % (f1, f2))
     if e1 & 15 or e2 & 15:
         errs.append('an energy word is not word aligned')
+    for name, e in (('P1 Drain all Energy Now!', e1), ('P2 Drain all Energy Now!', e2)):
+        if hides:
+            if name in allc:
+                errs.append('Plus has the drain cheat %r' % name)
+        elif allc.get(name) != [(e, 1, F_POKE, 0xFFFF)]:
+            errs.append('%r is %s, not a one-shot of the energy word %08X to 1' % (name, allc.get(name), e))
     # the round clock: DEC A10 / JRNN / MOVK 9,A10 / DEC A11 after the process's start (Plus: the same
     # with JANN and JA, the DEC A11 being the word its jumps name)
     i = (cw - 0xFF800000) >> 4 if cw >= 0xFF800000 and not cw & 15 else -1
@@ -231,10 +313,10 @@ def cheat_checks(root, gid, hides, prog):
                  if w[k] == 0x192B and w[k + 1] == 0x192A and w[k + 2] == 0x058A and w[k + 5] == 0x058B]
         if len(start) != 1:
             errs.append('%d clock process starts (MOVK 9,A11 / MOVK 9,A10 / MOVE A10,@ / MOVE A11,@) before %08X' % (len(start), cw))
-        if cv != 0x4D4A or cf != 1:
+        if cv != 0x4D4A or cf != F_FETCH:
             errs.append('the round time cheat is %04X flags %d, not 4D4A (MOVE A10,A10) as an instruction word' % (cv, cf))
     # the timer: the immediate of the second wait's MOVI .,A11 (Plus: the hack's, 80h and then 140h)
-    for k, (tw, tv, tf) in enumerate(units[3]):
+    for k, (tw, tv, tf, _) in enumerate(units[3]):
         i = (tw - 0xFF800000) >> 4 if tw >= 0xFF800000 and not tw & 15 else -1
         if i < 1 or i >= n:
             errs.append('the timer word %08X is not in the program ROM' % tw)
@@ -243,7 +325,7 @@ def cheat_checks(root, gid, hides, prog):
         if w[i - 1] != 0x09CB or w[i] not in ok_imm:
             errs.append('the timer word %08X is %04X after %04X, not %s after MOVI .,A11'
                         % (tw, w[i], w[i - 1], '/'.join('%02Xh' % v for v in ok_imm)))
-        if tv != 0x7FFF or tf != 1:
+        if tv != 0x7FFF or tf != F_FETCH:
             errs.append('the timer cheat is %04X flags %d, not 7FFF as an instruction word' % (tv, tf))
     return errs
 
@@ -343,21 +425,28 @@ def main():
             if w0 & ~0x107:
                 msgs.append('rom 1 word 0 is %04X: bits other than the game id and the hide flag' % w0)
             gid = w0 & 7
-            if hides and (len(t) != 0x458 or any(t[4:0x454])):
+            if hides and (len(t) != 0x45C or any(t[4:0x454])):
                 msgs.append('rom 1 hides the extras but is %d bytes, not game id and format, zeros, '
-                            'and the AI level word at 0x454' % len(t))
+                            'and the AI level word and the demo store at 0x454' % len(t))
             if gid <= 2:      # MK, MK Turbo, MK2: the AI level word, as the scan finds it
                 lv = level_scan(streams.get(0, b'')[:0x100000])
-                if len(t) < 0x458:
-                    msgs.append('rom 1 has no AI level word (%d bytes)' % len(t))
+                if len(t) < 0x45C:
+                    msgs.append('rom 1 has no AI level word and demo store (%d bytes)' % len(t))
                 elif isinstance(lv, str):
                     msgs.append(lv)
                 else:
                     got = (t[0x454] | t[0x455] << 8 | t[0x456] << 16 | t[0x457] << 24) << 4
                     if got != lv:
                         msgs.append('rom 1 AI level word is %08X, the program ROM\'s is %08X' % (got, lv))
+                    else:
+                        dm = demo_scan(streams.get(0, b'')[:0x100000], lv)
+                        gotd = (t[0x458] | t[0x459] << 8 | t[0x45A] << 16 | t[0x45B] << 24) << 4
+                        if isinstance(dm, str):
+                            msgs.append(dm)
+                        elif gotd != dm:
+                            msgs.append('rom 1 demo store PC is %08X, the program ROM\'s is %08X' % (gotd, dm))
         if len(t) >= 2:
-            msgs += cheat_checks(root, t[0] & 7, hides, streams.get(0, b'')[:0x100000])
+            msgs += cheat_checks(root, t[0] & 7, hides, streams.get(0, b'')[:0x100000], setname)
         status = 'OK' if not msgs else 'FAIL'
         bad += bool(msgs)
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
