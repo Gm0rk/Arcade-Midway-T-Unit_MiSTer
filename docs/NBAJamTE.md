@@ -33,51 +33,37 @@ Test (service mode) and Pause.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Ten extras on all nine versions: one hidden menu, seven cheat options, Tournament Mode, and a six-page Secret Player List window. Every version has all the cheat codes.
+Four extras on all nine versions: one hidden menu, No CPU Assistance, a Cheats menu (20 to 30 cheats a version) and a six-page Secret Player List window. Every version has all the cheat codes.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
 | Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics. Attract mode only | Cheat Codes & Hidden Items |
-| Baby Size Players | Small players, from the next game | Cheat Codes & Hidden Items |
-| Head Size | Big or huge heads for all players, from the next game | Cheat Codes & Hidden Items |
-| Max Power | The MAX POWER code for all players | Cheat Codes & Hidden Items |
 | No CPU Assistance | Turns off the computer assistance that keeps games close | Cheat Codes & Hidden Items |
-| Power-Up Goaltending | The POWERUP G.T. code for all players | Cheat Codes & Hidden Items |
-| Quick Hands | The QUICK HANDS code for all players | Cheat Codes & Hidden Items |
-| Shot Percentage | The shot percentage display | Cheat Codes & Hidden Items |
-| Tournament Mode | Pick it on Tonight's Match-Up: the core enters the code, and the game is played without power-ups, CPU assistance or other secrets ("TOURNAMENT MODE" at the tip-off) | Cheat Codes & Hidden Items |
-| Secret Player List window | Pages 1-4 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 5-6 list every cheat code as the players enter it. The game waits while it is shown | View Secret Players (main menu) |
+| Cheats menu | The power-ups of the four players (Big/Huge Head, Max Power, Powerup Goal Tending, Quick Hands), infinite turbo for each, Baby Size Players, Huge Heads, Shot Percentage, Tournament Mode and the cheats of MAME's cheat file: infinite shot time, never miss a shot, dunks always break the backboard, fatalities, the All-Star Jam Team and more. The list is on the NBA Jam Tournament Edition page | Cheats |
+| Secret Player List window | Pages 1-4 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 5-6 list every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
 
 <!-- extra-content:end -->
 
 ## Secrets
 
-View Secret Players (OSD main menu: Off, Page 1, ...) shows a window over
-the game, on the title screen, with the hidden players (below): their
-names, initials, birthdays and the versions that have them, and the cheat
-codes as the players enter them (below). Pages 1-4 have the players, Pages 5-6 the codes. The game waits while
-the window is on; set it to Off to play on.
+View Secret Players (OSD main menu: Off, On) shows a window over the game,
+on the title screen, with the hidden players (below): their names,
+initials, birthdays and the versions that have them, and the cheat codes as
+the players enter them (below). Pages 1-4 have the players, Pages 5-6 the
+codes. Set it On, close the OSD, and turn the pages with Left and Right on
+either controller (Right on page 6 goes round to page 1); open the OSD and
+set it Off to play on. The game waits while the window is on.
 
 On the OSD's Cheat Codes & Hidden Items page:
 
 | OSD item | What it does |
 |---|---|
 | Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics. In the attract mode only |
-| Baby Size Players | Small players (BABY SIZE PLAYERS), from the next game |
-| Head Size | Big or huge heads for all players (the game's BIG HEAD and HUGE HEAD codes), from the next game |
-| Max Power | The MAX POWER code for all players |
 | No CPU Assistance | Turns off the computer assistance that keeps games close |
-| Power-Up Goaltending | The power-up goaltending code (POWERUP G.T.) for all players |
-| Quick Hands | The QUICK HANDS code for all players |
-| Shot Percentage | The shot percentage display |
-| Tournament Mode | Pick it on the Tonight's Match-Up screen: the core enters the code, and the game is played without power-ups, CPU assistance or other secrets ("TOURNAMENT MODE" at the tip-off) |
 
-The game takes its power-up codes on the Tonight's Match-Up screen, for
-one game and one player; the options give them to all four players
-until they are switched off. Every version has them all. Tournament Mode
-turns the game's own codes off; the options above still apply. When the
-OSD closes, a message says that an option is on, or whether the game took
-a code.
+The power-ups, Baby Size Players, Huge Heads, Shot Percentage and Tournament
+Mode are in the [Cheats](#cheats) menu. When the
+OSD closes, a message says whether the game took a code.
 
 ### Cheat codes
 
@@ -195,3 +181,57 @@ players can be entered.
 |  |  | KNG | Mar 26 | 2.1, 3.0 2-26 |
 | Tim Coman | Coman | TJC | Oct 11 | Proto to 3.0 2-26 |
 | Elviscious | Elviscious | ELV | Jan 8 | Proto to 3.0 2-26 |
+
+## Cheats
+
+The OSD's Cheats menu (on the main menu, below Cheat Codes & Hidden Items)
+lists the cheats of the loaded version: 20 to 30 of them, as the table shows.
+Select one to switch it on or off; a mark shows the ones that are on. All are
+off each time a game loads: the OSD does not keep them across loads.
+
+The power-ups of the four players (Big/Huge Head, Max Power, Powerup Goal
+Tending, Quick Hands), Baby Size Players, Huge Heads, Shot Percentage and
+Tournament Mode are found in each version's program; each player has a
+cheat for each power-up. The others are from MAME's
+cheat files for the versions that have them (the addresses are for those
+revisions only): infinite shot time and turbo, never miss a shot, dunks that
+always break the backboard, no in-game play tip, the All-Star Jam Team and the
+fatalities. The names are MAME's, cut to the 27 characters the OSD shows.
+Versions are named by their MAME set (see [Versions](#versions)).
+
+| Cheat | Units | Versions |
+|---|---|---|
+| Baby Size Players | 1 | All |
+| Disable In-Game Play Tip | 2 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
+| Dunks Always Break Backbrd | 1 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
+| Fatalities Enabled! | 1 | nbajamte1, nbajamte2a |
+| Huge Heads | 1 | All |
+| Infinite Shot Time | 1 | All but nbajamten, nbajamtep2 |
+| Never Miss A Shot | 2 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
+| P1 Big/Huge Head | 1 | All |
+| P1 Infinite Turbo | 1 | All but nbajamten, nbajamtep2 |
+| P1 Max Power | 1 | All |
+| P1 Powerup Goal Tending | 1 | All |
+| P1 Quick Hands | 1 | All |
+| P2 Big/Huge Head | 1 | All |
+| P2 Infinite Turbo | 1 | All but nbajamten, nbajamtep2 |
+| P2 Max Power | 1 | All |
+| P2 Powerup Goal Tending | 1 | All |
+| P2 Quick Hands | 1 | All |
+| P3 Big/Huge Head | 1 | All |
+| P3 Infinite Turbo | 1 | All but nbajamten, nbajamtep2 |
+| P3 Max Power | 1 | All |
+| P3 Powerup Goal Tending | 1 | All |
+| P3 Quick Hands | 1 | All |
+| P4 Big/Huge Head | 1 | All |
+| P4 Infinite Turbo | 1 | All but nbajamten, nbajamtep2 |
+| P4 Max Power | 1 | All |
+| P4 Powerup Goal Tending | 1 | All |
+| P4 Quick Hands | 1 | All |
+| Shot Percentage | 1 | All |
+| Tournament Mode | 1 | All |
+| Unlock All-Star Jam Team | 5 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
+
+How a cheat acts: one that sets a value makes the game read that value from the word it names, or only the bits of the word it covers (one byte, one player's flag), whenever the CPU reads it while the game runs with interrupts on; the game's own value is never written over, so switching the cheat off gives the game back at once, and the diagnostics' RAM test sees the game as it is. One that changes the game's program replaces a word of it as the CPU fetches it as an instruction; nothing is written to the ROM. The Units column is how many of the core's 8 cheat entries a cheat uses: switch cheats on until their units add up to 8 at most; the menu refuses a switch-on that would pass 8.
+
+No CPU Assistance stays on the Cheat Codes & Hidden Items page.
