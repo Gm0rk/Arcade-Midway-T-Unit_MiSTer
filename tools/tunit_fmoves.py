@@ -27,7 +27,9 @@ This script holds the move list and makes from it:
 and, for mra_gen.py, each set's RAM addresses (ROM index 1, words 0x200 on):
 the move player follows the fight by watching the CPU's writes to them, and
 the OSD's "Fixed AI Difficulty" returns its level for the CPU's reads of the
-AI level word (words 0x22A-0x22B, level_word below).
+AI level word (words 0x22A-0x22B, level_word below), except in the demo fights
+between games, which the game sets up with its own store of the level (words
+0x22C-0x22D: the CPU's PC just after that store, demo_pc below).
 
 Where they come from (34010 bit addresses, MK2 L3.1 / MK 5.0):
 
@@ -300,16 +302,18 @@ def compile_prog(prog):
 # --------------------------------------------------------------------------
 
 CFG_BASE = 0x200
-CFG_WORDS = 44                   # words 40-41 are MK only (zero for MK2)
+CFG_WORDS = 46                   # words 40-41 are MK only (zero for MK2)
 FORMAT = 1
 LVL_WORD = 42                    # words 42-43 (bytes 0x454-0x457): the AI level word
+DEMO_WORD = 44                   # words 44-45 (bytes 0x458-0x45B): where the demo fights set the level
 
 # The AI level word (the CPU opponent's level, 0 to 9; the game raises it
 # after matches won and lowers it after matches lost) is found by the one
 # routine that adjusts it: MOVE @level,A0 / ADD A1,A0 / clamp to 0..9 /
 # MOVE A0,@level. The same in every MK and MK2 revision, hack ROMs included
 # (one match in each, checked in MAME). The OSD's Fixed AI Difficulty option
-# returns its level for the CPU's reads of the word.
+# returns its level for the CPU's reads of the word, but not in the demo
+# fights (see demo_pc).
 LVL_PATTERN = [0x05A0, X, X, 0x4020, 0xCF01, 0x5600, 0x0B40, 0xFFF6, 0xC201, 0x1920, 0x0580, X, X, 0x0960]
 
 # Moves a revision does not have, by MAME set name: (fighter or '*', move).
@@ -459,13 +463,39 @@ def level_word(prog_bytes):
     return p.u32(h[0] + 1)
 
 
+def demo_pc(prog_bytes):
+    """The demo fights' store of the level: between games the attract mode
+    sets up a fight of two random fighters and sets the level to 5 with
+    MOVK 5,A0 / MOVE A0,@level,0 (one such pair in each set; the game's real
+    starts store the level elsewhere). Returns the bit address of the
+    instruction after the store, which is the CPU's PC while the store
+    completes, or None (not found, or not exactly one)."""
+    lv = level_word(prog_bytes)
+    if lv is None:
+        return None
+    p = Prog(prog_bytes)
+    h = p.find([0x18A0, 0x0580, lv & 0xFFFF, lv >> 16])
+    if len(h) != 1:
+        return None
+    return 0xFF800000 + (h[0] + 4) * 16
+
+
 def level_part(prog_bytes):
-    """The level word as table bytes (words 42-43: word address, low word
-    first) and a note; b'' if not found."""
+    """The level word and the demo store's PC as table bytes (words 42-45: word
+    address = bit address >> 4, low word first, each) and a note; b'' if the
+    level word is not found. The demo PC is zero if it is not found: the
+    option then pins the demo fights' level too."""
     a = level_word(prog_bytes)
     if a is None:
         return b'', 'AI level word not found'
-    return struct.pack('<2H', (a >> 4) & 0xFFFF, a >> 20), 'AI level word %08X' % a
+    d = demo_pc(prog_bytes)
+    note = 'AI level word %08X' % a
+    if d is None:
+        note += ', demo store not found'
+        d = 0
+    else:
+        note += ', demo fights set it at %08X (PC after the store)' % d
+    return struct.pack('<4H', (a >> 4) & 0xFFFF, a >> 20, (d >> 4) & 0xFFFF, d >> 20), note
 
 
 def missing_mask(gid, setname):
@@ -520,6 +550,10 @@ def build(gid, prog_bytes, setname=None):
     if lv is not None:
         w[LVL_WORD], w[LVL_WORD + 1] = (lv >> 4) & 0xFFFF, lv >> 20
         notes.append('AI level word %08X' % lv)
+        dp = demo_pc(prog_bytes)
+        if dp is not None:
+            w[DEMO_WORD], w[DEMO_WORD + 1] = (dp >> 4) & 0xFFFF, dp >> 20
+            notes.append('demo store PC %08X' % dp)
     else:
         notes.append('AI level word not found')
     return struct.pack('<%dH' % CFG_WORDS, *w), notes
@@ -786,6 +820,9 @@ def main():
         lv = level_word(open(a[1], 'rb').read())
         if lv is not None:
             print('%-7s %08X' % ('level', lv))
+            dp = demo_pc(open(a[1], 'rb').read())
+            if dp is not None:
+                print('%-7s %08X' % ('demo', dp))
     else:
         print(__doc__)
 
