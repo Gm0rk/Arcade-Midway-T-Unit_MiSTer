@@ -19,6 +19,19 @@
 //  blitter), then the blitter and the sound samples. ROM downloads also use
 //  the write channel, while the board is held in reset.
 //
+//  Timing (Build 55): the address pins' registers are in the I/O cells, which
+//  are far from the logic, so the logic in front of them has to be short. The
+//  Build 54 compilation missed by 0.346 ns on cpu_sd_req / rd_delay -> SDRAM_A
+//  (8 to 10 logic levels, a 3.4 ns hop into the pin cell). The behaviour is
+//  unchanged, clock for clock; what changed is how it is written:
+//    - "a read of channel k is in flight" (rd_delay != 0 and rd_ch == k) and
+//      "a refresh is due" (refresh_count > REFRESH_CYCLES) are registers
+//      (rd_busy, ref_due), computed from the next values of rd_delay, rd_ch
+//      and refresh_count;
+//    - the choice among the five requests is a flat one-hot (sel*), not a
+//      chain of else-ifs, and the address, bank and byte masks it loads are
+//      an AND-OR of the five channels' values, assigned once.
+//
 //  Copyright (C) 2015-2019 Sorgelig, 2026 Gm0rk - GPL-3.0-or-later
 //============================================================================
 
@@ -114,6 +127,12 @@ localparam STATE_IDLE_5  = 4'd9;
 localparam STATE_RFSH    = 4'd10;
 
 reg [13:0] refresh_count = STARTUP_MAX - STARTUP_CYCLES;
+reg        ref_due = 1'b1;   // refresh_count > REFRESH_CYCLES (registered; the initial count is above it)
+// power-up sequencer steps, registered a clock ahead (true when refresh_count equals the step's count in STARTUP)
+reg        st_pc   = 1'b0;   // precharge all banks
+reg        st_ar   = 1'b0;   // auto refresh
+reg        st_lm   = 1'b0;   // load mode register
+reg        st_zero = 1'b0;   // refresh_count has wrapped to 0: power-up is over
 reg  [2:0] command;
 reg  [3:0] state = STATE_STARTUP;
 
@@ -121,6 +140,7 @@ reg  [3:0] state = STATE_STARTUP;
 localparam DLY = CAS_LATENCY + BURST_LENGTH + 1;
 reg  [DLY:0] rd_delay;
 reg    [1:0] rd_ch;          // channel of the read in flight
+reg    [3:0] rd_busy = 4'd0; // rd_busy[k]: a read of channel k is in flight (rd_delay != 0 && rd_ch == k)
 reg   [15:0] dq_reg;
 reg   [63:0] rd_line;
 
@@ -140,10 +160,62 @@ wire  [15:0] dq_in = SDRAM_DQ;
 reg   [15:0] saved_data;
 reg    [2:0] cur;            // 0-3 read channel, 4 write
 
+wire             st_startup = (state == STATE_STARTUP);
+wire             idle       = (state == STATE_IDLE);
+wire             g_rw       = (state == STATE_RW1);                   // column command goes out
+wire             g_wr       = g_rw &&  saved_wr;                      // ... a write
+wire             rd_set     = g_rw && !saved_wr;                      // ... a read
+
+// the next values of the counters that the arbitration looks at
+wire [DLY:0]     rd_delay_n = init ? {(DLY + 1){1'b0}} : {rd_set, rd_delay[DLY:1]};
+wire       [1:0] rd_ch_n    = rd_set ? cur[1:0] : rd_ch;
+wire             go         = idle && !ref_due;                       // IDLE, nothing to refresh
+wire             go_ref     = idle &&  ref_due;                       // IDLE with a refresh due
+wire      [13:0] rc_n       = init    ? STARTUP_MAX - STARTUP_CYCLES :
+                             st_zero ? 14'd0 :
+                             go_ref  ? refresh_count - REFRESH_CYCLES + 1'd1 :
+                                       refresh_count + 1'b1;
+
+// which request is granted in IDLE (priority ch0 > ch1 > write > ch2 > ch3): flat, one-hot, gated by go
+wire             q0   = (ch0_req != ch0_ack) && !rd_busy[0];
+wire             q1   = (ch1_req != ch1_ack) && !rd_busy[1];
+wire             qw   = (wr_req  != wr_ack);
+wire             q2   = (ch2_req != ch2_ack) && !rd_busy[2];
+wire             q3   = (ch3_req != ch3_ack) && !rd_busy[3];
+wire             g0   = go && q0;
+wire             g1   = go && !q0 && q1;
+wire             gw   = go && !q0 && !q1 && qw;
+wire             g2   = go && !q0 && !q1 && !qw && q2;
+wire             g3   = go && !q0 && !q1 && !qw && !q2 && q3;
+wire             g_ld = go && (q0 || q1 || qw || q2 || q3);           // some request is granted
+// what the grant loads, {DQM / auto-precharge bits, bank, row, column}; zero when nothing is granted
+wire      [27:0] ld   = ({28{g0}} & {2'b00, 1'b1, 1'b0, ch0_addr, 2'b00}) |
+                       ({28{g1}} & {2'b00, 1'b1, 1'b0, ch1_addr, 2'b00}) |
+                       ({28{gw}} & {~wr_be, 1'b1, 1'b0, wr_addr})        |
+                       ({28{g2}} & {2'b00, 1'b1, 1'b0, ch2_addr, 2'b00}) |
+                       ({28{g3}} & {2'b00, 1'b1, 1'b0, ch3_addr, 2'b00});
+
+// the address pins, one AND-OR: the grant's row, the held column, or the power-up values
+wire      [12:0] pu_a = st_lm ? MODE[12:0] : (st_pc ? 13'h0400 : 13'd0);
+wire      [12:0] a_d  = ld[21:9] | ({13{g_rw}} & cas_addr) | pu_a;
+
 always @(posedge clk) begin
-	refresh_count <= refresh_count + 1'b1;
-	rd_delay      <= rd_delay >> 1;
+	refresh_count <= rc_n;
+	ref_due       <= (rc_n > REFRESH_CYCLES);
+	rd_delay      <= rd_delay_n;
+	rd_ch         <= rd_ch_n;
+	rd_busy[0]    <= (|rd_delay_n) && (rd_ch_n == 2'd0);
+	rd_busy[1]    <= (|rd_delay_n) && (rd_ch_n == 2'd1);
+	rd_busy[2]    <= (|rd_delay_n) && (rd_ch_n == 2'd2);
+	rd_busy[3]    <= (|rd_delay_n) && (rd_ch_n == 2'd3);
 	dq_reg        <= dq_in;
+
+	// power-up steps for the next clock (the counts are the old compares minus one)
+	st_pc   <= !init && st_startup && (refresh_count == (STARTUP_MAX - 64) || refresh_count == (STARTUP_MAX - 32));
+	st_ar   <= !init && st_startup && (refresh_count == (STARTUP_MAX - 56) || refresh_count == (STARTUP_MAX - 24) ||
+                                       refresh_count == (STARTUP_MAX - 48) || refresh_count == (STARTUP_MAX - 16));
+	st_lm   <= !init && st_startup && (refresh_count == (STARTUP_MAX - 40) || refresh_count == (STARTUP_MAX - 8));
+	st_zero <= !init && st_startup && (refresh_count == STARTUP_MAX);
 
 	// assemble the four burst words of a line, then hand it to its channel
 	if (rd_delay[4]) rd_line[15:0]  <= dq_reg;
@@ -158,111 +230,45 @@ always @(posedge clk) begin
 		endcase
 	end
 
-	dq_oe    <= 1'b0;
-	command  <= CMD_NOP;
+	// a grant: bank, row and column come from ld; the row goes out now, the column with the command
+	if (g_ld) begin
+		{cas_addr[12:9], cas_addr[8:0]} <= {ld[27:24], ld[8:0]};
+		saved_wr <= gw;
+		cur      <= {gw, g2 || g3, g1 || g3};
+	end
+	if (gw) saved_data <= wr_data;
+
+	// the pins, each written once; idle, wait and read-recovery clocks hold the address
+	if (g_ld || g_rw || st_startup) SDRAM_A  <= a_d;
+	if (g_ld ||        st_startup) SDRAM_BA <= ld[23:22];
+	// command {nRAS, nCAS, nWE}: NOP unless a step below clears a bit
+	//   precharge 010, auto refresh 001, load mode 000, active 011, write 100, read 101
+	command <= {~(st_pc || st_ar || st_lm || g_ld || go_ref),
+                ~(st_ar || st_lm || go_ref || g_rw),
+                ~(st_pc || st_lm || g_wr)};
+	dq_oe   <= g_wr;
+	if (g_wr) begin
+		dq_out <= saved_data;
+		wr_ack <= wr_req;
+	end
 
 	case (state)
-		STATE_STARTUP: begin
-			SDRAM_A  <= 13'd0;
-			SDRAM_BA <= 2'd0;
-			if (refresh_count == (STARTUP_MAX - 63) || refresh_count == (STARTUP_MAX - 31)) begin
-				command     <= CMD_PRECHARGE;
-				SDRAM_A[10] <= 1'b1;    // all banks
-			end
-			if (refresh_count == (STARTUP_MAX - 55) || refresh_count == (STARTUP_MAX - 23) ||
-			    refresh_count == (STARTUP_MAX - 47) || refresh_count == (STARTUP_MAX - 15))
-				command <= CMD_AUTO_REFRESH;
-			if (refresh_count == (STARTUP_MAX - 39) || refresh_count == (STARTUP_MAX - 7)) begin
-				command <= CMD_LOAD_MODE;
-				SDRAM_A <= MODE;
-			end
-			if (refresh_count == 14'd0) begin
-				state         <= STATE_IDLE;
-				refresh_count <= 14'd0;
-			end
-		end
-
-		STATE_IDLE_5: state <= STATE_IDLE_4;
-		STATE_IDLE_4: state <= STATE_IDLE_3;
-		STATE_IDLE_3: state <= STATE_IDLE_2;
-		STATE_IDLE_2: state <= STATE_IDLE_1;
-		STATE_IDLE_1: state <= STATE_IDLE;
-
-		STATE_RFSH: state <= STATE_IDLE_5;
-
-		STATE_IDLE: begin
-			// word address split: bank = [24:23], row = [22:10], column = [9:1]
-			// (32 MB module); cas_addr carries DQM in [12:11], auto-precharge in [10]
-			if (refresh_count > REFRESH_CYCLES) begin
-				state         <= STATE_RFSH;
-				command       <= CMD_AUTO_REFRESH;
-				refresh_count <= refresh_count - REFRESH_CYCLES + 1'd1;
-			end
-			else if (ch0_req != ch0_ack && !(rd_delay != 0 && rd_ch == 2'd0)) begin
-				{cas_addr[12:9], SDRAM_BA, SDRAM_A, cas_addr[8:0]} <= {2'b00, 1'b1, 1'b0, ch0_addr, 2'b00};
-				saved_wr <= 1'b0;
-				cur      <= 3'd0;
-				command  <= CMD_ACTIVE;
-				state    <= STATE_WAIT;
-			end
-			else if (ch1_req != ch1_ack && !(rd_delay != 0 && rd_ch == 2'd1)) begin
-				{cas_addr[12:9], SDRAM_BA, SDRAM_A, cas_addr[8:0]} <= {2'b00, 1'b1, 1'b0, ch1_addr, 2'b00};
-				saved_wr <= 1'b0;
-				cur      <= 3'd1;
-				command  <= CMD_ACTIVE;
-				state    <= STATE_WAIT;
-			end
-			else if (wr_req != wr_ack) begin
-				{cas_addr[12:9], SDRAM_BA, SDRAM_A, cas_addr[8:0]} <= {~wr_be, 1'b1, 1'b0, wr_addr};
-				saved_data <= wr_data;
-				saved_wr   <= 1'b1;
-				cur        <= 3'd4;
-				command    <= CMD_ACTIVE;
-				state      <= STATE_WAIT;
-			end
-			else if (ch2_req != ch2_ack && !(rd_delay != 0 && rd_ch == 2'd2)) begin
-				{cas_addr[12:9], SDRAM_BA, SDRAM_A, cas_addr[8:0]} <= {2'b00, 1'b1, 1'b0, ch2_addr, 2'b00};
-				saved_wr <= 1'b0;
-				cur      <= 3'd2;
-				command  <= CMD_ACTIVE;
-				state    <= STATE_WAIT;
-			end
-			else if (ch3_req != ch3_ack && !(rd_delay != 0 && rd_ch == 2'd3)) begin
-				{cas_addr[12:9], SDRAM_BA, SDRAM_A, cas_addr[8:0]} <= {2'b00, 1'b1, 1'b0, ch3_addr, 2'b00};
-				saved_wr <= 1'b0;
-				cur      <= 3'd3;
-				command  <= CMD_ACTIVE;
-				state    <= STATE_WAIT;
-			end
-		end
-
-		STATE_WAIT: state <= STATE_RW1;
-
-		STATE_RW1: begin
-			SDRAM_A <= cas_addr;
-			if (saved_wr) begin
-				command  <= CMD_WRITE;
-				dq_out   <= saved_data;
-				dq_oe    <= 1'b1;
-				wr_ack   <= wr_req;
-				state    <= STATE_IDLE_2;
-			end
-			else begin
-				command <= CMD_READ;
-				rd_ch   <= cur[1:0];
-				rd_delay[DLY] <= 1'b1;
-				state   <= STATE_IDLE_5;
-			end
-		end
-
-		default: state <= STATE_IDLE;
+		STATE_STARTUP: if (st_zero) state <= STATE_IDLE;     // refresh_count stays 0 (rc_n)
+		STATE_IDLE_5:  state <= STATE_IDLE_4;
+		STATE_IDLE_4:  state <= STATE_IDLE_3;
+		STATE_IDLE_3:  state <= STATE_IDLE_2;
+		STATE_IDLE_2:  state <= STATE_IDLE_1;
+		STATE_IDLE_1:  state <= STATE_IDLE;
+		STATE_RFSH:    state <= STATE_IDLE_5;
+		STATE_IDLE:    if (ref_due) state <= STATE_RFSH;     // an auto refresh goes out (command)
+					   else if (g_ld) state <= STATE_WAIT;   // an active goes out (command)
+		STATE_WAIT:    state <= STATE_RW1;
+		STATE_RW1:     state <= saved_wr ? STATE_IDLE_2 : STATE_IDLE_5;
+		default:       state <= STATE_IDLE;
 	endcase
 
-	if (init) begin
-		state         <= STATE_STARTUP;
-		refresh_count <= STARTUP_MAX - STARTUP_CYCLES;
-		rd_delay      <= 0;
-	end
+	if (init)
+		state <= STATE_STARTUP;                              // refresh_count, rd_delay: rc_n, rd_delay_n
 end
 
 `ifdef SDRAM_SIM
