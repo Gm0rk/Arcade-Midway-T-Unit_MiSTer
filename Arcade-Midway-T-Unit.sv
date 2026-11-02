@@ -87,13 +87,7 @@ localparam CONF_STR = {
 	"h4P6R[15],EJB Menu (Copyright Screen);",
 	"h4P6O[42],Moon Silhouettes Always,Off,On;",
 	"h4P6T[41],Reptile Fight Next;",
-	"h4P6O[43],Reptile Hints Always,Off,On;",
-	"h5P6O[17],Hitboxes,Off,On;",
-	"h5P6O[20],Jade Fight,Off,On;",
-	"h5P6O[19],Noob Saibot Fight,Off,On;",
-	"h5P6O[18],Pong at Battle 250,Off,On;",
 	"h5P6O[16],Security Screen,Off,On;",
-	"h5P6O[21],Smoke Fight,Off,On;",
 	"P6-;",
 	"P6-,EJB Menu: attract mode only;",
 	"h0C,Cheats;",
@@ -108,8 +102,9 @@ localparam CONF_STR = {
 	"V,v",`BUILD_DATE
 };
 
-// OSD menu mask bits (assigned in "Game configuration"): bit 0 Mortal Kombat
-// II, Plus included (the Cheats line); which secrets the loaded game has;
+// OSD menu mask bits (assigned in "Game configuration"): bit 0 a game with a
+// Cheats menu (menu_cheats: every game); the next bits which
+// secrets the loaded game has;
 // bits 8-11 the fighter picked on the Finishing Moves page;
 // bits 12 and 13 NBA Jam and TE (their own Secrets lines,
 // rtl/tunit_secrets_osd.svh); bit 14 the Fixed AI Difficulty line (MK and
@@ -118,7 +113,7 @@ localparam CONF_STR = {
 // (hide_ext, Mortal Kombat II Plus): they show or hide the Move List, the
 // Finishing Moves page and the Hidden Items page. The Plus set has a Move
 // List and a View Secrets list of its own (menu_plus).
-wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te;
+wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te, menu_cheats;
 wire        osd_ejb, osd_mk2, menu_plus;
 wire        lvl_items;
 wire  [3:0] fm_line;
@@ -155,7 +150,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({menu_plus, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], menu_mk2}),
+	.status_menumask     ({menu_plus, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], menu_cheats}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -316,6 +311,7 @@ assign menu_nba     = (game_id == G_NBAJAM) || (game_id == G_NBAJAMTE);
 assign menu_nj      = (game_id == G_NBAJAM);
 assign menu_te      = (game_id == G_NBAJAMTE);
 assign menu_jd      = (game_id == G_JDREDDP);
+assign menu_cheats  = menu_mk | menu_mk2 | menu_nba | menu_jd;   // every game has a Cheats menu
 assign osd_ejb      = menu_ejb & ~hide_ext;
 assign osd_mk2      = menu_mk2 & ~hide_ext;
 assign menu_plus    = menu_mk2 & hide_ext;
@@ -670,28 +666,24 @@ end
 // OSD secrets (Secret Menus, Hidden Items, Cheat Codes & Hidden Items)
 //
 // R[14] / R[15] play the loaded set's code 1 / code 2 (hidden menus, entered
-// on the controls during the attract mode; NBA Jam's tank game and TE's
-// tournament mode, entered on the Tonight's Match-Up screen and held until
-// the game takes them); the options switch its read patches through the
-// option slots of rtl/tunit_secrets.sv (MK: Reptile Fight Next, Moon
-// Silhouettes Always and Reptile Hints Always, see Reptile below; MK2,
-// O[21:16]: security screen, hitboxes, Pong at battle 250, Noob Saibot, Jade
-// and Smoke fights; NBA Jam and TE, O[55:48]: the power-ups, slots in the
-// order of tools/tunit_secrets.py's NJ_* / TE_* codes). The codes and patch
+// on the controls during the attract mode); the options switch its read
+// patches through the option slots of rtl/tunit_secrets.sv (MK: Reptile Fight
+// Next and Moon Silhouettes Always, see Reptile below; MK2, O[16]: the
+// security screen; TE, O[53]: No CPU Assistance). The other items that used to
+// be here (the power-ups of NBA Jam and TE, their Tank Game and Tournament
+// Mode, MK's Reptile Hints, MK2's hitboxes, Pong, Noob Saibot, Jade and Smoke
+// fights) are cheats in the OSD's Cheats menu now. The codes and patch
 // addresses come with the MRA (ROM index 1), found per revision by
 // tools/tunit_secrets.py.
 // Frames are counted while the game runs, so with "Pause when OSD is open"
 // a code starts when the OSD closes.
 //////////////////////////////////////////////////////////////////
 
-wire  [1:0] te_head  = status[49:48];          // TE Head Size: Normal, Big, Huge
 reg         rep_arm  = 1'b0;                   // MK: Reptile Fight Next set (Reptile below)
 wire [10:0] sec_opt  = hide_ext ? 11'd0 :
-                       menu_mk2 ? {5'd0, status[21:16]} :
-                       menu_mk  ? {8'd0, status[43], status[42], rep_arm} :
-                       menu_nj  ? {6'd0, status[53], status[52], status[51], status[50], status[48]} :
-                       menu_te  ? {3'd0, status[53], status[52], status[50], status[51], status[55],
-                                   status[54], te_head == 2'd2, te_head != 2'd0} :
+                       menu_mk2 ? {10'd0, status[16]} :
+                       menu_mk  ? {9'd0, status[42], rep_arm} :
+                       menu_te  ? {3'd0, status[53], 7'd0} :
                                   11'd0;
 wire [10:0] opt_avail;
 
@@ -701,9 +693,12 @@ wire   [7:0] pt_en;
 wire   [7:0] pt_fetch;           // entry is program code: instruction fetches only
 wire [223:0] ck_addr;            // the OSD cheats' entries (rtl/tunit_cheats.sv)
 wire [127:0] ck_data;
+wire [127:0] ck_mask;            // the bits of the word each entry's value covers
 wire   [7:0] ck_en;
 wire   [7:0] ck_fetch;
 wire   [7:0] ck_store;           // entry also replaces the value the CPU writes
+wire   [7:0] ck_pk;              // the entry is a one-shot write (no read patch)
+wire   [7:0] ck_fire;            // one clock: that one-shot is new
 wire         cpu_rd;             // the board's completed CPU reads (a code's success)
 wire         cpu_wr;             // and writes (the finishing-move player follows the fight)
 wire  [27:0] cpu_wa;
@@ -749,11 +744,11 @@ tunit_secrets secrets
 );
 
 //////////////////////////////////////////////////////////////////
-// Cheats (Mortal Kombat II)
+// Cheats
 //
 // "C,Cheats;" in CONF_STR shows the MRA's <cheats> list (Infinite Health P1,
-// Infinite Health P2, Infinite Round Time, Stop Finishing Move Timer), for
-// every Mortal Kombat II set, Plus included (menu mask bit 0). Main_MiSTer
+// Infinite Lives, Infinite Turbo, ...), for every set of every game, Plus
+// included (menu mask bit 0). Main_MiSTer
 // sends every switched-on cheat as one download with index 255 each time the
 // menu toggles one (a lone 2-byte word when none is on); rtl/tunit_cheats.sv
 // turns the 8-byte units into 8 more read patches for the board, beside the
@@ -778,9 +773,12 @@ tunit_cheats cheats
 
 	.ck_addr    (ck_addr),
 	.ck_data    (ck_data),
+	.ck_mask    (ck_mask),
 	.ck_en      (ck_en),
 	.ck_fetch   (ck_fetch),
-	.ck_store   (ck_store)
+	.ck_store   (ck_store),
+	.ck_pk      (ck_pk),
+	.ck_fire    (ck_fire)
 );
 
 //////////////////////////////////////////////////////////////////
@@ -837,23 +835,33 @@ end
 // word: the AI picks entries of its 10-entry tables with it, the game raises
 // it after matches won and lowers it after matches lost. The MRA gives the
 // word's address (ROM index 1, bytes 0x454-0x457, tools/tunit_fmoves.py;
-// 0: none, and the OSD line is hidden). While O[113:110] is not Off, the
-// board returns the chosen level for the CPU's reads of that word (with
-// interrupts enabled, rtl/midway_tunit.sv "Read patches"): the game's own
-// writes go on as before, so Off hands its own value back at once. It is off
-// while the test menu is selected (the Service Mode option, a test button or
-// the Test Switch DIP), so the diagnostics see the game's RAM as it is.
+// 0: none, and the OSD line is hidden) and, behind it, the CPU's PC just
+// after the store with which the demo fights between games set the level
+// (bytes 0x458-0x45B). While O[113:110] is not Off, the board returns the
+// chosen level for the CPU's reads of that word (with interrupts enabled,
+// rtl/midway_tunit.sv "Read patches"): the game's own writes go on as before,
+// so Off hands its own value back at once. The demo fights keep the game's
+// own level (5). It is off while the test menu is selected (the Service Mode
+// option, a test button or the Test Switch DIP), so the diagnostics see the
+// game's RAM as it is.
 //////////////////////////////////////////////////////////////////
 
-reg  [27:0] lvl_wa = 28'd0;     // the AI level word's word address (0: none)
+reg  [27:0] lvl_wa  = 28'd0;    // the AI level word's word address (0: none)
+reg  [27:0] lvl_dpc = 28'd0;    // the PC (word address) after the demo fights' store of it (0: none)
 
 always @(posedge clk_sys) begin
-	if (secrets_dl & ~secrets_dl_d)
-		lvl_wa <= 28'd0;
+	if (secrets_dl & ~secrets_dl_d) begin
+		lvl_wa  <= 28'd0;
+		lvl_dpc <= 28'd0;
+	end
 	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h454)
-		lvl_wa[15:0]  <= ioctl_dout;
+		lvl_wa[15:0]   <= ioctl_dout;
 	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h456)
-		lvl_wa[27:16] <= ioctl_dout[11:0];
+		lvl_wa[27:16]  <= ioctl_dout[11:0];
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h458)
+		lvl_dpc[15:0]  <= ioctl_dout;
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h45A)
+		lvl_dpc[27:16] <= ioctl_dout[11:0];
 end
 
 wire [3:0] lvl_sel  = status[113:110];                    // Off, then levels 0-9
@@ -1037,9 +1045,13 @@ midway_tunit board
 	.pt_en          ({ck_en, pt_en}),
 	.pt_fetch       ({ck_fetch, pt_fetch}),         // program code patches: instruction fetches only
 	.pt_store       ({ck_store, 8'd0}),             // cheat entries that also replace the CPU's writes
+	.pt_mask        ({ck_mask, {8{16'hFFFF}}}),     // the secrets' entries cover the whole word
+	.pt_pk          (ck_pk),                        // cheat entries that are one-shot writes
+	.pt_fire        (ck_fire),
 
 	.lvl_on         (lvl_on),           // Fixed AI Difficulty
 	.lvl_addr       (lvl_wa),
+	.lvl_dpc        (lvl_dpc),
 	.lvl_val        (lvl_val),
 
 	.snd_wr         (snd_wr),
@@ -1096,7 +1108,8 @@ midway_tunit board
 	.dbg_wa         (cpu_wa),
 	.dbg_wdata      (cpu_wd),
 	.dbg_rdata      (),
-	.dbg_ie         ()
+	.dbg_ie         (),
+	.dbg_lvl_demo   ()
 );
 
 assign DDRAM_CLK = clk_sys;
