@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II (rev L3.1)</name>
-	<mratimestamp>20261029</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2</setname>
 	<year>1993</year>
@@ -35,8 +35,8 @@ rom index 3 (SDRAM 0xD00000):
 	<rom index="1">
 		<!-- game id and secrets table (rtl/tunit_secrets.sv): EJB code FFA1D4E0 (27 presses), menu FFA1D3A0; security screen branches FFA1DA90 FFA1DAC0; hitbox flag 01061FB0; battle counter 01061B40; Noob Saibot check FFA188F0 (50 wins); Jade check FFA199F0 (battle 10); Smoke check FFA19FD0 (stage 7) -->
 		<part>
-		02 00 01 00 A9 1D FA 1F 00 03 AC 1D FA 1F 00 03 FB 61 10 20 01 00 B4 61 10 30 FA 00 A5 18 FA 6F
-		00 00 A4 19 FA 7F 00 03 DA 19 FA 7F 06 C0 11 1A FA 8F 12 C0 20 00 00 00 3A 1D FA 0F 00 00 00 00
+		02 00 01 00 A9 1D FA 1F 00 03 AC 1D FA 1F 00 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 3A 1D FA 0F 00 00 00 00
 		20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 00
 		20 00 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
@@ -45,12 +45,12 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 80
 		</part>
-		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; AI level word 01061AD0 -->
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; AI level word 01061AD0; demo store PC FF827BA0 -->
 		<part repeat="744">00</part>
 		<part>
 		01 00 00 00 B0 61 10 00 28 60 10 00 E5 60 10 00 2F 60 10 00 EC 60 10 00 22 60 10 00 DF 60 10 00
 		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 C0 27 8C FF 10 7E A1 FF 70 F2 82 FF 09 0E 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AD 61 10 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AD 61 10 00 BA 27 F8 0F
 		</part>
 	</rom>
 	<rom index="0" zip="mk2.zip" md5="61472fc68c72bdd63567de43c6d5621d" type="merged">
@@ -89,11 +89,51 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
-	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150 -->
+	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150; 44 cheats -->
 	<cheats size="8" max="8">
-		<cheat name="Infinite Health P1">2F60 1000 A100 0200</cheat>
-		<cheat name="Infinite Health P2">EC60 1000 A100 0200</cheat>
-		<cheat name="Infinite Round Time">FA19 F80F 4A4D 0100</cheat>
-		<cheat name="Stop Finishing Move Timer">151F F80F FF7F 0100</cheat>
+		<cheat name="Allow Fighting Before Round">D414 F81F 2002 FFFF D714 F81F FFFF FFFF D814 F81F 01CA FFFF 212F F81F 0003 FFFF</cheat>
+		<cheat name="Always Play Pong">B461 1000 FA00 FFFF</cheat>
+		<cheat name="Always Toasty Uppercut">00DF F81F 11C0 FFFF 12DF F81F 80C0 FFFF 161A FA1F C009 FFFF</cheat>
+		<cheat name="Ball Breaker Mode">8274 F81F 0003 FFFF 8574 F81F 0003 FFFF 8974 F81F 0003 FFFF 8F74 F81F 0003 FFFF</cheat>
+		<cheat name="Bloody Floors">E1B0 F91F 0001 FFFF</cheat>
+		<cheat name="CPU Throwing Disabled">8B34 F81F 22C0 FFFF 78B5 F91F 5EC0 FFFF 31B7 F91F 0CC0 FFFF FCC9 F91F 02C0 FFFF F4CA F91F 14C0 FFFF 0CCB F91F 07C0 FFFF B7CF F91F 02C0 FFFF</cheat>
+		<cheat name="CPU Won't Block">94B2 F91F 22C0 FFFF</cheat>
+		<cheat name="Disable Blocking">9337 F81F 0AC0 FFFF</cheat>
+		<cheat name="En Cage's Shadow Smash">618F F81F 0500 FFFF C58F F81F 0500 FFFF AE8F F81F 0500 FFFF 25D4 F81F 3083 FFFF 26D4 F81F 8DFF FFFF</cheat>
+		<cheat name="En Reptile Invisible Slice">3E6A F81F 0000 FFFF</cheat>
+		<cheat name="En Sub-Z Shatter No Freeze">E865 F81F 0000 FFFF</cheat>
+		<cheat name="Enable Cage Kick Fatality">E5C4 F81F 2000 FFFF</cheat>
+		<cheat name="Finish Him/Her Every Round">2519 F81F 0003 FFFF</cheat>
+		<cheat name="Hit Anywhere (Both Players)">B835 F81F 04C0 FFFF</cheat>
+		<cheat name="Infinite Health P1">2F60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Health P2">EC60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Round Time">FA19 F81F 4A4D FFFF</cheat>
+		<cheat name="Jade Fight no Low Kick">A419 FA1F 0003 FFFF DA19 FA1F 06C0 FFFF</cheat>
+		<cheat name="Johnny Cage Red Shadow">7C8F F81F 0003 FFFF</cheat>
+		<cheat name="Kombat Tomb stage auto fall">1AEB F81F 0003 FFFF</cheat>
+		<cheat name="Night Mode">6CF8 F91F 03C0 FFFF</cheat>
+		<cheat name="P1 Drain all Energy Now!">2F60 1040 0100 FFFF</cheat>
+		<cheat name="P2 Drain all Energy Now!">EC60 1040 0100 FFFF</cheat>
+		<cheat name="Play on Goro's Lair Stage">AD26 F81F F5FF FFFF</cheat>
+		<cheat name="Play Pong After Every Round">F018 F81F 0003 FFFF FA18 F81F FFFF FFFF FB18 F81F 11CA FFFF</cheat>
+		<cheat name="Press Start To Fight Smoke">111A FA1F 12C0 FFFF</cheat>
+		<cheat name="Projectiles work on Jade">B5B6 F81F 0003 FFFF</cheat>
+		<cheat name="Rem Friendship Requirements">8280 F81F 0003 FFFF 8880 F81F 0003 FFFF 1D7E F81F 0003 FFFF 237E F81F 0003 FFFF</cheat>
+		<cheat name="Rem KL Accuracy Requirement">CEE0 F81F 0003 FFFF</cheat>
+		<cheat name="Remove Stage Restriction">6C29 F81F 80C0 FFFF 6D29 F81F 509A FFFF 6E29 F81F 82FF FFFF</cheat>
+		<cheat name="Restore Fatality Sounds">B4CD F81F 02C0 FFFF B3C5 F81F C309 FFFF B4C5 F81F F600 FFFF B6C5 F81F A03B FFFF</cheat>
+		<cheat name="Restore Kintaro's Kick">1ECB F91F A0FF FFFF</cheat>
+		<cheat name="Restore Shang Tsung's">2A62 F81F 01C0 FFFF</cheat>
+		<cheat name="Restore Shang Tsung's Laugh">3815 FA1F C009 FFFF 3915 FA1F 4900 FFFF 3B15 FA1F 3024 FFFF 3C15 FA1F A1FF FFFF 3E15 FA1F 0B00 FFFF</cheat>
+		<cheat name="Secret Game Over Screen">EC1F F81F 0003 FFFF</cheat>
+		<cheat name="Select Alternate Outfit">4E95 F81F 307B FFFF F406 F91F 307B FFFF 7607 F91F 307B FFFF 5295 F81F 1079 FFFF 0607 F91F 1079 FFFF 8107 F91F 1079 FFFF</cheat>
+		<cheat name="Shao Kahn Always Taunts">BF14 FA1F 0003 FFFF</cheat>
+		<cheat name="Show Hitboxes">FB61 1000 0100 FFFF</cheat>
+		<cheat name="Skip CPU Ladder Screen">E018 F81F 02C0 FFFF</cheat>
+		<cheat name="Skip Two Player Vs Screen">C0A1 F81F 00C0 FFFF</cheat>
+		<cheat name="Smoke and Jade Clues">2E1C F81F 0003 FFFF</cheat>
+		<cheat name="Stop Finishing Move Timer">151F F81F FF7F FFFF</cheat>
+		<cheat name="Vs Throwing Disabled">76A2 F81F 09C0 FFFF</cheat>
+		<cheat name="Winner Battles Noob Saibot">A518 FA1F 0000 FFFF</cheat>
 	</cheats>
 </misterromdescription>
