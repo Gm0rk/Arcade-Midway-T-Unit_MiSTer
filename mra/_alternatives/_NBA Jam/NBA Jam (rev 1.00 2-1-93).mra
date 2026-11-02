@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam (rev 1.00 2/1/93)</name>
-	<mratimestamp>20261015</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajamr1</setname>
 	<year>1993</year>
@@ -28,11 +28,11 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code (no second part); tank game FF8D65C0; power-ups: big heads 010E58C0 only -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code (no second part); power-ups: big heads 010E58C0 only -->
 		<part>
-		03 00 01 00 8C E5 10 10 0F 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 28 80 00 00 00 00 5C D6 F8 0F
-		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 80 72 70 FA 00 72 70 FA 00 00 00 02 80
+		03 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
+		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 80
 		</part>
 	</rom>
 	<rom index="0" zip="nbajamr1.zip|nbajam.zip" md5="45501796728e6d9617079e082c5d7a26" type="merged">
@@ -76,4 +76,12 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="b6fe24bd" name="l1_nba_jam_u13_sound_rom.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): power-ups: big heads 010E58C0 only; 5 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="P1 Big Head">8CE5 1000 0100 0100</cheat>
+		<cheat name="P2 Big Head">8CE5 1000 0200 0200</cheat>
+		<cheat name="P3 Big Head">8CE5 1000 0400 0400</cheat>
+		<cheat name="P4 Big Head">8CE5 1000 0800 0800</cheat>
+		<cheat name="Play Hidden 3D Tank Game">943C F81F 0003 FFFF</cheat>
+	</cheats>
 </misterromdescription>
