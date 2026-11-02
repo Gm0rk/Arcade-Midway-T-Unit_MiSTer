@@ -16,8 +16,8 @@ mra/_alternatives/_<Game>/. Each MRA carries
     extras (hbmame_sets.py hide_extras: Mortal Kombat II Plus) has the game
     id with the flag instead: no table, and the OSD shows the hack's Move
     List and View Secrets (tools/tunit_plus.py) but no Finishing Moves or
-    Hidden Items (and the AI level word, at byte 0x454); it has the cheats
-    like the other Mortal Kombat II sets,
+    Hidden Items (and the AI level word and the demo store, at bytes
+    0x454-0x45B); it has the cheats like the other Mortal Kombat II sets,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
   - MAME's DIP switches for the set (less the ones the set does not use,
@@ -286,7 +286,7 @@ def main():
         out += st[3][2]
         out.append('\t</romstruct>')
 
-        cheat_out = []                  # the <cheats> block (Mortal Kombat II sets)
+        cheat_out = []                  # the <cheats> block (every set's)
         prog = mame_src.build_region(g.romset.regions['maincpu'], gz) if gz else None
         out.append('\t<rom index="1">')
         if getattr(g, 'hide_extras', False):
@@ -301,7 +301,7 @@ def main():
             out.append('\t\t</part>')
             lv, lv_note = tunit_fmoves.level_part(prog) if gz else (b'', '')
             if lv:
-                # at bytes 0x454-0x457 (rtl/tunit_fmoves.sv's words 0x22A-0x22B)
+                # at bytes 0x454-0x45B (rtl/tunit_fmoves.sv's words 0x22A-0x22D)
                 out.append('\t\t<!-- %s (Fixed AI Difficulty) -->' % escape(lv_note))
                 out.append('\t\t<part repeat="%d">00</part>'
                            % ((tunit_fmoves.CFG_BASE + tunit_fmoves.LVL_WORD) * 2 - len(table)))
@@ -330,7 +330,7 @@ def main():
             out.append('\t\t<part>%02X</part>' % gid)
         out.append('\t</rom>')
         if prog is not None:
-            ck, ck_notes = tunit_cheats.build(gid, prog)
+            ck, ck_notes = tunit_cheats.build(gid, prog, g.name, plus=getattr(g, 'hide_extras', False))
             if ck:
                 # the OSD's Cheats menu (tools/tunit_cheats.py, rtl/tunit_cheats.sv)
                 cheat_out.append('\t<!-- cheats (rtl/tunit_cheats.sv): %s -->' % escape('; '.join(ck_notes)))
