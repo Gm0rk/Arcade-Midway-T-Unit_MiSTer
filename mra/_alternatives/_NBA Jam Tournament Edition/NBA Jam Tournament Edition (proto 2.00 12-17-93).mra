@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam Tournament Edition (proto 2.00 12/17/93)</name>
-	<mratimestamp>20261011</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajamtep2</setname>
 	<year>1993</year>
@@ -30,14 +30,14 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9555D0 (11 presses); tournament mode FF92F150; power-ups: counters 010EB150, big heads 010E6950, quick hands 010E6960, 8 patches -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9555D0 (11 presses); power-ups: counters 010EB150, big heads 010E6950, quick hands 010E6960, 8 patches -->
 		<part>
-		04 00 01 00 95 E6 10 10 0F 00 96 E6 10 70 0F 00 19 EB 10 90 01 00 AA EA 10 30 01 00 1F EB 10 60
-		0F 00 4C 76 F8 2F 03 C0 6A A5 F8 8F 00 03 1A EB 10 A0 01 00 20 00 54 80 00 00 00 00 15 2F F9 0F
+		04 00 01 00 1A EB 10 A0 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
 		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 00 40 00 03 00 00 00 03 00 40 00 03 00 00 00 03 00
 		00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 20 03 00 00 00 03 00
 		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
-		00 40 03 00 00 00 03 80 78 00 1E 00 00 00 02 80
+		00 40 03 00 00 00 03 80
 		</part>
 	</rom>
 	<rom index="0" zip="nbajamtep2.zip|nbajamte.zip" md5="9851a34239a27f640150520ee3031b5c" type="merged">
@@ -81,4 +81,27 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="6f27b202" name="l1_nba_jam_tournament_u13_sound_rom.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): power-ups: counters 010EB150, big heads 010E6950, quick hands 010E6960, 8 patches; 20 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="Baby Size Players">AAEA 1000 0100 FFFF</cheat>
+		<cheat name="Huge Heads">4C76 F81F 03C0 FFFF</cheat>
+		<cheat name="P1 Big/Huge Head">95E6 1000 0100 0100</cheat>
+		<cheat name="P1 Max Power">1FEB 1000 0100 0100</cheat>
+		<cheat name="P1 Powerup Goal Tending">15EB 1000 1800 FFFF</cheat>
+		<cheat name="P1 Quick Hands">96E6 1000 0100 0100</cheat>
+		<cheat name="P2 Big/Huge Head">95E6 1000 0200 0200</cheat>
+		<cheat name="P2 Max Power">1FEB 1000 0200 0200</cheat>
+		<cheat name="P2 Powerup Goal Tending">16EB 1000 1800 FFFF</cheat>
+		<cheat name="P2 Quick Hands">96E6 1000 0200 0200</cheat>
+		<cheat name="P3 Big/Huge Head">95E6 1000 0400 0400</cheat>
+		<cheat name="P3 Max Power">1FEB 1000 0400 0400</cheat>
+		<cheat name="P3 Powerup Goal Tending">17EB 1000 1800 FFFF</cheat>
+		<cheat name="P3 Quick Hands">96E6 1000 0400 0400</cheat>
+		<cheat name="P4 Big/Huge Head">95E6 1000 0800 0800</cheat>
+		<cheat name="P4 Max Power">1FEB 1000 0800 0800</cheat>
+		<cheat name="P4 Powerup Goal Tending">18EB 1000 1800 FFFF</cheat>
+		<cheat name="P4 Quick Hands">96E6 1000 0800 0800</cheat>
+		<cheat name="Shot Percentage">19EB 1000 0100 FFFF</cheat>
+		<cheat name="Tournament Mode">1BEB 1000 0100 FFFF</cheat>
+	</cheats>
 </misterromdescription>
