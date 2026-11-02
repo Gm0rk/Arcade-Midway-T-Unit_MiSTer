@@ -27,47 +27,35 @@ Test (service mode) and Pause.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Eight extras across the five versions: one hidden menu, five cheat options, the tank game, and a Secret Player List window with 13 secret players and the cheat codes. Revision limits are noted per row.
+Three extras across the five versions: one hidden menu, a Cheats menu (26 cheats on 3.01, 20 on 2.00, 4 to 5 on the others) and a Secret Player List window with 13 secret players and the cheat codes. Revision limits are noted per row.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
 | Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on 1.00, 2.00 and the prototypes). Attract mode only | Cheat Codes & Hidden Items |
-| Big Heads | Big heads for all players, from the next game. The only power-up in 1.00 and the prototypes | Cheat Codes & Hidden Items |
-| No CPU Assistance | Turns off the computer assistance that keeps games close (3.01) | Cheat Codes & Hidden Items |
-| Power-Up Defense | The POWERUP DEF code for all players (3.01 and 2.00) | Cheat Codes & Hidden Items |
-| Power-Up Interceptions | The POWERUP INT code for all players (3.01 and 2.00) | Cheat Codes & Hidden Items |
-| Shot Percentage | The shot percentage display (3.01 and 2.00) | Cheat Codes & Hidden Items |
-| Tank Game | Pick it on Tonight's Match-Up: the core holds the code until the game takes it, and the hidden 3D tank game ("YOU ARE DEAD!") is played instead of the tip-off (1.00, 2.00 and 3.01; 3.01 once a game) | Cheat Codes & Hidden Items |
-| Secret Player List window | Page 1 lists the 13 secret players with name, initials, birthday and versions; Page 2 lists every cheat code as the players enter it. The game waits while it is shown | View Secret Players (main menu) |
+| Cheats menu | The power-ups for each of the four players (big head, power-up defense and interceptions; Big Head on every version), Shot Percentage, Computer Assistance Turned Off, the hidden 3D tank game (1.00, 2.00 and 3.01) and the cheats of MAME's cheat file: infinite turbo for each player, infinite quarter and shot time, never miss a shot, dunks from anywhere and more. The list is on the NBA Jam page | Cheats |
+| Secret Player List window | Page 1 lists the 13 secret players with name, initials, birthday and versions; Page 2 lists every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
 
 <!-- extra-content:end -->
 
 ## Secrets
 
-View Secret Players (OSD main menu: Off, Page 1, ...) shows a window over
-the game, on the title screen, with the hidden players (below): their
-names, initials, birthdays and the versions that have them, and the cheat
-codes as the players enter them (below). Page 1 has the players, Page 2 the codes. The game waits while
-the window is on; set it to Off to play on.
+View Secret Players (OSD main menu: Off, On) shows a window over the game,
+on the title screen, with the hidden players (below): their names,
+initials, birthdays and the versions that have them, and the cheat codes as
+the players enter them (below). Page 1 has the players, Page 2 the codes.
+Set it On, close the OSD, and turn the pages with Left and Right on either
+controller (Right on page 2 goes round to page 1); open the OSD and set it
+Off to play on. The game waits while the window is on.
 
 On the OSD's Cheat Codes & Hidden Items page:
 
 | OSD item | What it does |
 |---|---|
 | Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on revisions 1.00 and 2.00 and the prototypes). In the attract mode only |
-| Big Heads | Big heads for all players (the game's BIG HEAD code), from the next game |
-| No CPU Assistance | Turns off the computer assistance that keeps games close (revision 3.01) |
-| Power-Up Defense | The power-up defense code (POWERUP DEF) for all players (revisions 3.01 and 2.00) |
-| Power-Up Interceptions | The power-up interceptions code (POWERUP INT) for all players (revisions 3.01 and 2.00) |
-| Shot Percentage | The shot percentage display (revisions 3.01 and 2.00) |
-| Tank Game | Pick it on the Tonight's Match-Up screen: the core holds the code on the controls until the game takes it, and a hidden 3D tank game ("YOU ARE DEAD!") is played instead of the tip-off (revisions 1.00, 2.00 and 3.01; 3.01 once a game) |
 
-The game takes its power-up codes on the Tonight's Match-Up screen, for
-one game and one player; the options give them to all four players
-until they are switched off. When the OSD closes, a message says that an
-option is on, whether the game took a code, or that the loaded version
-does not have the item. Big Heads is the only power-up in revision 1.00
-and the prototypes.
+The power-ups, Shot Percentage, No CPU Assistance and the Tank Game are in the
+[Cheats](#cheats) menu. When the OSD closes, a message says whether the game
+took the secret menu code.
 
 ### Cheat codes
 
@@ -109,3 +97,53 @@ shows.
 | Stephen Howard | Howard | HOW | Jul 15 | 1.00, 2.00, 3.01 |
 | Willie Morris Jr. | Air Morris | WIL | Jan 1 | 1.00, 2.00, 3.01 |
 | Tony Scott | Scott | TON | Jul 3 | 1.00, 2.00, 3.01 |
+
+## Cheats
+
+The OSD's Cheats menu (on the main menu, below Cheat Codes & Hidden Items)
+lists the cheats of the loaded version: 26 on rev 3.01, 20 on rev 2.00, 5 on
+rev 1.00 and 4 on each prototype. Select one to switch it on or off; a mark
+shows the ones that are on. All are off each time a game loads: the OSD does
+not keep them across loads.
+
+The power-ups of the four players (Big Head on every version, Powerup Defense
+and Powerup Intercept on 3.01 and 2.00), Shot Percentage, Computer Assistance
+Turned (off) and Play Hidden 3D Tank Game are found in each version's
+program; each player has a cheat for each power-up. The others are from MAME's cheat files for rev 3.01 and rev 2.00, whose addresses
+are for those revisions only. The names are MAME's, cut to the 27 characters
+the OSD shows. Versions are named by their MAME set (see
+[Versions](#versions)).
+
+| Cheat | Units | Versions |
+|---|---|---|
+| Computer Assistance Turned | 1 | nbajam |
+| Disable In-Game Play Tip | 2 | nbajam |
+| Dunk/Glide/Layup Anywhere | 6 | nbajam |
+| Dunks Always Break Backbrd | 1 | nbajam |
+| Infinite Quarter Time | 2 | nbajam, nbajamr2 |
+| Infinite Shot Time | 1 | nbajam, nbajamr2 |
+| Invincibility on 3D Tank | 1 | nbajam |
+| Never Miss A Shot | 2 | nbajam |
+| P1 Big Head | 1 | All |
+| P1 Infinite Turbo | 1 | nbajam, nbajamr2 |
+| P1 Powerup Defense | 1 | nbajam, nbajamr2 |
+| P1 Powerup Intercept | 1 | nbajam, nbajamr2 |
+| P2 Big Head | 1 | All |
+| P2 Infinite Turbo | 1 | nbajam, nbajamr2 |
+| P2 Powerup Defense | 1 | nbajam, nbajamr2 |
+| P2 Powerup Intercept | 1 | nbajam, nbajamr2 |
+| P3 Big Head | 1 | All |
+| P3 Infinite Turbo | 1 | nbajam, nbajamr2 |
+| P3 Powerup Defense | 1 | nbajam, nbajamr2 |
+| P3 Powerup Intercept | 1 | nbajam, nbajamr2 |
+| P4 Big Head | 1 | All |
+| P4 Infinite Turbo | 1 | nbajam, nbajamr2 |
+| P4 Powerup Defense | 1 | nbajam, nbajamr2 |
+| P4 Powerup Intercept | 1 | nbajam, nbajamr2 |
+| Play Hidden 3D Tank Game | 1 | All but nbajamp1, nbajamp2 |
+| Shot Percentage | 1 | nbajam, nbajamr2 |
+
+How a cheat acts: one that sets a value makes the game read that value from the word it names, or only the bits of the word it covers (one byte, one player's flag), whenever the CPU reads it while the game runs with interrupts on; the game's own value is never written over, so switching the cheat off gives the game back at once, and the diagnostics' RAM test sees the game as it is. One that changes the game's program replaces a word of it as the CPU fetches it as an instruction; nothing is written to the ROM. The Units column is how many of the core's 8 cheat entries a cheat uses: switch cheats on until their units add up to 8 at most; the menu refuses a switch-on that would pass 8.
+
+The game's own codes (see Cheat codes above) work as before. A power-up
+cheat gives its power-up to one player without entering the code.
