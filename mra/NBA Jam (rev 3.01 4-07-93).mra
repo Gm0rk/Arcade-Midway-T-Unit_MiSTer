@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>NBA Jam (rev 3.01 4/07/93)</name>
-	<mratimestamp>20261011</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>nbajam</setname>
 	<year>1993</year>
@@ -31,14 +31,14 @@ rom index 3 (SDRAM 0xD00000):
 0x040000 OKI M6295 samples (1 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9217E0 (11 presses); tank game FF8E1010; power-ups: counters 010F1250, big heads 010E59C0, interceptions 010E59D0, 5 patches -->
+		<!-- game id and secrets table (rtl/tunit_secrets.sv): secret menu code, second part FF9217E0 (11 presses); power-ups: counters 010F1250, big heads 010E59C0, interceptions 010E59D0, 5 patches -->
 		<part>
-		03 00 01 00 9C E5 10 10 0F 00 9D E5 10 30 0F 00 29 F1 10 60 01 00 58 84 F8 2F 00 03 2A F1 10 70
-		01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 54 80 00 00 00 00 01 E1 F8 0F
+		03 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00 00
 		71 71 03 00 00 00 01 00 02 02 5A 00 00 00 14 00 40 00 03 00 00 00 03 00 40 00 03 00 00 00 03 00
 		00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 10 03 00 00 00 03 00 00 20 03 00 00 00 03 00
 		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
-		00 40 03 00 00 00 03 80 72 70 FA 00 72 70 FA 00 00 00 02 80
+		00 40 03 00 00 00 03 80
 		</part>
 	</rom>
 	<rom index="0" zip="nbajam.zip" md5="ec636915caaa4d85a59093937218626f" type="merged">
@@ -82,4 +82,33 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="b6fe24bd" name="l1_nba_jam_u13_sound_rom.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): power-ups: counters 010F1250, big heads 010E59C0, interceptions 010E59D0, 5 patches; 26 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="Computer Assistance Turned">2AF1 1000 0100 FFFF</cheat>
+		<cheat name="Disable In-Game Play Tip">7B0A F91F 08C0 FFFF 8B0E F91F 1DC0 FFFF</cheat>
+		<cheat name="Dunk/Glide/Layup Anywhere">EF63 F81F 01C0 FFFF F363 F81F 01C0 FFFF 3664 F81F 1CC0 FFFF 7B64 F81F 0FC0 FFFF B364 F81F 0FC0 FFFF D064 F81F 01C0 FFFF</cheat>
+		<cheat name="Dunks Always Break Backbrd">5982 F81F 22C0 FFFF</cheat>
+		<cheat name="Infinite Quarter Time">F5F0 1000 0509 FFFF F4F0 1000 0009 00FF</cheat>
+		<cheat name="Infinite Shot Time">F1F0 1000 0900 FF00</cheat>
+		<cheat name="Invincibility on 3D Tank">DAE8 F81F 0003 FFFF</cheat>
+		<cheat name="Never Miss A Shot">2B7F F81F 76CB FFFF 6B81 F81F 00C4 FFFF</cheat>
+		<cheat name="P1 Big Head">9CE5 1000 0100 0100</cheat>
+		<cheat name="P1 Infinite Turbo">3DE5 1000 2F00 FF00</cheat>
+		<cheat name="P1 Powerup Defense">25F1 1000 0800 FFFF</cheat>
+		<cheat name="P1 Powerup Intercept">9DE5 1000 0100 0100</cheat>
+		<cheat name="P2 Big Head">9CE5 1000 0200 0200</cheat>
+		<cheat name="P2 Infinite Turbo">50E5 1000 2F00 FF00</cheat>
+		<cheat name="P2 Powerup Defense">26F1 1000 0800 FFFF</cheat>
+		<cheat name="P2 Powerup Intercept">9DE5 1000 0200 0200</cheat>
+		<cheat name="P3 Big Head">9CE5 1000 0400 0400</cheat>
+		<cheat name="P3 Infinite Turbo">63E5 1000 2F00 FF00</cheat>
+		<cheat name="P3 Powerup Defense">27F1 1000 0800 FFFF</cheat>
+		<cheat name="P3 Powerup Intercept">9DE5 1000 0400 0400</cheat>
+		<cheat name="P4 Big Head">9CE5 1000 0800 0800</cheat>
+		<cheat name="P4 Infinite Turbo">76E5 1000 2F00 FF00</cheat>
+		<cheat name="P4 Powerup Defense">28F1 1000 0800 FFFF</cheat>
+		<cheat name="P4 Powerup Intercept">9DE5 1000 0800 0800</cheat>
+		<cheat name="Play Hidden 3D Tank Game">1F3D F81F 0003 FFFF</cheat>
+		<cheat name="Shot Percentage">29F1 1000 0100 FFFF</cheat>
+	</cheats>
 </misterromdescription>
