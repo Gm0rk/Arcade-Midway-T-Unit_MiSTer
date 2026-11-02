@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Mortal Kombat II Plus (Beta 2, hack)</name>
-	<mratimestamp>20261030</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>mk2p</setname>
 	<year>1993</year>
@@ -37,10 +37,10 @@ rom index 3 (SDRAM 0xD00000):
 		<part>
 		02 01 01 00
 		</part>
-		<!-- AI level word 01061AD0 (Fixed AI Difficulty) -->
+		<!-- AI level word 01061AD0, demo fights set it at FF827BA0 (PC after the store) (Fixed AI Difficulty) -->
 		<part repeat="1104">00</part>
 		<part>
-		AD 61 10 00
+		AD 61 10 00 BA 27 F8 0F
 		</part>
 	</rom>
 	<rom index="0" zip="/hbmame/mk2.zip" md5="f27539dc97987541eddfe6af46ae557f" type="merged">
@@ -79,11 +79,11 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
-	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FFD463E0; FINISH HIM wait FFC79740, FFC797F0 -->
+	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FFD463E0; FINISH HIM wait FFC79740, FFC797F0; 4 cheats -->
 	<cheats size="8" max="8">
-		<cheat name="Infinite Health P1">2F60 1000 A100 0200</cheat>
-		<cheat name="Infinite Health P2">EC60 1000 A100 0200</cheat>
-		<cheat name="Infinite Round Time">3E46 FD0F 4A4D 0100</cheat>
-		<cheat name="Stop Finishing Move Timer">7479 FC0F FF7F 0100 7F79 FC0F FF7F 0100</cheat>
+		<cheat name="Infinite Health P1">2F60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Health P2">EC60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Round Time">3E46 FD1F 4A4D FFFF</cheat>
+		<cheat name="Stop Finishing Move Timer">7479 FC1F FF7F FFFF 7F79 FC1F FF7F FFFF</cheat>
 	</cheats>
 </misterromdescription>
