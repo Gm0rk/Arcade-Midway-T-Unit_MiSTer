@@ -1,6 +1,6 @@
 <misterromdescription>
 	<name>Judge Dredd (rev TA1 7/12/92, location test)</name>
-	<mratimestamp>20261011</mratimestamp>
+	<mratimestamp>20261101</mratimestamp>
 	<mameversion>0289</mameversion>
 	<setname>jdreddp</setname>
 	<year>1993</year>
@@ -81,4 +81,16 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="3dc70473" name="t1_judge_dredd_sound_rom_u13.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
+	<!-- cheats (rtl/tunit_cheats.sv): 9 cheats -->
+	<cheats size="8" max="8">
+		<cheat name="P1 Infinite Energy">B2E4 1000 C800 FF00</cheat>
+		<cheat name="P1 Infinite Lives">B1E4 1000 0A00 FF00</cheat>
+		<cheat name="P1 Invincibility">BBE4 1000 2400 FFFF</cheat>
+		<cheat name="P2 Infinite Energy">E3E4 1000 C800 FF00</cheat>
+		<cheat name="P2 Infinite Lives">E2E4 1000 0A00 FF00</cheat>
+		<cheat name="P2 Invincibility">ECE4 1000 2400 FFFF</cheat>
+		<cheat name="P3 Infinite Energy">14E5 1000 C800 FF00</cheat>
+		<cheat name="P3 Infinite Lives">13E5 1000 0A00 FF00</cheat>
+		<cheat name="P3 Invincibility">1DE5 1000 2400 FFFF</cheat>
+	</cheats>
 </misterromdescription>
