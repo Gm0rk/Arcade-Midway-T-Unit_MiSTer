@@ -27,79 +27,91 @@
 	"h4H8h9hAP4R[32],Fire Breath  (BL) U U;", \
 	"h4H8h9hAP4R[33],The Pit      D+HP;", \
 	"h5H8H9HAHBP4R[32],Dragon       D F B B HK;", \
-	"h5H8H9HAHBP4R[33],Cartwheel    D F U B D;", \
-	"h5H8H9HAHBP4R[34],Friendship   F B B B LK;", \
-	"h5H8H9HAHBP4R[35],Babality     D D F B LK;", \
-	"h5H8H9HAHBP4R[36],Pit / Spikes B F F LK;", \
-	"h5H8H9HAHBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5h8H9HAHBP4R[32],Hat Throw    (LP) B F;", \
+	"h5H8H9HAHBHCP4R[33],Cartwheel    D F U B D;", \
+	"h5H8H9HAHBH2hCP4R[33],Cartwheel    D F U B D;", \
+	"h5H8H9HAHBHCP4R[34],Friendship   F B B B LK;", \
+	"h5H8H9HAHBHCP4R[35],Babality     D D F B LK;", \
+	"h5H8H9HAHBHCP4R[36],Pit / Spikes B F F LK;", \
+	"h5H8H9HAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5h8H9HAHBHCP4R[32],Hat Throw    (LP) B F;", \
 	"h5h8H9HAHBP4R[33],Decapitation F F F LK;", \
-	"h5h8H9HAHBP4R[34],Friendship   B B B D HK;", \
-	"h5h8H9HAHBP4R[35],Babality     B B F F HK;", \
-	"h5h8H9HAHBP4R[36],Pit / Spikes F F F HP;", \
-	"h5h8H9HAHBP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5h8H9HAHBH2HCP4R[34],Friendship   B B B D HK;", \
+	"h5h8H9HAHBHCP4R[35],Babality     B B F F HK;", \
+	"h5h8H9HAHBHCP4R[36],Pit / Spikes F F F HP;", \
+	"h5h8H9HAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
 	"h5H8h9HAHBP4R[32],Torso Rip    D D F F LP;", \
-	"h5H8h9HAHBP4R[33],Decapitation F F D U;", \
-	"h5H8h9HAHBP4R[34],Friendship   D D D D HK;", \
-	"h5H8h9HAHBP4R[35],Babality     B B B HK;", \
-	"h5H8h9HAHBP4R[36],Pit / Spikes D D D HK;", \
-	"h5H8h9HAHBP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5H8h9HAHBHCP4R[33],Decapitation F F D U;", \
+	"h5H8h9HAHBH2hCP4R[33],Decapitation F F D U;", \
+	"h5H8h9HAHBHCP4R[34],Friendship   D D D D HK;", \
+	"h5H8h9HAHBHCP4R[35],Babality     B B B HK;", \
+	"h5H8h9HAHBHCP4R[36],Pit / Spikes D D D HK;", \
+	"h5H8h9HAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
 	"h5h8h9HAHBP4R[32],Tongue       B B D LP;", \
-	"h5h8h9HAHBP4R[33],Slice        U U D HP;", \
-	"h5h8h9HAHBP4-,            then F F D HK;", \
-	"h5h8h9HAHBP4R[34],Friendship   B B D LK;", \
-	"h5h8h9HAHBP4R[35],Babality     D B B LK;", \
-	"h5h8h9HAHBP4R[36],Pit / Spikes D F F BL;", \
-	"h5h8h9HAHBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5H8H9hAHBP4R[32],Deep Freeze  F F D HK;", \
-	"h5H8H9hAHBP4-,            then F D F F HP;", \
-	"h5H8H9hAHBP4R[33],Ice Grenade  (LP) B B D F;", \
-	"h5H8H9hAHBP4R[34],Friendship   B B D HK;", \
-	"h5H8H9hAHBP4R[35],Babality     D B B HK;", \
-	"h5H8H9hAHBP4R[36],Pit / Spikes D F F BL;", \
-	"h5H8H9hAHBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5h8H9hAHBP4R[32],Soul Drain   U D U LK;", \
-	"h5h8H9hAHBP4R[33],Spikes       (HK 1 s);", \
-	"h5h8H9hAHBP4R[34],Friendship   B B D F HK;", \
-	"h5h8H9hAHBP4R[35],Babality     B F D HK;", \
-	"h5h8H9hAHBP4R[36],Pit          D D U D;", \
-	"h5h8H9hAHBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5H8h9hAHBP4R[32],Fan Decap    BL BL BL HK;", \
-	"h5H8h9hAHBP4R[33],Kiss of Death (LK) F F D F;", \
-	"h5H8h9hAHBP4R[34],Friendship   D D D U LK;", \
-	"h5H8h9hAHBP4R[35],Babality     D D D LK;", \
-	"h5H8h9hAHBP4R[36],Pit / Spikes F D F HK;", \
-	"h5H8h9hAHBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5h8h9hAHBP4R[32],Arm Rip      BL BL BL BL LP;", \
+	"h5h8h9HAHBHCP4R[33],Slice        U U D HP;", \
+	"h5h8h9HAHBHCP4-,            then F F D HK;", \
+	"h5h8h9HAHBHCP4R[34],Friendship   B B D LK;", \
+	"h5h8h9HAHBHCP4R[35],Babality     D B B LK;", \
+	"h5h8h9HAHBHCP4R[36],Pit / Spikes D F F BL;", \
+	"h5h8h9HAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5H8H9hAHBHCP4R[32],Deep Freeze  F F D HK;", \
+	"h5H8H9hAHBHCP4-,            then F D F F HP;", \
+	"h5H8H9hAHBH2hCP4R[32],Deep Freeze  F F D HK;", \
+	"h5H8H9hAHBH2hCP4-,            then F D F F HP;", \
+	"h5H8H9hAHBHCP4R[33],Ice Grenade  (LP) B B D F;", \
+	"h5H8H9hAHBHCP4R[34],Friendship   B B D HK;", \
+	"h5H8H9hAHBHCP4R[35],Babality     D B B HK;", \
+	"h5H8H9hAHBHCP4R[36],Pit / Spikes D F F BL;", \
+	"h5H8H9hAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5h8H9hAHBHCP4R[32],Soul Drain   U D U LK;", \
+	"h5h8H9hAHBH2hCP4R[32],Soul Drain   U D U LK;", \
+	"h5h8H9hAHBHCP4R[33],Spikes       (HK 1 s);", \
+	"h5h8H9hAHBH2hCP4R[33],Spikes       (HK 1 s);", \
+	"h5h8H9hAHBH2P4R[34],Friendship   B B D F HK;", \
+	"h5h8H9hAHBHCP4R[35],Babality     B F D HK;", \
+	"h5h8H9hAHBH2hCP4R[35],Babality     B F D HK;", \
+	"h5h8H9hAHBH2HCP4R[36],Pit          D D U D;", \
+	"h5h8H9hAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5H8h9hAHBHCP4R[32],Fan Decap    BL BL BL HK;", \
+	"h5H8h9hAHBHCP4R[33],Kiss of Death (LK) F F D F;", \
+	"h5H8h9hAHBH2hCP4R[33],Kiss of Death (LK) F F D F;", \
+	"h5H8h9hAHBHCP4R[34],Friendship   D D D U LK;", \
+	"h5H8h9hAHBHCP4R[35],Babality     D D D LK;", \
+	"h5H8h9hAHBHCP4R[36],Pit / Spikes F D F HK;", \
+	"h5H8h9hAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5h8h9hAHBHCP4R[32],Arm Rip      BL BL BL BL LP;", \
+	"h5h8h9hAHBH2hCP4R[32],Arm Rip      BL BL BL BL LP;", \
 	"h5h8h9hAHBP4R[33],Head Smash   (LP) F F F;", \
-	"h5h8h9hAHBP4R[34],Friendship   D D U U LK;", \
-	"h5h8h9hAHBP4R[35],Babality     D U D U LK;", \
-	"h5h8h9hAHBP4R[36],Pit / Spikes U U D LK;", \
-	"h5h8h9hAHBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5H8H9HAhBP4R[32],Sai Stab     F B F LP;", \
-	"h5H8H9HAhBP4R[33],Inhale       (HK 2 s);", \
-	"h5H8H9HAhBP4R[34],Friendship   D D D U HK;", \
-	"h5H8H9HAhBP4R[35],Babality     D D D HK;", \
-	"h5H8H9HAhBP4R[36],Pit / Spikes F D F LK;", \
-	"h5H8H9HAhBP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5h8h9hAHBHCP4R[34],Friendship   D D U U LK;", \
+	"h5h8h9hAHBHCP4R[35],Babality     D U D U LK;", \
+	"h5h8h9hAHBHCP4R[36],Pit / Spikes U U D LK;", \
+	"h5h8h9hAHBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5H8H9HAhBHCP4R[32],Sai Stab     F B F LP;", \
+	"h5H8H9HAhBh2hCP4R[32],Sai Stab     F B F LP;", \
+	"h5H8H9HAhBHCP4R[33],Inhale       (HK 2 s);", \
+	"h5H8H9HAhBH2hCP4R[33],Inhale       (HK 2 s);", \
+	"h5H8H9HAhBHCP4R[34],Friendship   D D D U HK;", \
+	"h5H8H9HAhBHCP4R[35],Babality     D D D HK;", \
+	"h5H8H9HAhBHCP4R[36],Pit / Spikes F D F LK;", \
+	"h5H8H9HAhBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
 	"h5h8H9HAhBP4R[32],Decapitation B B B B HP;", \
 	"h5h8H9HAhBP4R[33],Impale       B F D F LP;", \
-	"h5h8H9HAhBP4R[34],Friendship   U F F HK;", \
-	"h5h8H9HAhBP4R[35],Babality     F F F HK;", \
-	"h5h8H9HAhBP4R[36],Pit / Spikes F F D HK;", \
-	"h5h8H9HAhBP4R[37],Dead Pool    D+LP+LK HP;", \
-	"h5H8h9HAhBP4R[32],Toasty       D D U U HP;", \
+	"h5h8H9HAhBHCP4R[34],Friendship   U F F HK;", \
+	"h5h8H9HAhBHCP4R[35],Babality     F F F HK;", \
+	"h5h8H9HAhBHCP4R[36],Pit / Spikes F F D HK;", \
+	"h5h8H9HAhBH2HCP4R[37],Dead Pool    D+LP+LK HP;", \
+	"h5H8h9HAhBHCP4R[32],Toasty       D D U U HP;", \
 	"h5H8h9HAhBP4R[33],Torch        U U HP;", \
-	"h5H8h9HAhBP4R[34],Slice        (HP) D F F F;", \
-	"h5H8h9HAhBP4R[35],Friendship   B B D HK;", \
-	"h5H8h9HAhBP4R[36],Babality     D B B HK;", \
-	"h5H8h9HAhBP4R[37],Pit / Spikes D F F BL;", \
-	"h5H8h9HAhBP4R[38],Dead Pool    D+LP+LK HP;", \
-	"h5h8h9HAhBP4R[32],Electrocution (LK 2 s);", \
-	"h5h8h9HAhBP4R[33],Friendship   D B F HK;", \
-	"h5h8h9HAhBP4R[34],Babality     D D U HK;", \
-	"h5h8h9HAhBP4R[35],Pit / Spikes U U HP;", \
-	"h5h8h9HAhBP4R[36],Dead Pool    D+LP+LK HP;", \
+	"h5H8h9HAhBHCP4R[34],Slice        (HP) D F F F;", \
+	"h5H8h9HAhBHCP4R[35],Friendship   B B D HK;", \
+	"h5H8h9HAhBHCP4R[36],Babality     D B B HK;", \
+	"h5H8h9HAhBHCP4R[37],Pit / Spikes D F F BL;", \
+	"h5H8h9HAhBH2HCP4R[38],Dead Pool    D+LP+LK HP;", \
+	"h5h8h9HAhBHCP4R[32],Electrocution (LK 2 s);", \
+	"h5h8h9HAhBH2hCP4R[32],Electrocution (LK 2 s);", \
+	"h5h8h9HAhBHCP4R[33],Friendship   D B F HK;", \
+	"h5h8h9HAhBHCP4R[34],Babality     D D U HK;", \
+	"h5h8h9HAhBHCP4R[35],Pit / Spikes U U HP;", \
+	"h5h8h9HAhBH2HCP4R[36],Dead Pool    D+LP+LK HP;", \
 	"P4-;", \
 	"P4R[40],Clear the set move;", \
 	"P4-;", \
