@@ -398,10 +398,15 @@ wire [27:0] wa = b_addr;
 //
 // The OSD cheats are 8 more entries of the same kind (pt_*[15:8]), switched
 // by the Cheats menu instead of the secrets' options: Infinite Health P1 and
-// P2 (the energy words, read as full: main RAM entries, the games read them
-// from their processes with interrupts enabled), Stop Finishing Move Timer
-// (the FINISH HIM routine's wait) and Infinite Round Time (the instruction
-// that counts the round clock down), both program ROM entries.
+// P2 (Mortal Kombat II: the high half of a pointer in the damage routine's
+// table, a program ROM word the game reads as data, so a hit is taken off a
+// large positive constant and the energy word is never touched: a program ROM entry
+// without the fetch mark, which the compare below applies to every read of
+// the word), the Mortal Kombat energy words and the other games' variables
+// (main RAM entries, read from the games' processes with interrupts
+// enabled), Stop Finishing Move Timer (the FINISH HIM routine's wait) and
+// Infinite Round Time (the instruction that counts the round clock down),
+// both program ROM entries with the fetch mark.
 //
 // An entry has a mask (pt_mask): the CPU reads the entry's value in the bits
 // the mask covers and the game's own value in the others, so a cheat can hold
@@ -412,14 +417,14 @@ wire [27:0] wa = b_addr;
 //
 // An entry marked pt_store also replaces the value the CPU writes to the
 // word (the same compare, on the CPU's own address and interrupt enable, so
-// it is ready with the registered copy). Infinite Health uses it: the game
-// works out the new energy from the full value it reads and writes the
-// result, and without this the game's own copy is left at full less the last
-// hit, which is what the bar showed when the cheat was switched off. With
-// it every write stores full, so the bar stays full when the cheat goes off.
-// A fighter who was already hurt when the cheat went on keeps the lower copy
-// until the next hit, so an entry that goes on also writes its value to the
-// word once (see "Cheat pokes" below).
+// it is ready with the registered copy). Mortal Kombat's P1 and P2 Infinite
+// Energy use it: the game works out the new energy from the full value it
+// reads and writes the result, and without this the game's own copy is left
+// at full less the last hit, which is what the bar showed when the cheat was
+// switched off. With it every write stores full, so the bar stays full when
+// the cheat goes off. A fighter who was already hurt when the cheat went on
+// keeps the lower copy until the next hit, so an entry that goes on also
+// writes its value to the word once (see "Cheat pokes" below).
 //
 // Fixed AI Difficulty is one more entry of the same kind, with its value
 // from the OSD (lvl_val, 0 to 9) instead of the table: MK and MK2 keep their
@@ -975,14 +980,15 @@ wire        req = (b_rd | b_wr) & ~mem_ack & ~b_stale;
 //----------------------------------------------------------------------------
 // Cheat pokes
 //
-// A cheat entry with pt_store (Infinite Health) keeps the game's own copy of
-// the word full by replacing what the game writes, but a copy that was lower
-// when the cheat went on stayed there until the fighter was hit again, and
-// came back to the bar when the cheat went off (a fighter not being hit: the
-// bar dropped to what it had been). So when such an entry becomes enabled the
-// board writes its value to the word once: into the write queue, as a CPU
-// write would go, and the cached line of the word is dropped (tag cleared in
-// S_POKE) so that the next read fetches it from the SDRAM after the queue.
+// A cheat entry with pt_store (Mortal Kombat's Infinite Energy) keeps the
+// game's own copy of the word full by replacing what the game writes, but a
+// copy that was lower when the cheat went on stayed there until the fighter
+// was hit again, and came back to the bar when the cheat went off (a fighter
+// not being hit: the bar dropped to what it had been). So when such an entry
+// becomes enabled the board writes its value to the word once: into the write
+// queue, as a CPU write would go, and the cached line of the word is dropped
+// (tag cleared in S_POKE) so that the next read fetches it from the SDRAM
+// after the queue.
 // It waits for a clock in which the bus state machine is idle and no CPU
 // request is in front of it; the CPU's request then waits one more clock in
 // S_IDLE. A toggle of any cheat sends the whole list again, so every entry
