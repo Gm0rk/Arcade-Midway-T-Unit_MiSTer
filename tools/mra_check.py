@@ -29,9 +29,17 @@ word, a one-shot being a RAM word alone; the value inside the mask). The
 cheats are also made again from the loaded program ROM and must equal the
 MRA's (the MRA is not stale). The Mortal Kombat II sets are checked on their
 own from the program ROM: Infinite Health P1 and P2 and Infinite Round Time,
-Stop Finishing Move Timer (Plus has these four only). The health units must name the two energy words of
-the program ROM's round start (MOVI full,A0 and MOVE A0 to both) with that
-full value, flagged as written too (flags 2), the round time unit the DEC A10
+Stop Finishing Move Timer (Plus has these four only). The health units are
+checked against the damage routine (SLL 5,A6 / ADDI table,A6 / MOVE *A6+,A6,1 /
+MOVE *A6,A1,0, then the hit SUB A10,A1 - in Plus a JA to a routine that starts
+with it - and MOVE A1,*A6,0): the table it names holds the two energy words
+(32-bit pointers, P1's then P2's), which must be the ones the program ROM's
+round start fills (MOVI full,A0 and MOVE A0 to both), and each health unit must
+be the high half of its player's pointer in that table, a program ROM word
+read as data (flags 0, the whole word), with a value that makes the pointer
+land on a program ROM word from 0400h to 7FFFh (the game reads the energy as a
+signed 16-bit field, SETF 10h,1,0, so the constant must be positive in it), so a
+hit is taken off a large constant and the energy word itself is never touched. The round time unit is the DEC A10
 of the clock process (followed by JRNN, MOVK 9,A10, DEC A11, and after the
 clock's start MOVK 9,A11 / MOVK 9,A10; in Plus the same four with long jumps,
 DEC A10 / JANN to the word after DEC A11 / MOVK 9,A10 / JA to DEC A11) with
@@ -52,6 +60,14 @@ level, adds to it, clamps it to 0..9 and writes it back (exactly one in the
 ROM, with the same word read and written). Behind it comes the PC after the
 demo fights' store of the level (bytes 0x458-0x45B), which the scan finds as
 MOVK 5,A0 / MOVE A0,@level,0 (exactly one in the ROM).
+
+The word at byte 0x43E is the OSD class of the revision (0 to 3): the Finishing
+Moves page shows each move line for the classes that have the move, so a
+revision's page lists the moves it has. The word is 0 exactly when the 128-bit
+mask of the moves the revision lacks (bytes 0x440-0x44F) is zero, and then in
+every set that is not Mortal Kombat II; two sets with the same mask have the
+same class and two with different masks have different ones, across all the MRAs
+given.
 
 With --out, the loaded streams are written as <set>_rom0.bin / _rom3.bin
 for the simulator, and the game id / secrets table as <set>_rom1.bin
@@ -230,7 +246,12 @@ def cheat_checks(root, gid, hides, prog, setname=''):
                 errs.append('%s is not word aligned' % where)
             if fl & 8:
                 errs.append('%s has the unused flag bit' % where)
-            if bool(fl & F_FETCH) != rom:
+            if gid == 2 and name in MK2_CHEATS[:2]:
+                # a table word of the program ROM that the game reads as data
+                if not rom or fl:
+                    errs.append('%s: the damage pointer table is program ROM read as data, flags 0, not %s %d'
+                                % (where, 'program ROM' if rom else 'main RAM', fl))
+            elif bool(fl & F_FETCH) != rom:
                 errs.append('%s: %s but flagged %d' % (where, 'program ROM' if rom else 'main RAM', fl))
             if rom and not 0 <= (a - 0xFF800000) >> 4 < n:
                 errs.append('%s is not in the program ROM' % where)
@@ -261,6 +282,55 @@ def cheat_checks(root, gid, hides, prog, setname=''):
     return errs
 
 
+def mk2_health_checks(u1, u2, w, n):
+    """Infinite Health P1 and P2 (their one unit each) against the damage routine
+    of the program ROM. Returns (problems, P1 energy, P2 energy), the energies
+    being None when the routine or its table is not what it should be."""
+    errs = []
+    # SLL 5,A6 / ADDI table,A6 / MOVE *A6+,A6,1 / MOVE *A6,A1,0 (the victim's pointer, its energy)
+    dm = [i for i in range(n - 12)
+          if w[i] == 0x24A6 and w[i + 1] == 0x0B26 and w[i + 4] == 0x96C6 and w[i + 5] == 0x84C1]
+    if len(dm) != 1:
+        return ['%d damage routines (SLL 5,A6 / ADDI table,A6 / MOVE *A6+,A6,1 / MOVE *A6,A1,0), not 1' % len(dm)], None, None
+    i = dm[0]
+    # the hit and the store back: SUB A10,A1 (Plus: a JA to a routine that starts with it) .. MOVE A1,*A6,0
+    if w[i + 6] == 0xC080:
+        t = w[i + 7] | w[i + 8] << 16
+        j = (t - 0xFF800000) >> 4 if t >= 0xFF800000 and not t & 15 else -1
+        hit = 0 <= j < n and w[j] == 0x4541
+    else:
+        hit = w[i + 6] == 0x4541
+    if not hit or w[i + 9] != 0x8026:
+        errs.append('the damage routine at %08X does not subtract A10 from the energy and store it back' % (0xFF800000 + 16 * i))
+    tab = w[i + 2] | w[i + 3] << 16
+    ti = (tab - 0xFF800000) >> 4 if tab >= 0xFF800000 and not tab & 15 else -1
+    if ti < 0 or ti + 4 > n:
+        return errs + ['the damage routine\'s table %08X is not in the program ROM' % tab], None, None
+    e1, e2 = w[ti] | w[ti + 1] << 16, w[ti + 2] | w[ti + 3] << 16
+    # the round start's fill of those two energy words: MOVI full,A0 / MOVE A0,@P1 / MOVE A0,@P2 (the other fill, FFFFh, is not it)
+    ok = [k for k in range(n - 8)
+          if w[k] == 0x09C0 and w[k + 1] != 0xFFFF and w[k + 2] == 0x0580 and w[k + 3] | w[k + 4] << 16 == e1
+          and w[k + 5] == 0x0580 and w[k + 6] | w[k + 7] << 16 == e2]
+    if len(ok) != 1:
+        errs.append('%d places fill the table\'s energies %08X and %08X with a full value' % (len(ok), e1, e2))
+    if e1 & 15 or e2 & 15 or not (0x01000000 <= e1 < 0x01400000 and 0x01000000 <= e2 < 0x01400000):
+        errs.append('an energy word (%08X, %08X) is not a word of main RAM' % (e1, e2))
+    for who, (a, v, fl, m), e, off in (('P1', u1, e1, 1), ('P2', u2, e2, 3)):
+        if a != 0xFF800000 + 16 * (ti + off):
+            errs.append('Infinite Health %s is %08X, not the high half of its pointer in the table (%08X)'
+                        % (who, a, 0xFF800000 + 16 * (ti + off)))
+        if fl or m != 0xFFFF:
+            errs.append('Infinite Health %s has flags %d mask %04X, not 0 and FFFF' % (who, fl, m))
+        tgt = v << 16 | (e & 0xFFFF)
+        ri = (tgt - 0xFF800000) >> 4 if v >= 0xFF80 and not tgt & 15 else -1
+        if not 0 <= ri < n:
+            errs.append('Infinite Health %s points the damage at %08X, not a program ROM word' % (who, tgt))
+        elif not 0x400 <= w[ri] <= 0x7FFF:
+            errs.append('Infinite Health %s points the damage at %08X, which holds %04X, not 0400 to 7FFF: a hit would '
+                        'take it to zero or below (the game reads the energy as a signed 16-bit field)' % (who, tgt, w[ri]))
+    return errs, e1, e2
+
+
 def mk2_cheat_checks(allc, hides, w, n):
     """The Mortal Kombat II cheats against an independent scan of the program."""
     errs = []
@@ -271,24 +341,14 @@ def mk2_cheat_checks(allc, hides, w, n):
     units = [allc[name] for name in MK2_CHEATS]
     if [len(u) for u in units] != want_units:
         return errs + ['units per cheat %s, not %s' % ([len(u) for u in units], want_units)]
-    (e1, v1, f1, _), (e2, v2, f2, _), (cw, cv, cf, _) = units[0][0], units[1][0], units[2][0]
-    # MOVI full,A0 / MOVE A0,@P1 energy / MOVE A0,@P2 energy (the other fill, FFFFh, is not it)
-    ok = [i for i in range(n - 8)
-          if w[i] == 0x09C0 and w[i + 1] != 0xFFFF and w[i + 2] == 0x0580 and w[i + 3] | w[i + 4] << 16 == e1
-          and w[i + 5] == 0x0580 and w[i + 6] | w[i + 7] << 16 == e2]
-    if len(ok) != 1:
-        errs.append('%d places fill energies %08X and %08X with a full value' % (len(ok), e1, e2))
-    elif v1 != w[ok[0] + 1] or v2 != v1:
-        errs.append('the health cheats read %04X and %04X, the round start fills %04X' % (v1, v2, w[ok[0] + 1]))
-    if f1 != F_STORE or f2 != F_STORE:
-        errs.append('the health cheats are flagged %d and %d, not 2 (a RAM word whose writes store the value)' % (f1, f2))
-    if e1 & 15 or e2 & 15:
-        errs.append('an energy word is not word aligned')
+    cw, cv, cf, _ = units[2][0]
+    herrs, e1, e2 = mk2_health_checks(units[0][0], units[1][0], w, n)
+    errs += herrs
     for name, e in (('P1 Drain all Energy Now!', e1), ('P2 Drain all Energy Now!', e2)):
         if hides:
             if name in allc:
                 errs.append('Plus has the drain cheat %r' % name)
-        elif allc.get(name) != [(e, 1, F_POKE, 0xFFFF)]:
+        elif e is not None and allc.get(name) != [(e, 1, F_POKE, 0xFFFF)]:
             errs.append('%r is %s, not a one-shot of the energy word %08X to 1' % (name, allc.get(name), e))
     # the round clock: DEC A10 / JRNN / MOVK 9,A10 / DEC A11 after the process's start (Plus: the same
     # with JANN and JA, the DEC A11 being the word its jumps name)
@@ -378,6 +438,7 @@ def main():
 
     zips = mame_src.RomZips(sorted(glob.glob(os.path.join(a.zips, '*.zip'))))
     bad = 0
+    classes = {}       # (game id, class) -> {the masks of the moves the sets of that class lack}
     for path in a.mras:
         root = ET.parse(path).getroot()
         setname = root.findtext('setname')
@@ -445,6 +506,21 @@ def main():
                             msgs.append(dm)
                         elif gotd != dm:
                             msgs.append('rom 1 demo store PC is %08X, the program ROM\'s is %08X' % (gotd, dm))
+        if len(t) >= 0x450:
+            cls = t[0x43E] | t[0x43F] << 8
+            gone = bytes(t[0x440:0x450])
+            if cls > 3:
+                msgs.append('rom 1 OSD class is %d, not 0 to 3' % cls)
+            elif (cls == 0) != (not any(gone)):
+                msgs.append('rom 1 OSD class is %d but the mask of the moves the set lacks is %s'
+                            % (cls, 'zero' if not any(gone) else 'not zero'))
+            elif cls and (t[0] & 7) != 2:
+                msgs.append('rom 1 OSD class is %d in a set that is not Mortal Kombat II' % cls)
+            else:
+                classes.setdefault((t[0] & 7, cls), set()).add(gone)
+                for (g, c), masks in classes.items():
+                    if g == t[0] & 7 and c != cls and gone in masks:
+                        msgs.append('rom 1 OSD class %d, and %d for another set that lacks the same moves' % (cls, c))
         if len(t) >= 2:
             msgs += cheat_checks(root, t[0] & 7, hides, streams.get(0, b'')[:0x100000], setname)
         status = 'OK' if not msgs else 'FAIL'
@@ -452,6 +528,10 @@ def main():
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
                                                              len(streams.get(3, b'')), len(streams.get(1, b'')),
                                                              '; '.join(msgs + (['Plus: own Move List and View Secrets, no Finishing Moves or Hidden Items'] if hides else []))))
+    for (g, c), masks in sorted(classes.items()):
+        if len(masks) > 1:
+            print('FAIL OSD class %d of game %d holds sets that lack different moves' % (c, g))
+            bad += 1
     sys.exit(1 if bad else 0)
 
 
