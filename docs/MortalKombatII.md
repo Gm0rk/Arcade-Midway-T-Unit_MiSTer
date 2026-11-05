@@ -676,4 +676,4 @@ Versus Cheats, Secret Characters (lock or unlock each one) and Cheat Selection
 
 The pages follow the MK2+ guide (MKKomplete, Ver. 2.8.50,
 https://icemantraveler.github.io/mkksg/fan_made/mk2plus/default.htm). The
-hack in the MRA is HBMAME's MK2+ VER 1.48 (Beta 2, build of 12/22/2018).
+hack in the MRA is MK2+ VER 1.48 (Beta 2, build of 12/22/2018).
