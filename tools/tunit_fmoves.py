@@ -67,6 +67,7 @@ Taps are 3 frames down, 3 up.
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 """
 
+import itertools
 import os
 import struct
 import sys
@@ -510,6 +511,67 @@ def missing_mask(gid, setname):
     return m
 
 
+# The Finishing Moves page lists only the moves the loaded revision has. The
+# OSD cannot be built per set (one CONF_STR), so the revisions are sorted into
+# classes by the moves they lack: class 0 lacks none (and is what every set
+# without a table, every Mortal Kombat set and a download without the word
+# gets), the others are the distinct sets of missing moves in MISSING, fewest
+# missing first. The MRA gives the set's class (ROM index 1 word 0x21F, the
+# top level keeps it in fm_class) and two bits of the OSD's menu mask carry it:
+# class bit 0 is mask bit 2 and class bit 1 is mask bit 12. A move's line is
+# there once for each group of classes that has the move that one line's hide
+# prefixes can name (class_cover()).
+CLASS_WORD = 31
+CLASS_MASK = ('2', 'C')          # status_menumask bits of class bits 0 and 1
+
+
+def class_masks():
+    """The missing-move masks of the classes, class 0 (nothing missing) first."""
+    masks = sorted({missing_mask(G_MK2, name) for name in MISSING} - {0}, key=lambda m: (bin(m).count('1'), m))
+    if len(masks) > 3:
+        raise ValueError('more than four classes of revisions: the OSD has two bits for them')
+    return [0] + masks
+
+
+def set_class(gid, setname):
+    """The class of a set (0 for every set but the Mortal Kombat II revisions
+    that lack moves)."""
+    if gid != G_MK2:
+        return 0
+    return class_masks().index(missing_mask(gid, setname))
+
+
+def class_cover(have):
+    """The fewest groups of classes (a set of class numbers 0-3) that together
+    are exactly the classes in `have`, each class in one group only (a line in
+    two groups would show twice), each group one the hide prefixes of a line can
+    name: every class, the classes with a class bit 0 or 1, or one class. A
+    group is (bit 0, bit 1) with None for a bit the group does not name."""
+    groups = []
+    for b0 in (None, 0, 1):
+        for b1 in (None, 0, 1):
+            members = frozenset(c for c in range(4)
+                                if (b0 is None or c & 1 == b0) and (b1 is None or c >> 1 == b1))
+            if members <= have:
+                groups.append(((b0, b1), members))
+    for n in range(1, 5):
+        for combo in itertools.combinations(groups, n):
+            if (frozenset().union(*[m for _, m in combo]) == have
+                    and sum(len(m) for _, m in combo) == len(have)):
+                return [g for g, _ in combo]
+    raise ValueError('no cover of classes %s' % sorted(have))
+
+
+def class_prefix(group):
+    """Hide prefixes of a group of classes: h<bit> shows the line when the mask
+    bit is set, H<bit> when it is clear."""
+    pre = ''
+    for b, letter in zip(group, CLASS_MASK):
+        if b is not None:
+            pre += ('h' if b else 'H') + letter
+    return pre
+
+
 def build(gid, prog_bytes, setname=None):
     """ROM index 1 words 0x200 on (bytes) and notes; empty if the set has no
     finishing moves.
@@ -519,7 +581,8 @@ def build(gid, prog_bytes, setname=None):
     pointer and process pointer, the stage and the finish flag (2-23); the
     dizzy codes 1 and 2 and the stance code (24-29, 32-bit values); x and
     resume-address offsets in words (30: {resume[15:8], x[7:0]}); the moves
-    the set lacks (32-39: bit line * 8 + slot of the OSD's moves); MK: the
+    the set lacks (32-39: bit line * 8 + slot of the OSD's moves; 31: the
+    set's class of them, set_class()); MK: the
     word address of Reptile's flag (40-41, the top level's Reptile Fight
     Next is used up when the game writes 1 there; 0 = no Reptile); the word
     address of the AI level (42-43; 0 = none)."""
@@ -539,8 +602,9 @@ def build(gid, prog_bytes, setname=None):
     gone = missing_mask(gid, setname)
     for n in range(8):
         w[32 + n] = gone >> (16 * n) & 0xFFFF
+    w[CLASS_WORD] = set_class(gid, setname)
     if gone:
-        notes.append('%d moves not in this revision' % bin(gone).count('1'))
+        notes.append('%d moves not in this revision (OSD class %d)' % (bin(gone).count('1'), w[CLASS_WORD]))
     if gid in (G_MK, G_MKTURBO):
         rp = mk_reptile(Prog(prog_bytes), [])
         if rp:
@@ -643,13 +707,22 @@ def osd_lines():
         names = ','.join(n for n, _, _ in fighters(game))
         out.append('h%sP4O[%d:%d],Character,%s;' % (bit, sel[0], sel[1], names))
     out.append('P4-;')
+    masks = class_masks()
     for game in ('mk', 'mk2'):
         for li, (name, cid, moves) in enumerate(fighters(game)):
             pre = sel_prefix(game, li)
             for slot, (mname, kind, cmd, prog, dmin, dmax, note) in enumerate(moves):
-                out.append('%sP4R[%d],%s;' % (pre, SLOT_BIT + slot, label(mname, cmd)))
-                if note:
-                    out.append('%sP4-,%s%s;' % (pre, ' ' * 12, note))
+                if game == 'mk':
+                    groups = [(None, None)]
+                else:
+                    # the classes that have this move, as the fewest groups
+                    have = frozenset(c for c, m in enumerate(masks) if not m >> (li * 8 + slot) & 1)
+                    have |= frozenset(range(len(masks), 4))          # class numbers no set has
+                    groups = [(None, None)] if len(have) == 4 else class_cover(have)
+                for g in groups:
+                    out.append('%s%sP4R[%d],%s;' % (pre, class_prefix(g), SLOT_BIT + slot, label(mname, cmd)))
+                    if note:
+                        out.append('%s%sP4-,%s%s;' % (pre, class_prefix(g), ' ' * 12, note))
     out.append('P4-;')
     out.append('P4R[%d],Clear the set move;' % CLEAR_BIT)
     out.append('P4-;')
