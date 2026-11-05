@@ -51,19 +51,19 @@ MRAs.
 
 ## Timing and resources
 
-<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 56's). -->
+<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 58's). -->
 Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Figures are from the
-compilation of Build 56 (2026-11-01). Timing is met on every clock, and so is
+compilation of Build 58 (2026-11-05). Timing is met on every clock, and so is
 every hold, recovery, removal and minimum pulse width check.
 
 | Clock | Frequency | Setup slack |
 |---|---|---|
-| System (core PLL) | 96 MHz | +0.132 ns |
+| System (core PLL) | 96 MHz | +0.311 ns |
 
 | Resource | Used | Percent used |
 |---|---|---|
-| Logic (ALMs) | 32,431 / 41,910 | 77 % |
+| Logic (ALMs) | 32,440 / 41,910 | 77 % |
 | Block RAM (M10K blocks) | 405 / 553 | 73 % |
 | DSP blocks | 67 / 112 | 60 % |
 
@@ -126,9 +126,11 @@ and the core in `_Arcade/cores`. Mortal Kombat II Plus goes in `games/hbmame`.
 - Texas Instruments TMS34010 User's Guide
 - mc6809 core: Greg Miller (synchronous version by Sorgelig)
 - jt51 (YM2151) and jt6295 (OKI M6295): Jose Tejada (jotego)
-- SDRAM controller and [MiSTer framework](https://github.com/MiSTer-devel/Template_MiSTer): Sorgelig and the MiSTer-devel team
-- [CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust): Umberto Parisi (rmonic79), with Andrea Bogazzi
-  (@asturur)  
+- SDRAM controller and MiSTer framework: Sorgelig and the MiSTer-devel team
+- CRT Adjust and CRT V-Size: Umberto Parisi (rmonic79), with Andrea Bogazzi
+  (@asturur)
+- [Template_MiSTer](https://github.com/MiSTer-devel/Template_MiSTer),
+  [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
 - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
   the arcade core guidance used while developing and checking this core
 - Cheats: the MAME cheat collection (cheat.txt, release 27 July 2025 for MAME
