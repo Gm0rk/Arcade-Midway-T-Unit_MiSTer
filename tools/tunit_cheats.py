@@ -22,7 +22,9 @@ Unit (four 16-bit words, little-endian, as the other tables):
     word 1   bits 11-0: word address bits 27-16
              bit 12: a program ROM word, patched for instruction fetches only
                      (the secrets' pt_fetch); 0: a main RAM variable, patched
-                     while the CPU has interrupts enabled
+                     while the CPU has interrupts enabled, or a program ROM
+                     word the game reads as data (a table: Infinite Health),
+                     patched for every read
              bit 13: the CPU's writes to the word store the value too (a main
                      RAM variable; rtl/midway_tunit.sv pt_store), and the
                      board writes the value to the word once when it goes on
@@ -51,12 +53,18 @@ Where the cheats come from:
 
 The Mortal Kombat II cheats (found in each set's program):
 
-    Infinite Health P1 / P2   the energy word reads full (A1h in every set
-                              seen), the game's writes to it store full too,
-                              and the board writes full to it once when the
-                              cheat is switched on (a fighter already hurt),
-                              so the game's own copy stays full and the bar
-                              stays full when the cheat is switched off
+    Infinite Health P1 / P2   the player takes no damage: the game's one damage
+                              routine finds the pointer to the energy word it
+                              subtracts the hit from in a two-entry table of
+                              the program ROM, and the unit changes the high
+                              half of that player's pointer so that it reads
+                              (and writes, which a ROM ignores) a program ROM
+                              word that holds a large positive value (400h to
+                              7FFFh: the game reads the energy as a signed
+                              16-bit field) instead. The
+                              energy word itself is never touched, so
+                              switching the cheat on or off leaves the bar
+                              where it is, and a new round still fills it
     Infinite Round Time       the round clock (two digit registers of the
                               clock process, A11 tens and A10 ones, shown
                               from RAM words that the time-over test reads)
@@ -88,7 +96,8 @@ CHEAT_MAX = 8             # units switched on at once (<cheats max>, rtl/tunit_c
 NAME_MAX = 27             # characters the OSD shows
 
 TIMER_VALUE = 0x7FFF      # frames of the FINISH HIM wait (80h in the game)
-FULL_DEFAULT = 0x00A1
+DAMAGE_FLOOR = 0x400      # the ROM word a hit is subtracted from must be above any hit (a bar is A1h)
+DAMAGE_CEIL = 0x7FFF      # ... and positive as the signed 16-bit field the game reads it with (SETF 10h,1,0)
 MOVE_A10_A10 = 0x4D4A     # replaces DEC A10 (142Ah): same size, the flags of A10 >= 0
 PLAYER_GAP = 0xBD0        # bits between the two players' variables (P2 - P1), as in every set
 
@@ -135,13 +144,54 @@ def fight_words(p):
     return {'state': p.u32(st[0] + 2), 'p1e': p.u32(en[0] + 1), 'p2e': p.u32(en[0] + 9)}
 
 
-def full_energy(p, r):
-    """The value the game fills both energy words with at a round's start:
-    MOVI full,A0 / MOVE A0,@P1 energy / MOVE A0,@P2 energy."""
-    a1, a2 = r['p1e'], r['p2e']            # bit addresses, low word first in the code
-    h = [k for k in p.find([0x09C0, X, 0x0580, a1 & 0xFFFF, a1 >> 16, 0x0580, a2 & 0xFFFF, a2 >> 16])
-         if p.w[k + 1] != 0xFFFF]          # (one other place fills both with FFFFh)
-    return p.w[h[0] + 1] if len(h) == 1 else None
+def damage_table(p, r):
+    """Bit address of the program ROM table of the two energy pointers the
+    damage routine uses, or None.
+
+    The routine (MK2 L3.1 FF8364C0): MOVE A6,A7 / SLL 5,A6 / ADDI table,A6 /
+    MOVE *A6+,A6,1 (the victim's pointer: two 32-bit pointers, P1's then P2's,
+    which are the two energy words) / MOVE *A6,A1,0 (the energy) / SUB A10,A1
+    (the hit) / JRNN / CLR A1 / MOVE A1,*A6,0 (stored back, the flags decide
+    between a hit and a knockout). In Mortal Kombat II Plus the subtraction is
+    a JA to the hack's routine, which starts with the same SUB A10,A1 and
+    comes back to the store, and the table has moved. The table is found by
+    that code (one place in each program) and must hold the two energy words."""
+    hits = p.find([0x24A6, 0x0B26, X, X, 0x96C6, 0x84C1])
+    if len(hits) != 1:
+        return None
+    k = hits[0]
+    t = p.u32(k + 2)
+    ti = p.word_index(t)
+    if t & 0xF or not 0 <= ti < len(p.w) - 4:
+        return None
+    if p.u32(ti) != r['p1e'] or p.u32(ti + 2) != r['p2e']:
+        return None
+    if p.w[k + 6] == 0x4541:                       # SUB A10,A1 / JRNN / CLR A1
+        pass
+    elif p.w[k + 6] == 0xC080:                     # the hack: JA to a routine that starts with the SUB
+        j = p.word_index(p.u32(k + 7))
+        if not 0 <= j < len(p.w) - 1 or p.w[j] != 0x4541:
+            return None
+    else:
+        return None
+    if p.w[k + 9] != 0x8026:                       # MOVE A1,*A6,0
+        return None
+    return t
+
+
+def damage_hi(p, lo):
+    """The high half of a pointer to a program ROM word that holds a value from
+    DAMAGE_FLOOR to DAMAGE_CEIL (the lowest such pointer), for a pointer whose
+    low half is lo, or None. The program ROM is the bit addresses
+    FF800000-FFFFFFFF. The game reads the energy through the pointer as a
+    16-bit field that is sign extended (its SETF 10h,1,0), so a value from 8000h
+    on would be negative: the hit would leave a negative number and the fighter
+    would be knocked out."""
+    for hi in range(0xFF80, 0x10000):
+        i = p.word_index(hi << 16 | lo)
+        if 0 <= i < len(p.w) and DAMAGE_FLOOR <= p.w[i] <= DAMAGE_CEIL:
+            return hi
+    return None
 
 
 def finish_wait(p, r):
@@ -238,18 +288,25 @@ def mk2_cheats(p, notes, drains=True):
     if not r:
         return [], ['fight variables not found: no cheats']
     out = []
-    full = full_energy(p, r)
-    if full is None:
-        notes.append('full energy value not found: no health cheats')
-    elif (r['p1e'] | r['p2e']) & 0xF:
+    tab = damage_table(p, r)
+    if (r['p1e'] | r['p2e']) & 0xF:
         notes.append('energy not word aligned: no health cheats')
+    elif tab is None:
+        notes.append('damage routine\'s pointer table not found: no health cheats')
     else:
-        out.append(('Infinite Health P1', [unit(r['p1e'], full, store=True)]))
-        out.append(('Infinite Health P2', [unit(r['p2e'], full, store=True)]))
-        if drains:
-            out.append(('P1 Drain all Energy Now!', [unit(r['p1e'], 1, poke=True)]))
-            out.append(('P2 Drain all Energy Now!', [unit(r['p2e'], 1, poke=True)]))
-        notes.append('energy P1 %08X, P2 %08X, full %02Xh' % (r['p1e'], r['p2e'], full))
+        hi1, hi2 = damage_hi(p, r['p1e'] & 0xFFFF), damage_hi(p, r['p2e'] & 0xFFFF)
+        if hi1 is None or hi2 is None:
+            notes.append('no program ROM word from %Xh to %Xh to point the damage at: no health cheats' % (DAMAGE_FLOOR, DAMAGE_CEIL))
+        else:
+            # the high half of each player's pointer (word 1 of its entry)
+            out.append(('Infinite Health P1', [unit(tab + 0x10, hi1)]))
+            out.append(('Infinite Health P2', [unit(tab + 0x30, hi2)]))
+            notes.append('damage pointer table %08X, hits go to %04X%04X and %04X%04X' %
+                         (tab, hi1, r['p1e'] & 0xFFFF, hi2, r['p2e'] & 0xFFFF))
+    if not (r['p1e'] | r['p2e']) & 0xF and drains:
+        out.append(('P1 Drain all Energy Now!', [unit(r['p1e'], 1, poke=True)]))
+        out.append(('P2 Drain all Energy Now!', [unit(r['p2e'], 1, poke=True)]))
+    notes.append('energy P1 %08X, P2 %08X' % (r['p1e'], r['p2e']))
     c = round_clock(p)
     if c is None:
         notes.append('round clock not found: no time cheat')
