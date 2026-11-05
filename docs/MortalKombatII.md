@@ -62,10 +62,10 @@ Across the 11 versions in MAME: two hidden items, Finishing Moves for all 12 fig
 | --- | --- | --- |
 | EJB Menu | The programmers' menu: diagnostics, coin bookkeeping, game audits, a hidden Hello page, initials entry and every character's ending. L1.1 and L1.4 have the menu but never check for its code, so the core connects it while the code plays | Hidden Items |
 | Security Screen | Each attract cycle starts with a hidden "This version passed the security test" screen | Hidden Items |
-| Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, too far or too close, or a move the revision lacks | Finishing Moves |
+| Finishing Moves | Pick a fighter and a fatality, friendship, babality, Pit / Spikes, Dead Pool or stage move (12 fighters). The core enters it on the winner's controls at the next FINISH HIM, waits for the right distance, and reports a wrong stage, or too far or too close. A revision's page lists only the moves that revision has | Finishing Moves |
 | Move List window | A page per fighter (55 moves in all) with the special moves and finishing moves and their distances, over the game's paused title screen. Set it On in the OSD, close the OSD and turn the pages with Left and Right, from Liu Kang to Raiden and round; open the OSD to set it Off. Kintaro and Super Uppercut, which need a held button, are listed there too. The moves are rev L3.1's | Move List |
 | Fixed AI Difficulty | Pins the computer opponent's level: Off, or 0 (easiest) to 9. The game raises the level after matches you win and lowers it after matches you lose; with the option on, the computer plays at the chosen level whatever the game thinks it is, in 1-player games; the demo fights between games keep the game's own level. Off gives the game's own level back at once. Not applied while the test menu is selected | Main menu |
-| Infinite Health P1 | Player 1's energy stays full: the game is shown full energy (A1h), the energy it keeps is set to full when you switch the cheat on, and what it writes there is full too, whatever damage it takes, so the bar never drops, there is no knockout, and the bar is still full when you switch the cheat off. Switch it on in the OSD's Cheats menu. Every version | Cheats |
+| Infinite Health P1 | Player 1 takes no damage: the energy bar stays exactly where it is whatever hits land, and there is no knockout. Switching the cheat on or off does not move the bar, and a new round fills it as usual. Switch it on in the OSD's Cheats menu. Every version | Cheats |
 | Infinite Health P2 | The same for player 2, who in a 1-player game is the computer opponent: it cannot be knocked out while this is on | Cheats |
 | Infinite Round Time | The round clock stops counting: it stays at 99 from the start of the round (or at the time it showed when you switched the cheat on), so a round never ends on time. Switched off, the clock carries on from there. Every version | Cheats |
 | Stop Finishing Move Timer | FINISH HIM waits for you: its window of 168 frames (about 3 seconds) is held open for about 10 minutes. It still ends when a finishing move starts or when the winner hits the loser. Challenger's window already stays open much longer, so the cheat changes little there. In Plus the window is the same 168 frames, or 360 when one of the hack's own options lengthens it; the cheat holds either open | Cheats |
@@ -212,8 +212,8 @@ tried in MAME).
 The early revisions have fewer moves: L2.0 and L2.1 have no Dead Pool and no
 Kung Lao friendship, and Shang Tsung's friendship and Pit differ there; L1.1
 and L1.4 lack most friendships, babalities and stage moves and some
-fatalities. Picking one of those shows "Not available in this revision of
-the game".
+fatalities. The Finishing Moves page of one of those revisions lists only the
+moves it has.
 
 | Fighter | Move | Command | Distance |
 |---|---|---|---|
@@ -372,7 +372,7 @@ Versions are named by their MAME set (see [Versions](#versions)).
 
 | Cheat | What it does |
 |---|---|
-| Infinite Health P1 | Player 1's energy bar stays full and player 1 cannot be knocked out. The game is shown full energy (A1h) every time it reads player 1's energy, the energy it keeps is set to full when you switch the cheat on, and what it writes there is full too, whatever damage it has taken |
+| Infinite Health P1 | Player 1 takes no damage and cannot be knocked out. The energy bar and the energy the game keeps stay exactly where they are, whatever hits land, and switching the cheat on or off does not move them: a fighter who is half way down stays half way down. A new round fills the bar as usual |
 | Infinite Health P2 | The same for player 2. In a 1-player game player 2 is the computer opponent, who then cannot be knocked out, so a round only ends on time (or not at all with Infinite Round Time on) |
 | Infinite Round Time | The round clock stops counting: it stays at 99 from the start of the round (or at the time it showed when you switched the cheat on), so a round never ends on time. The clock is two digits the game keeps in registers while it counts; the cheat replaces the one instruction that counts the ones digit down, so switching it off lets the clock carry on from where it stopped |
 | Stop Finishing Move Timer | The FINISH HIM window lasts 168 frames (about 3 seconds). With the cheat on it is held open for 32,767 frames (about 10 minutes), so there is time to enter a finishing move by hand, hold a button for Kintaro or the Super Uppercut, or pick one from Finishing Moves |
@@ -383,7 +383,7 @@ Versions are named by their MAME set (see [Versions](#versions)).
 | Always Play Pong | Every two-player battle counts as battle 250: the VS screen shows "Kombat Zone: Back in Time", and after the first round both players face a game of Pong |
 | Press Start To Fight Smoke | Hold Down and press Start during any fight to fight Smoke next ("You have found the passage from the Outworld to the Earth Realm"). Normally that only works on The Portal while the "Toasty!" man is on screen |
 
-How a cheat acts: one that sets a value makes the game read that value from the word it names, or only the bits of the word it covers (one byte, one player's flag), whenever the CPU reads it while the game runs with interrupts on; the game's own value is never written over, so switching the cheat off gives the game back at once, and the diagnostics' RAM test sees the game as it is. One that changes the game's program replaces a word of it as the CPU fetches it as an instruction; nothing is written to the ROM. The Units column is how many of the core's 8 cheat entries a cheat uses: switch cheats on until their units add up to 8 at most; the menu refuses a switch-on that would pass 8.
+How a cheat acts: one that sets a value makes the game read that value from the word it names, or only the bits of the word it covers (one byte, one player's flag), whenever the CPU reads it while the game runs with interrupts on; the game's own value is never written over, so switching the cheat off gives the game back at once, and the diagnostics' RAM test sees the game as it is. One that changes the game's program replaces a word of it as the CPU fetches it as an instruction; nothing is written to the ROM. Infinite Health changes a word of a table in the game's program that the game reads as data, whenever it reads it (below). The Units column is how many of the core's 8 cheat entries a cheat uses: switch cheats on until their units add up to 8 at most; the menu refuses a switch-on that would pass 8.
 
 The FINISH HIM window still ends the way the game ends it: when a finishing
 move starts (it then runs to the end as usual), and when the winner hits the
@@ -391,12 +391,22 @@ other player with any attack. Hit the loser to carry on to the next round or
 the end of the match. Challenger's window already stays open much longer, so
 the cheat changes little there.
 
-Switching an Infinite Health cheat off leaves the bar full. While the cheat is
-on, the core answers the game's reads of the energy word with full energy and
-stores full energy when the game writes it, so the game's own copy is full
-too, not full less the last hit. Switching the cheat on stores full energy
-there once as well, so a fighter who was already hurt does not go back to the
-lower bar when the cheat is switched off before the next hit.
+Switching an Infinite Health cheat on or off does not move the bar: the
+fighter keeps the energy he has at that moment, hurt or not, and the core
+never changes the energy word. The game has one routine that takes a hit off
+a fighter. It finds the fighter's energy through a table of two pointers in
+its program, takes the hit off it, and writes the result back (and the fighter
+is knocked out if the result is not above zero). With the cheat on, the core
+changes the high half of that fighter's pointer, so the routine finds a number
+in the game's program that is positive and far larger than any hit instead: the
+hit comes off that, the result is far above zero, and the write goes to the
+program ROM, which ignores it. The fighter's energy is not read or written at all by a hit,
+so the bar stays where it was. Switched off, the pointer is the game's own
+again and the next hit comes off the energy the fighter has. A new round still
+fills the bar as usual, because that is not a hit. The cheat changes what the
+game reads from one word of its program, so the service menu's ROM test can
+report a fault while an Infinite Health cheat is on; switch it off before
+running the tests.
 
 Each version has the cheats it finds in its program at its own addresses,
 found by `tools/tunit_cheats.py` and written into its MRA.
