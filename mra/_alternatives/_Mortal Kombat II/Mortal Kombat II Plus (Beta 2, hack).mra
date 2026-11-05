@@ -79,10 +79,10 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
-	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FFD463E0; FINISH HIM wait FFC79740, FFC797F0; 4 cheats -->
+	<!-- cheats (rtl/tunit_cheats.sv): damage pointer table FFDAC1E0, hits go to FF8102F0 and FF800EC0; energy P1 010602F0, P2 01060EC0; round clock DEC A10 FFD463E0; FINISH HIM wait FFC79740, FFC797F0; 4 cheats -->
 	<cheats size="8" max="8">
-		<cheat name="Infinite Health P1">2F60 1020 A100 FFFF</cheat>
-		<cheat name="Infinite Health P2">EC60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Health P1">1FAC FD0F 81FF FFFF</cheat>
+		<cheat name="Infinite Health P2">21AC FD0F 80FF FFFF</cheat>
 		<cheat name="Infinite Round Time">3E46 FD1F 4A4D FFFF</cheat>
 		<cheat name="Stop Finishing Move Timer">7479 FC1F FF7F FFFF 7F79 FC1F FF7F FFFF</cheat>
 	</cheats>

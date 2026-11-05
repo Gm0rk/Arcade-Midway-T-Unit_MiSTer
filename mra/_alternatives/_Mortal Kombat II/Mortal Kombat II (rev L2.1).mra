@@ -43,11 +43,11 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00 00 20 02 00 00 00 02 00
 		00 20 02 00 00 00 02 00 20 00 02 00 00 00 02 00 20 00 02 00 00 00 02 80
 		</part>
-		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; 15 moves not in this revision; AI level word 01061AD0; demo store PC FF825300 -->
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; 15 moves not in this revision (OSD class 1); AI level word 01061AD0; demo store PC FF825300 -->
 		<part repeat="744">00</part>
 		<part>
 		01 00 00 00 B0 61 10 00 28 60 10 00 E5 60 10 00 2F 60 10 00 EC 60 10 00 22 60 10 00 DF 60 10 00
-		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 A0 9F 8B FF E0 A4 A0 FF E0 C8 82 FF 09 0E 00 00
+		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 A0 9F 8B FF E0 A4 A0 FF E0 C8 82 FF 09 0E 01 00
 		20 24 20 20 20 34 20 20 20 20 40 10 00 00 00 00 00 00 00 00 AD 61 10 00 30 25 F8 0F
 		</part>
 	</rom>
@@ -87,11 +87,11 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
-	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819A60; FINISH HIM wait FF81CB60; Noob Saibot check not found; 10 cheats -->
+	<!-- cheats (rtl/tunit_cheats.sv): damage pointer table FF834110, hits go to FF8102F0 and FF800EC0; energy P1 010602F0, P2 01060EC0; round clock DEC A10 FF819A60; FINISH HIM wait FF81CB60; Noob Saibot check not found; 10 cheats -->
 	<cheats size="8" max="8">
 		<cheat name="Always Play Pong">B461 1000 FA00 FFFF</cheat>
-		<cheat name="Infinite Health P1">2F60 1020 A100 FFFF</cheat>
-		<cheat name="Infinite Health P2">EC60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Health P1">1234 F80F 81FF FFFF</cheat>
+		<cheat name="Infinite Health P2">1434 F80F 80FF FFFF</cheat>
 		<cheat name="Infinite Round Time">A619 F81F 4A4D FFFF</cheat>
 		<cheat name="Jade Fight no Low Kick">010B FA1F 0003 FFFF 370B FA1F 06C0 FFFF</cheat>
 		<cheat name="P1 Drain all Energy Now!">2F60 1040 0100 FFFF</cheat>

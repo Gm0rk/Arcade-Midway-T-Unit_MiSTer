@@ -89,7 +89,7 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="20387e0a" name="l1_mortal_kombat_ii_sound_rom_u7.u7"/>
 	</rom>
 	<nvram index="2" size="16384"/>
-	<!-- cheats (rtl/tunit_cheats.sv): energy P1 010602F0, P2 01060EC0, full A1h; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150; 44 cheats -->
+	<!-- cheats (rtl/tunit_cheats.sv): damage pointer table FF836BE0, hits go to FF8102F0 and FF800EC0; energy P1 010602F0, P2 01060EC0; round clock DEC A10 FF819FA0; FINISH HIM wait FF81F150; 44 cheats -->
 	<cheats size="8" max="8">
 		<cheat name="Allow Fighting Before Round">D414 F81F 2002 FFFF D714 F81F FFFF FFFF D814 F81F 01CA FFFF 212F F81F 0003 FFFF</cheat>
 		<cheat name="Always Play Pong">B461 1000 FA00 FFFF</cheat>
@@ -105,8 +105,8 @@ rom index 3 (SDRAM 0xD00000):
 		<cheat name="Enable Cage Kick Fatality">E5C4 F81F 2000 FFFF</cheat>
 		<cheat name="Finish Him/Her Every Round">2519 F81F 0003 FFFF</cheat>
 		<cheat name="Hit Anywhere (Both Players)">B835 F81F 04C0 FFFF</cheat>
-		<cheat name="Infinite Health P1">2F60 1020 A100 FFFF</cheat>
-		<cheat name="Infinite Health P2">EC60 1020 A100 FFFF</cheat>
+		<cheat name="Infinite Health P1">BF36 F80F 81FF FFFF</cheat>
+		<cheat name="Infinite Health P2">C136 F80F 80FF FFFF</cheat>
 		<cheat name="Infinite Round Time">FA19 F81F 4A4D FFFF</cheat>
 		<cheat name="Jade Fight no Low Kick">A419 FA1F 0003 FFFF DA19 FA1F 06C0 FFFF</cheat>
 		<cheat name="Johnny Cage Red Shadow">7C8F F81F 0003 FFFF</cheat>
