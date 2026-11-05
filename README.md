@@ -126,11 +126,9 @@ and the core in `_Arcade/cores`. Mortal Kombat II Plus goes in `games/hbmame`.
 - Texas Instruments TMS34010 User's Guide
 - mc6809 core: Greg Miller (synchronous version by Sorgelig)
 - jt51 (YM2151) and jt6295 (OKI M6295): Jose Tejada (jotego)
-- SDRAM controller and MiSTer framework: Sorgelig and the MiSTer-devel team
-- CRT Adjust and CRT V-Size: Umberto Parisi (rmonic79), with Andrea Bogazzi
-  (@asturur)
-- [Template_MiSTer](https://github.com/MiSTer-devel/Template_MiSTer),
-  [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
+- SDRAM controller and [MiSTer framework](https://github.com/MiSTer-devel/Template_MiSTer): Sorgelig and the MiSTer-devel team
+- [CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust): Umberto Parisi (rmonic79), with Andrea Bogazzi
+  (@asturur)  
 - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
   the arcade core guidance used while developing and checking this core
 - Cheats: the MAME cheat collection (cheat.txt, release 27 July 2025 for MAME
