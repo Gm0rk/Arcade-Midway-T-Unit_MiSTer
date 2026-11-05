@@ -106,17 +106,20 @@ localparam CONF_STR = {
 // Cheats menu (menu_cheats: every game); the next bits which
 // secrets the loaded game has;
 // bits 8-11 the fighter picked on the Finishing Moves page;
-// bits 12 and 13 NBA Jam and TE (their own Secrets lines,
-// rtl/tunit_secrets_osd.svh); bit 14 the Fixed AI Difficulty line (MK and
-// MK2, see below); bit 15 Mortal Kombat II Plus (menu_plus). osd_ejb and
+// bit 13 NBA Jam TE (its own Secrets lines, rtl/tunit_secrets_osd.svh);
+// bit 14 the Fixed AI Difficulty line (MK and MK2, see below); bit 15 Mortal
+// Kombat II Plus (menu_plus). Bits 2 and 12 carry the class of the loaded
+// Mortal Kombat II revision (fm_class, below): the Finishing Moves page lists
+// only the moves that revision has. osd_ejb and
 // osd_mk2 are menu_ejb and menu_mk2 less a set whose MRA hides the extras
 // (hide_ext, Mortal Kombat II Plus): they show or hide the Move List, the
 // Finishing Moves page and the Hidden Items page. The Plus set has a Move
 // List and a View Secrets list of its own (menu_plus).
-wire        menu_secrets, menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te, menu_cheats;
+wire        menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te, menu_cheats;
 wire        osd_ejb, osd_mk2, menu_plus;
 wire        lvl_items;
 wire  [3:0] fm_line;
+reg   [1:0] fm_class = 2'd0;
 wire        info_req;
 wire  [7:0] info;
 
@@ -150,7 +153,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({menu_plus, lvl_items, menu_te, menu_nj, fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, menu_secrets, ~status[101], menu_cheats}),
+	.status_menumask     ({menu_plus, lvl_items, menu_te, fm_class[1], fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, fm_class[0], ~status[101], menu_cheats}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -302,8 +305,7 @@ always @(posedge clk_sys) begin
 	endcase
 end
 
-// OSD lines and pages of the loaded game (status_menumask bits 0, 2-7, 12, 13, 15)
-assign menu_secrets = (game_id <= G_JDREDDP);
+// OSD lines and pages of the loaded game (status_menumask bits 0, 3-7, 13, 15)
 assign menu_ejb     = (game_id == G_MK) || (game_id == G_MKTURBO) || (game_id == G_MK2);
 assign menu_mk      = (game_id == G_MK) || (game_id == G_MKTURBO);
 assign menu_mk2     = (game_id == G_MK2);
@@ -845,6 +847,20 @@ end
 // option, a test button or the Test Switch DIP), so the diagnostics see the
 // game's RAM as it is.
 //////////////////////////////////////////////////////////////////
+
+// The early Mortal Kombat II revisions lack some finishing moves, and which
+// ones differs from revision to revision. The MRA gives the revision's class
+// (0: it has them all, then one number for each set of moves a revision
+// lacks; ROM index 1, byte 0x43E, tools/tunit_fmoves.py). The class is on
+// status_menumask bits 2 and 12 and every move line of the Finishing Moves
+// page (rtl/tunit_fmoves_osd.svh) is shown for the classes that have the
+// move only, so a revision's page lists the moves it has.
+always @(posedge clk_sys) begin
+	if (secrets_dl & ~secrets_dl_d)
+		fm_class <= 2'd0;
+	else if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'h43E)
+		fm_class <= ioctl_dout[1:0];
+end
 
 reg  [27:0] lvl_wa  = 28'd0;    // the AI level word's word address (0: none)
 reg  [27:0] lvl_dpc = 28'd0;    // the PC (word address) after the demo fights' store of it (0: none)
