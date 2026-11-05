@@ -1,6 +1,6 @@
 # Changelog
 
-What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's changes are grouped by type: **Added**, **Changed**, **Fixed**, **Removed**, **Docs & tools**. Per-file detail for every build is in [COMMIT.md](COMMIT.md).
+What changed in the Arcade-Midway-T-Unit core, newest build first. Each build's changes are grouped by type: **Added**, **Changed**, **Fixed**, **Removed**, **Docs & tools**.
 
 Build numbers count the core's development builds in order. Released RBF files are named by date.
 
