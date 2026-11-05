@@ -19,12 +19,15 @@
 //   word 0   word address bits 15-0 (bit address >> 4)
 //   word 1   bits 11-0: word address bits 27-16
 //            bit 12: a program ROM word (patched for instruction fetches
-//                    only); 0: a main RAM variable
+//                    only); 0: a main RAM variable, or a program ROM word
+//                    the game reads as data (Mortal Kombat II's Infinite
+//                    Health: a table word of the damage routine), which is
+//                    patched for every read of it
 //            bit 13: the CPU's writes to the word store the value too, and
 //                    the board writes the value to the word once when the
-//                    entry goes on (a main RAM variable only: Infinite
-//                    Health, so the game's own copy stays full and
-//                    switching the cheat off leaves the bar full)
+//                    entry goes on (a main RAM variable only: Mortal
+//                    Kombat's Infinite Energy, so the game's own copy stays
+//                    full and switching the cheat off leaves the bar full)
 //            bit 14: a one-shot write: no read patch; the board writes the
 //                    value to the word (a whole 16-bit word of main RAM)
 //                    once, when the entry first appears in the list, not
