@@ -676,10 +676,4 @@ Versus Cheats, Secret Characters (lock or unlock each one) and Cheat Selection
 
 The pages follow the MK2+ guide (MKKomplete, Ver. 2.8.50,
 https://icemantraveler.github.io/mkksg/fan_made/mk2plus/default.htm). The
-hack in the MRA is HBMAME's MK2+ VER 1.48 (Beta 2, build of 12/22/2018), which
-is older than the guide, so a move or secret the guide adds may be missing in
-it. The moves were not tried in the core, and not checked in the hack's code;
-the clues, the Kombat Kode messages and the settings the pages name are in
-its ROM. The guide's SHRUNKEN KOMBAT!, LARGE EFFECTS! and TINY EFFECTS! codes
-are in the ROM too, but the guide gives no buttons for them, so they are not
-listed.
+hack in the MRA is HBMAME's MK2+ VER 1.48 (Beta 2, build of 12/22/2018).
