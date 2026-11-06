@@ -20,10 +20,78 @@ ADPCM sound board.
 | NBA Jam Tournament Edition (rev 1.00 1-17-94) | nbajamte1 |
 | NBA Jam Tournament Edition (proto 2.00 12-17-93) | nbajamtep2 |
 | NBA Jam Tournament Edition (Nani Edition, rev 5.2 8-11-95, prototype) | nbajamten |
+| NBA Jam Tournament Edition (SE rev 5.02, hack) | nbajamtese (`games/hbmame`) |
+| NBA Jam Tournament Edition (Rewind, hack) | nbajamre (`games/hbmame`) |
+| NBA Jam Tournament Edition (Rewind, Get the Bleep Out Here, hack) | nbajamreb (`games/hbmame`) |
 
 The first is in `_Arcade`, the others in
 `_Arcade/_alternatives/_NBA Jam Tournament Edition`. With a merged ROM set
-they all load from `nbajamte.zip`.
+they all load from `nbajamte.zip`, except the Special Edition and the two
+Rewind versions, which are hacks with zips of their own.
+
+### Special Edition 5.02
+
+The Special Edition is a ROM hack that is not in MAME; it comes from HBMAME.
+It is the Tournament Edition rebuilt from its source code, with new players,
+options in the game's CMOS menu and new voice samples. Its own complete set
+goes in `games/hbmame` as `nbajamtese.zip`, while MAME's `nbajamte.zip` stays
+in `games/mame` for the other versions. Its settings and high scores are kept
+apart from the other versions'.
+
+What the hack's author lists for release 5.02 (the release notes that come
+with it): Shaq, Jordan, Laimbeer, Petrovic and Lewis join the teams (replacing
+Anderson, Kukoc, Hunter, Benjamin and Gamble), Hornacek and D. Harper change
+teams, Jordan is also a hidden player (replacing Webber), Griffey is back with
+a birthday code, there are new voice samples (Griffey, Jordan and Shaq), the
+3D tank game is enabled again (hold P1 Shoot at the match-up screen; not from
+the attract mode), the CMOS menu has Extra Settings (Idiot boxes, Roster, GC
+Team unlock, Fatalities, Baby Size, Max Power and Shot %), Raiden has his
+lightning bolts, and there is a credits screen. Gameplay is not changed.
+
+The core treats it as a Tournament Edition: the same DIP switches and buttons,
+the secret menu code, No CPU Assistance and the [Cheats](#cheats) menu, and the
+Secret Player List window, which now has the Special Edition's secret players
+(68 of them; Griffey and Jordan are new). The code, No CPU Assistance and the
+power-up cheats are found in the hack's own program, which is the Tournament
+Edition's code with its variables moved.
+The cheats that come from MAME's cheat files are not available for the hack
+(MAME has no file for it): its infinite turbo, infinite shot time, never miss
+a shot and play tip cheats are the Tournament Edition 4.0 3-23's, moved to
+where the hack keeps those words (`tools/tunit_relocate.py` finds them).
+Dunks Always Break Backbrd and Unlock All-Star Jam Team are left out (the hack
+has an option for the second).
+
+### Rewind
+
+NBA Jam Rewind is a ROM hack of the Tournament Edition that is not in MAME.
+The core's two MRAs read `nbajamre.zip` and `nbajamreb.zip` from
+`games/hbmame`, each a complete set. The second is the optional "Get the Bleep
+Out Here" version, in which the announcer says "Get that *Bleep* outta here!"
+(the hack's readme). Their settings and high scores are kept apart from the
+other versions' and from each other's.
+
+| MRA | Zip | Program (`uj12`) | Sound (`u12`, `u13`) |
+|---|---|---|---|
+| Rewind | nbajamre.zip | CRC 9b3fc483 | cd5d4532, e92fb0d3 |
+| Rewind, Get the Bleep Out Here | nbajamreb.zip | CRC 383cd3ec | 7061fbc0, 25edad0d |
+
+The program is the Tournament Edition's rev 2.0 (1-28-94, `nbajamte2a`) with
+about 2,600 bytes changed (the readme names rev 2.1, but the program matches
+2.0 where the two differ), and 12 graphics ROMs are changed. The Bleep version
+differs from the plain one in 2 program bytes and in its `u12` and `u13`
+sample ROMs. The hack's readme lists a code to turn fatalities on (at the team
+select screen hold Up and press Pass / Steal 20 times), the Big Head and Huge
+Head codes and an Expanded Roster code (at the player select screen, hold
+Down, press Pass twice, turn the joystick a full circle counterclockwise and
+press Pass three times); the arcade-projects thread says Jordan and Shaq are
+added to the teams. These are the game's own codes: the core has no OSD item
+for them.
+
+The core treats both as Tournament Edition rev 2.0: the same DIP switches and
+buttons, the secret menu code, No CPU Assistance and the [Cheats](#cheats)
+menu (30 cheats, rev 2.0's, found in the hack's own program). The secret
+player table is rev 2.0's, so the Secret Player List window lists Rewind
+wherever it lists 2.0 and has no player of its own for it.
 
 ## Controls
 
@@ -33,14 +101,14 @@ Test (service mode) and Pause.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Four extras on all nine versions: one hidden menu, No CPU Assistance, a Cheats menu (20 to 30 cheats a version) and a six-page Secret Player List window. Every version has all the cheat codes.
+Four extras on all twelve versions: one hidden menu, No CPU Assistance, a Cheats menu (20 to 30 cheats a version) and a seven-page Secret Player List window. Every version has all the cheat codes.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
 | Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics. Attract mode only | Cheat Codes & Hidden Items |
 | No CPU Assistance | Turns off the computer assistance that keeps games close | Cheat Codes & Hidden Items |
-| Cheats menu | The power-ups of the four players (Big/Huge Head, Max Power, Powerup Goal Tending, Quick Hands), infinite turbo for each, Baby Size Players, Huge Heads, Shot Percentage, Tournament Mode and the cheats of MAME's cheat file: infinite shot time, never miss a shot, dunks always break the backboard, fatalities, the All-Star Jam Team and more. The list is on the NBA Jam Tournament Edition page | Cheats |
-| Secret Player List window | Pages 1-4 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 5-6 list every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
+| Cheats menu | The power-ups of the four players (Big/Huge Head, Max Power, Powerup Goal Tending, Quick Hands), infinite turbo for each, Baby Size Players, Huge Heads, Shot Percentage, Tournament Mode and the cheats of MAME's cheat file (for the Special Edition, which has none, the same addresses moved to where the hack keeps them; Rewind has rev 2.0's, unmoved): infinite shot time, never miss a shot, dunks always break the backboard, fatalities, the All-Star Jam Team and more. The list is on the NBA Jam Tournament Edition page | Cheats |
+| Secret Player List window | Pages 1-5 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 6-7 list every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
 
 <!-- extra-content:end -->
 
@@ -49,9 +117,9 @@ Four extras on all nine versions: one hidden menu, No CPU Assistance, a Cheats m
 View Secret Players (OSD main menu: Off, On) shows a window over the game,
 on the title screen, with the hidden players (below): their names,
 initials, birthdays and the versions that have them, and the cheat codes as
-the players enter them (below). Pages 1-4 have the players, Pages 5-6 the
+the players enter them (below). Pages 1-5 have the players, Pages 6-7 the
 codes. Set it On, close the OSD, and turn the pages with Left and Right on
-either controller (Right on page 6 goes round to page 1); open the OSD and
+either controller (Right on page 7 goes round to page 1); open the OSD and
 set it Off to play on. The game waits while the window is on.
 
 On the OSD's Cheat Codes & Hidden Items page:
@@ -91,8 +159,9 @@ and the day. The team select then shows that player as yours. "On screen"
 is the name the team select shows. A player whose initials or birthday
 changed between versions has a line for each. Versions by revision, oldest
 first: proto (2.00, 12-17-93), 1.00, 2.0, 2.1, 3.0 2-26 (2-26-94), 4.0 3-03,
-3.0 3-04, 4.0 3-23 and the Nani Edition; "1.00 to 3.0 2-26" means every
-revision in between. Revision 3.0 (2-26-94) changes the first letter of
+3.0 3-04, 4.0 3-23, the Nani Edition, Rewind (both versions, which have rev
+2.0's players) and the Special Edition (SE 5.02);
+"1.00 to 3.0 2-26" means every revision in between. Revision 3.0 (2-26-94) changes the first letter of
 everyone's initials but the NBA players' in its table, so there only the NBA
 players can be entered.
 
@@ -149,7 +218,8 @@ players can be entered.
 | Lorraine Olivia | Olivia | LOR | Feb 20 | All but proto |
 |  |  | LOR | Jan 1 | Proto |
 | Chris Granner | Granner | CG_ | Dec 4 | All |
-| Ray Gay | Gay | RMG | Aug 11 | All |
+| Ray Gay | Gay | RMG | Aug 11 | All but SE 5.02 |
+| Ken Griffey Jr. | Griffey | KID | Nov 21 | SE 5.02 |
 | Jason Skiles | Skiles | JMS | Jul 29 | All |
 | Joe Linhoff | Linhoff | JFL | Apr 16 | All but proto |
 |  |  | JZL | Jan 1 | Proto |
@@ -157,30 +227,31 @@ players can be entered.
 | Dee Brown | Brown | DEE | Nov 29 | All but proto |
 | Alonzo Mourning | Mourning | ZO_ | Feb 8 | All but proto |
 | Scottie Pippen | Pippen | PIP | Sep 25 | All but proto |
-| Isiah Thomas | Thomas | ZEK | Apr 30 | All but proto, Nani |
-| Chris Webber | Webber | WEB | Mar 1 | All but proto |
+| Isiah Thomas | Thomas | ZEK | Apr 30 | 1.00 to 4.0 3-23, Rewind |
+| Chris Webber | Webber | WEB | Mar 1 | All but proto, SE 5.02 |
 | Hakeem Olajuwon | Olajuwon | HAK | Jan 21 | All but proto |
 | Derrick Coleman | Coleman | DC_ | Jun 21 | All but proto |
 | Patrick Ewing | Ewing | PAT | Aug 5 | All but proto |
-| Charles Barkley | Barkley | BRK | Feb 20 | 1.00 to 3.0 2-26, 4.0 3-23, Nani |
+| Charles Barkley | Barkley | BRK | Feb 20 | 1.00 to 3.0 2-26, 4.0 3-23 to SE 5.02 |
 | David Robinson | Robinson | ROB | Aug 6 | All but proto |
 | Shawn Kemp | Kemp | KMP | Nov 26 | All but proto |
 | Karl Malone | Malone | KRL | Jul 24 | All but proto |
 | Dennis Rodman | Rodman | ROD | May 13 | 4.0 3-03, 3.0 3-04 |
-| Gary Payton | Payton | GEE | Jul 23 | Nani |
-| Sub-Zero | Sub-Zero | SUB | Dec 5 | Proto, 1.00, 2.0 |
-|  |  | SUB | Nov 5 | 2.1, 3.0 2-26 |
-| Scorpion | Scorpion | SCO | Jul 6 | Proto, 1.00, 2.0 |
-|  |  | SCO | Jul 5 | 2.1, 3.0 2-26 |
-| Reptile | Reptile | RPT | Nov 11 | Proto, 1.00, 2.0 |
-|  |  | RPT | Nov 10 | 2.1, 3.0 2-26 |
-| Raiden | Raiden | RAD | Jul 9 | Proto to 3.0 2-26 |
-| Grim Reaper | Reaper | GRM | Oct 31 | Proto, 1.00, 2.0 |
-|  |  | BIG | Sep 31 | 2.1, 3.0 2-26 |
-| Kongo | Kongo | KNG | Jan 16 | Proto, 1.00, 2.0 |
-|  |  | KNG | Mar 26 | 2.1, 3.0 2-26 |
-| Tim Coman | Coman | TJC | Oct 11 | Proto to 3.0 2-26 |
-| Elviscious | Elviscious | ELV | Jan 8 | Proto to 3.0 2-26 |
+| Gary Payton | Payton | GEE | Jul 23 | Nani, SE 5.02 |
+| Michael Jordan | Jordan | AIR | Feb 17 | SE 5.02 |
+| Sub-Zero | Sub-Zero | SUB | Dec 5 | Proto, 1.00, 2.0, Rewind |
+|  |  | SUB | Nov 5 | 2.1, 3.0 2-26, SE 5.02 |
+| Scorpion | Scorpion | SCO | Jul 6 | Proto, 1.00, 2.0, Rewind |
+|  |  | SCO | Jul 5 | 2.1, 3.0 2-26, SE 5.02 |
+| Reptile | Reptile | RPT | Nov 11 | Proto, 1.00, 2.0, Rewind |
+|  |  | RPT | Nov 10 | 2.1, 3.0 2-26, SE 5.02 |
+| Raiden | Raiden | RAD | Jul 9 | Proto to 3.0 2-26, Rewind, SE 5.02 |
+| Grim Reaper | Reaper | GRM | Oct 31 | Proto, 1.00, 2.0, Rewind |
+|  |  | BIG | Sep 31 | 2.1, 3.0 2-26, SE 5.02 |
+| Kongo | Kongo | KNG | Jan 16 | Proto, 1.00, 2.0, Rewind |
+|  |  | KNG | Mar 26 | 2.1, 3.0 2-26, SE 5.02 |
+| Tim Coman | Coman | TJC | Oct 11 | Proto to 3.0 2-26, Rewind |
+| Elviscious | Elviscious | ELV | Jan 8 | Proto to 3.0 2-26, Rewind, SE 5.02 |
 
 ## Cheats
 
@@ -196,18 +267,25 @@ cheat for each power-up. The others are from MAME's
 cheat files for the versions that have them (the addresses are for those
 revisions only): infinite shot time and turbo, never miss a shot, dunks that
 always break the backboard, no in-game play tip, the All-Star Jam Team and the
-fatalities. The names are MAME's, cut to the 27 characters the OSD shows.
+fatalities. The names are MAME's, cut to the 27 characters the OSD shows. The
+Special Edition (nbajamtese) has no cheat file: its infinite shot time and
+turbo, never miss a shot and no in-game play tip are rev 4.0 3-23's with the
+addresses moved to where the hack has the same words, found by
+`tools/tunit_relocate.py`; it has no Dunks Always Break Backbrd or Unlock
+All-Star Jam Team. The two Rewind versions (nbajamre, nbajamreb) have the
+cheats of rev 2.0's file (nbajamte2a), all at the same places in their
+programs (`tools/tunit_relocate.py` finds each one unmoved).
 Versions are named by their MAME set (see [Versions](#versions)).
 
 | Cheat | Units | Versions |
 |---|---|---|
 | Baby Size Players | 1 | All |
-| Disable In-Game Play Tip | 2 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
-| Dunks Always Break Backbrd | 1 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
-| Fatalities Enabled! | 1 | nbajamte1, nbajamte2a |
+| Disable In-Game Play Tip | 2 | All but nbajamten, nbajamtep2, nbajamte2, nbajamte3a, nbajamte4 |
+| Dunks Always Break Backbrd | 1 | nbajamte, nbajamreb, nbajamre, nbajamte1, nbajamte2a, nbajamte3 |
+| Fatalities Enabled! | 1 | nbajamreb, nbajamre, nbajamte1, nbajamte2a |
 | Huge Heads | 1 | All |
 | Infinite Shot Time | 1 | All but nbajamten, nbajamtep2 |
-| Never Miss A Shot | 2 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
+| Never Miss A Shot | 2 | All but nbajamten, nbajamtep2, nbajamte2, nbajamte3a, nbajamte4 |
 | P1 Big/Huge Head | 1 | All |
 | P1 Infinite Turbo | 1 | All but nbajamten, nbajamtep2 |
 | P1 Max Power | 1 | All |
@@ -230,7 +308,9 @@ Versions are named by their MAME set (see [Versions](#versions)).
 | P4 Quick Hands | 1 | All |
 | Shot Percentage | 1 | All |
 | Tournament Mode | 1 | All |
-| Unlock All-Star Jam Team | 5 | nbajamte, nbajamte1, nbajamte2a, nbajamte3 |
+| Unlock All-Star Jam Team | 5 | nbajamte, nbajamreb, nbajamre, nbajamte1, nbajamte2a, nbajamte3 |
+
+30 cheats; versions: nbajamte (29), nbajamten (20), nbajamreb (30), nbajamre (30), nbajamtese (27), nbajamtep2 (20), nbajamte1 (30), nbajamte2a (30), nbajamte2 (25), nbajamte3a (25), nbajamte3 (29), nbajamte4 (25)
 
 How a cheat acts: one that sets a value makes the game read that value from the word it names, or only the bits of the word it covers (one byte, one player's flag), whenever the CPU reads it while the game runs with interrupts on; the game's own value is never written over, so switching the cheat off gives the game back at once, and the diagnostics' RAM test sees the game as it is. One that changes the game's program replaces a word of it as the CPU fetches it as an instruction; nothing is written to the ROM. The Units column is how many of the core's 8 cheat entries a cheat uses: switch cheats on until their units add up to 8 at most; the menu refuses a switch-on that would pass 8.
 
