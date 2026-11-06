@@ -22,7 +22,7 @@ ADPCM sound board.
 | NBA Jam Tournament Edition (Nani Edition, rev 5.2 8-11-95, prototype) | nbajamten |
 | NBA Jam Tournament Edition (SE rev 5.02, hack) | nbajamtese (`games/hbmame`) |
 | NBA Jam Tournament Edition (Rewind, hack) | nbajamre (`games/hbmame`) |
-| NBA Jam Tournament Edition (Rewind, Get the Bleep Out Here, hack) | nbajamreb (`games/hbmame`) |
+| NBA Jam Tournament Edition (Rewind, Get that Bleep outta here, hack) | nbajamreb (`games/hbmame`) |
 
 The first is in `_Arcade`, the others in
 `_Arcade/_alternatives/_NBA Jam Tournament Edition`. With a merged ROM set
@@ -65,15 +65,15 @@ has an option for the second).
 
 NBA Jam Rewind is a ROM hack of the Tournament Edition that is not in MAME.
 The core's two MRAs read `nbajamre.zip` and `nbajamreb.zip` from
-`games/hbmame`, each a complete set. The second is the optional "Get the Bleep
-Out Here" version, in which the announcer says "Get that *Bleep* outta here!"
-(the hack's readme). Their settings and high scores are kept apart from the
-other versions' and from each other's.
+`games/hbmame`, each a complete set. The second is the optional "Get that
+Bleep outta here" version, in which the announcer says it (the hack's readme).
+Their settings and high scores are kept apart from the other versions' and
+from each other's.
 
 | MRA | Zip | Program (`uj12`) | Sound (`u12`, `u13`) |
 |---|---|---|---|
 | Rewind | nbajamre.zip | CRC 9b3fc483 | cd5d4532, e92fb0d3 |
-| Rewind, Get the Bleep Out Here | nbajamreb.zip | CRC 383cd3ec | 7061fbc0, 25edad0d |
+| Rewind, Get that Bleep outta here | nbajamreb.zip | CRC 383cd3ec | 7061fbc0, 25edad0d |
 
 The program is the Tournament Edition's rev 2.0 (1-28-94, `nbajamte2a`) with
 about 2,600 bytes changed (the readme names rev 2.1, but the program matches
