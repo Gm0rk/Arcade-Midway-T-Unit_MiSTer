@@ -28,6 +28,12 @@ Entry fields
            fight variables are written): the hack changes the code and the
            moves those extras are built on
 
+A hack without hide_extras (NBA Jam Tournament Edition Special Edition) keeps
+its parent's extras: the secrets table and the cheats are found in the
+hack's own program (tools/tunit_secrets.py, tools/tunit_cheats.py), and the
+cheats from MAME's files, which have no entry for a hack, are derived from the
+parent's (tools/tunit_relocate.py, tools/tunit_cheats_data.py).
+
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 """
 
@@ -52,6 +58,30 @@ HACKS = [
              'l1_mortal_kombat_ii_game_rom_ug20.ug20': 'd05e970a',
              'l1_mortal_kombat_ii_game_rom_uj20.uj20': '0f9c9a12',
              'l1_mortal_kombat_ii_sound_rom_u2.u2': '65d11dd7',        # DCS sound data
+         }),
+    # NBA Jam Tournament Edition Special Edition 5.02: TE rebuilt from its source
+    # with new players, CMOS options and samples (the author's whatsnew.txt).
+    # A complete nbajamte.zip with the parent's file names: 16 files differ
+    # (program, 12 graphics ROMs, two sound ROMs), 5 are the parent's own.
+    dict(name='nbajamtese', parent='nbajamte', desc='NBA Jam Tournament Edition (SE rev 5.02, hack)',
+         zip='nbajamte.zip',
+         files={
+             'l4_nba_jam_tournament_game_rom_uj12.uj12': '08507007',   # program, even bytes
+             'l4_nba_jam_tournament_game_rom_ug12.ug12': 'd784608e',   # program, odd bytes
+             'l1_nba_jam_tournament_game_rom_ug16.ug16': 'c8da980e',   # graphics
+             'l1_nba_jam_tournament_game_rom_ug17.ug17': '1b7ddbe9',
+             'l1_nba_jam_tournament_game_rom_ug18.ug18': 'a182457b',
+             'l1_nba_jam_tournament_game_rom_ug20.ug20': '9cd4f985',
+             'l1_nba_jam_tournament_game_rom_ug22.ug22': '5427ca82',
+             'l1_nba_jam_tournament_game_rom_ug23.ug23': '7755db95',
+             'l1_nba_jam_tournament_game_rom_uj16.uj16': '205c5fb7',
+             'l1_nba_jam_tournament_game_rom_uj17.uj17': 'cb08465f',
+             'l1_nba_jam_tournament_game_rom_uj18.uj18': 'ed6b08a5',
+             'l1_nba_jam_tournament_game_rom_uj20.uj20': '7a47f364',
+             'l1_nba_jam_tournament_game_rom_uj22.uj22': '569b1ae5',
+             'l1_nba_jam_tournament_game_rom_uj23.uj23': 'a659b604',
+             'l1_nba_jam_tournament_u12_sound_rom.u12': '7be1622b',    # sound
+             'l1_nba_jam_tournament_u13_sound_rom.u13': 'f939bfcb',
          }),
 ]
 
