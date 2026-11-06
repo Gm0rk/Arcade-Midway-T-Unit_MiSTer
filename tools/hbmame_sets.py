@@ -121,10 +121,10 @@ HACKS = [
              'l1_nba_jam_tournament_u13_sound_rom.u13': 'e92fb0d3',
          }),
     # NBA Jam Rewind with the optional "Get that Bleep outta here" patches
-    # (program and the two sound ROMs; the announcer says it):
+    # (the program and the u13 sound ROM; the announcer says it):
     # the program differs from nbajamre's in 2 bytes (0x33D9E and 0x3415E of
-    # the uj12 file's even bytes), the u12 and u13 samples are its own. Same
-    # file names as nbajamre's.
+    # the uj12 file's even bytes), the u13 samples differ in about 56,000 bytes
+    # and u12 is nbajamre's. Same file names as nbajamre's.
     dict(name='nbajamreb', parent='nbajamte2a', desc='NBA Jam Tournament Edition (Rewind, Get that Bleep outta here, hack)',
          zip='nbajamreb.zip',
          names={
@@ -146,8 +146,8 @@ HACKS = [
              'l1_nba_jam_tournament_game_rom_uj20.uj20': '71d028f8',
              'l1_nba_jam_tournament_game_rom_uj22.uj22': '42196c84',
              'l1_nba_jam_tournament_game_rom_uj23.uj23': 'b5bf66f9',
-             'l1_nba_jam_tournament_u12_sound_rom.u12': '7061fbc0',    # sound
-             'l1_nba_jam_tournament_u13_sound_rom.u13': '25edad0d',
+             'l1_nba_jam_tournament_u12_sound_rom.u12': 'cd5d4532',    # sound (nbajamre's)
+             'l1_nba_jam_tournament_u13_sound_rom.u13': 'c4cbede2',
          }),
 ]
 
