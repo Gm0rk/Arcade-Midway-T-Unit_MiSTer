@@ -73,13 +73,13 @@ from each other's.
 | MRA | Zip | Program (`uj12`) | Sound (`u12`, `u13`) |
 |---|---|---|---|
 | Rewind | nbajamre.zip | CRC 9b3fc483 | cd5d4532, e92fb0d3 |
-| Rewind, Get that Bleep outta here | nbajamreb.zip | CRC 383cd3ec | 7061fbc0, 25edad0d |
+| Rewind, Get that Bleep outta here | nbajamreb.zip | CRC 383cd3ec | cd5d4532, c4cbede2 |
 
 The program is the Tournament Edition's rev 2.0 (1-28-94, `nbajamte2a`) with
 about 2,600 bytes changed (the readme names rev 2.1, but the program matches
 2.0 where the two differ), and 12 graphics ROMs are changed. The Bleep version
-differs from the plain one in 2 program bytes and in its `u12` and `u13`
-sample ROMs. The hack's readme lists a code to turn fatalities on (at the team
+differs from the plain one in 2 program bytes and in its `u13` sample ROM
+(`u12` is the same). The hack's readme lists a code to turn fatalities on (at the team
 select screen hold Up and press Pass / Steal 20 times), the Big Head and Huge
 Head codes and an Expanded Roster code (at the player select screen, hold
 Down, press Pass twice, turn the joystick a full circle counterclockwise and
