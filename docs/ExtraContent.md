@@ -21,7 +21,7 @@ Beyond the arcade board itself, the core adds 12 core-wide features and a set of
 | Secrets pages | The hidden menus, screens and debug features the programmers left in each game, as OSD items. The core enters the control codes for you |
 | Information windows | Pages drawn over the game's dimmed title screen while the game waits: the Move List (Mortal Kombat games), the Secret Player List (NBA Jam games) and View Secrets (Mortal Kombat II Plus). Set one On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off |
 | OSD messages | When the OSD closes, a message says whether a code was taken, what a set finishing move is waiting for, what an option just turned on does, or that the loaded version does not have it |
-| MRAs | 30 MRAs for the five games (5 parents, 25 alternatives), each carrying its own table of patches and code positions and its Cheats list, built for MAME 0.289. One is for a hack that is not in MAME, Mortal Kombat II Plus, whose OSD has its own Move List and View Secrets, Fixed AI Difficulty and the Cheats, but no Finishing Moves or Hidden Items, and whose zip goes in `games/hbmame` |
+| MRAs | 33 MRAs for the five games (5 parents, 28 alternatives), each carrying its own table of patches and code positions and its Cheats list, built for MAME 0.289. Four are for hacks that are not in MAME, whose zips go in `games/hbmame`: Mortal Kombat II Plus, whose OSD has its own Move List and View Secrets, Fixed AI Difficulty and the Cheats, but no Finishing Moves or Hidden Items, and NBA Jam Tournament Edition Special Edition 5.02 and NBA Jam Rewind (with and without Get that Bleep outta here), which have the Tournament Edition's extras |
 
 ## Mortal Kombat
 
@@ -69,14 +69,14 @@ Three extras across the five versions: one hidden menu, a Cheats menu (26 cheats
 
 ## NBA Jam Tournament Edition
 
-Four extras on all nine versions: one hidden menu, No CPU Assistance, a Cheats menu (20 to 30 cheats a version) and a six-page Secret Player List window. Every version has all the cheat codes.
+Four extras on all twelve versions: one hidden menu, No CPU Assistance, a Cheats menu (20 to 30 cheats a version) and a seven-page Secret Player List window. Every version has all the cheat codes.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
 | Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics. Attract mode only | Cheat Codes & Hidden Items |
 | No CPU Assistance | Turns off the computer assistance that keeps games close | Cheat Codes & Hidden Items |
-| Cheats menu | The power-ups of the four players (Big/Huge Head, Max Power, Powerup Goal Tending, Quick Hands), infinite turbo for each, Baby Size Players, Huge Heads, Shot Percentage, Tournament Mode and the cheats of MAME's cheat file: infinite shot time, never miss a shot, dunks always break the backboard, fatalities, the All-Star Jam Team and more. The list is on the NBA Jam Tournament Edition page | Cheats |
-| Secret Player List window | Pages 1-4 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 5-6 list every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
+| Cheats menu | The power-ups of the four players (Big/Huge Head, Max Power, Powerup Goal Tending, Quick Hands), infinite turbo for each, Baby Size Players, Huge Heads, Shot Percentage, Tournament Mode and the cheats of MAME's cheat file (for the Special Edition, which has none, the same addresses moved to where the hack keeps them; Rewind has rev 2.0's, unmoved): infinite shot time, never miss a shot, dunks always break the backboard, fatalities, the All-Star Jam Team and more. The list is on the NBA Jam Tournament Edition page | Cheats |
+| Secret Player List window | Pages 1-5 list the secret players with name, initials, birthday and the versions that have them (a player whose initials changed between versions has a line for each); Pages 6-7 list every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
 
 ## Judge Dredd
 
