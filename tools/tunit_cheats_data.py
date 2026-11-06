@@ -201,7 +201,7 @@ CHEATS = {
     ],
 }
 
-# NBA Jam Rewind, with and without "Get the Bleep Out Here" (tools/hbmame_sets.py):
+# NBA Jam Rewind, with and without "Get that Bleep outta here" (tools/hbmame_sets.py):
 # rev 2.0's program (nbajamte2a) with changes elsewhere, so every pick of
 # nbajamte2a is at the same place in both (tools/tunit_relocate.py finds each of
 # them unmoved).
