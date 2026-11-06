@@ -184,4 +184,19 @@ CHEATS = {
         ('P4 Infinite Turbo', [(0x010E66F0, 0x002F, 0x00FF, '')]),
         ('Unlock All-Star Jam Team', [(0xFF9C6D00, 0xC003, 0xFFFF, 'F'), (0xFF9C7450, 0xC001, 0xFFFF, 'F'), (0xFF9C7030, 0xC001, 0xFFFF, 'F'), (0xFF9BFF60, 0xC009, 0xFFFF, 'F'), (0xFF9C2C80, 0xC009, 0xFFFF, 'F')]),
     ],
+    # Special Edition 5.02 (tools/hbmame_sets.py), which no cheat file covers:
+    # derived from nbajamte's by tools/tunit_relocate.py (the same code rebuilt
+    # from source: the RAM variables moved 7F60h bits, the ROM words keep their
+    # place in the code). Not in it: Dunks Always Break Backbrd (its jump target
+    # could not be matched) and Unlock All-Star Jam Team (the Special Edition
+    # has its own team lists and a CMOS option for it).
+    'nbajamtese': [
+        ('Disable In-Game Play Tip', [(0xFF953EE0, 0xC032, 0xFFFF, 'F'), (0xFF9581C0, 0xC01D, 0xFFFF, 'F')]),
+        ('Infinite Shot Time', [(0x010F2D80, 0x0009, 0x00FF, '')]),
+        ('Never Miss A Shot', [(0xFF8B6560, 0xCB76, 0xFFFF, 'F'), (0xFF8B9100, 0xC400, 0xFFFF, 'F')]),
+        ('P1 Infinite Turbo', [(0x010EE2C0, 0x002F, 0x00FF, '')]),
+        ('P2 Infinite Turbo', [(0x010EE3F0, 0x002F, 0x00FF, '')]),
+        ('P3 Infinite Turbo', [(0x010EE520, 0x002F, 0x00FF, '')]),
+        ('P4 Infinite Turbo', [(0x010EE650, 0x002F, 0x00FF, '')]),
+    ],
 }
