@@ -51,19 +51,19 @@ MRAs.
 
 ## Timing and resources
 
-<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 58's). -->
+<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 62's). -->
 Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
 5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Figures are from the
-compilation of Build 58 (2026-11-05). Timing is met on every clock, and so is
+compilation of Build 62 (2026-11-06). Timing is met on every clock, and so is
 every hold, recovery, removal and minimum pulse width check.
 
 | Clock | Frequency | Setup slack |
 |---|---|---|
-| System (core PLL) | 96 MHz | +0.311 ns |
+| System (core PLL) | 96 MHz | +0.409 ns |
 
 | Resource | Used | Percent used |
 |---|---|---|
-| Logic (ALMs) | 32,440 / 41,910 | 77 % |
+| Logic (ALMs) | 33,206 / 41,910 | 79 % |
 | Block RAM (M10K blocks) | 405 / 553 | 73 % |
 | DSP blocks | 67 / 112 | 60 % |
 
@@ -88,6 +88,13 @@ every hold, recovery, removal and minimum pulse width check.
   power-ups, night mode and more; the list is on each game's page)
 - Support for Mortal Kombat II Plus: its own Move List and View Secrets (the secret
   characters, the Kombat Kodes), Fixed AI Difficulty and four Cheats
+- Support for NBA Jam Tournament Edition Special Edition 5.02 (a ROM hack): the
+  Tournament Edition's extras, with the Special Edition's own secret players in
+  the Secret Player List
+- Support for NBA Jam Rewind (a ROM hack of the Tournament Edition rev 2.0),
+  with and without "Get that Bleep outta here": the Tournament Edition's extras,
+  including its 30 cheats and the Secret Player List, whose Versions column
+  names Rewind (it has rev 2.0's players)
 - NBA Jam, NBA Jam Tournament Edition: a Secret Player List with the cheat codes
 
 ## OSD
@@ -114,7 +121,10 @@ games.
 
 Use **merged** ROM sets. Files are found by CRC. Put the zips in `games/mame`, 
 the MRA files in `_Arcade` (other versions in `_Arcade/_alternatives`) 
-and the core in `_Arcade/cores`. Mortal Kombat II Plus goes in `games/hbmame`.
+and the core in `_Arcade/cores`. Mortal Kombat II Plus (`mk2p.zip`), the NBA Jam
+Tournament Edition Special Edition 5.02 (`nbajamtese.zip`) and NBA Jam Rewind
+(`nbajamre.zip`, and `nbajamreb.zip` for Get that Bleep outta here) go in
+`games/hbmame`.
 
 ## Credits and references
 
@@ -145,7 +155,9 @@ and the core in `_Arcade/cores`. Mortal Kombat II Plus goes in `games/hbmame`.
     syndromtr (the others)
   - NBA Jam (nbajam): Abystus (most of them); Pugsy (Invincibility on 3D Tank
     Game, Computer Assistance Off)
-  - NBA Jam Tournament Edition: syndromtr, Abystus and Pugsy (nbajamte);
+  - NBA Jam Tournament Edition: syndromtr, Abystus and Pugsy (nbajamte; the
+    Special Edition's, nbajamtese, are some of these moved to where the hack
+    keeps them; Rewind's, nbajamre and nbajamreb, are nbajamte2a's);
     syndromtr and Abystus (nbajamte1, nbajamte2a, nbajamte3)
   - Judge Dredd (jdreddp), NBA Jam rev 2.00 (nbajamr2) and the Tournament
     Edition sets nbajamte2, nbajamte3a and nbajamte4 are not in cheat.txt's
