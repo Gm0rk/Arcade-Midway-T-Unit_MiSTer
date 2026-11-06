@@ -200,3 +200,9 @@ CHEATS = {
         ('P4 Infinite Turbo', [(0x010EE650, 0x002F, 0x00FF, '')]),
     ],
 }
+
+# NBA Jam Rewind, with and without "Get the Bleep Out Here" (tools/hbmame_sets.py):
+# rev 2.0's program (nbajamte2a) with changes elsewhere, so every pick of
+# nbajamte2a is at the same place in both (tools/tunit_relocate.py finds each of
+# them unmoved).
+CHEATS['nbajamre'] = CHEATS['nbajamreb'] = CHEATS['nbajamte2a']
