@@ -108,6 +108,7 @@ TE_SETS = [('nbajamtep2', 'proto', 'proto 2.00 12-17-93'), ('nbajamte1', '1.00',
            ('nbajamte3a', '3.0 2-26', 'rev 3.0 2-26-94'), ('nbajamte4', '4.0 3-03', 'rev 4.0 3-03-94'),
            ('nbajamte3', '3.0 3-04', 'rev 3.0 3-04-94'), ('nbajamte', '4.0 3-23', 'rev 4.0 3-23-94'),
            ('nbajamten', 'Nani', 'Nani Edition, rev 5.2 8-11-95'),
+           ('nbajamre', 'Rewind', 'Rewind (hack of 2.0; the Bleep version, nbajamreb, has the same table)'),
            ('nbajamtese', 'SE 5.02', 'Special Edition, rev 5.02')]
 GAMES = [('nbajam', 'NBA JAM', NJ_PLAYERS, NJ_SETS), ('nbajamte', 'NBA JAM TOURNAMENT EDITION', TE_PLAYERS, TE_SETS)]
 
@@ -177,7 +178,7 @@ def hack_program(hack, hbmame):
     z = zipfile.ZipFile(os.path.join(hbmame, hack['zip']))
     data = {}
     for k, (name, crc) in files.items():
-        data[k] = z.read(name)
+        data[k] = z.read(hack.get('names', {}).get(name, name))      # the zip's own name for it
         if zlib.crc32(data[k]) != crc:
             raise SystemExit('%s: %s has the wrong CRC' % (hack['zip'], name))
     buf = bytearray(len(data['uj12']) * 2)
