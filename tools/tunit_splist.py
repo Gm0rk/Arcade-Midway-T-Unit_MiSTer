@@ -11,20 +11,27 @@ The players come from the games themselves: after a player's initials and
 birthday the game compares them with a table of 5-word entries (initials 0-25
 and 26 for a space, month, day; NBA Jam 3.01 FF963740, TE 4.0 FF9DF760). --scan
 reads that table in every revision's program ROM (region dumps from
-tools/mame/region_dump.lua) and writes tools/tunit_splist.txt, from which the
-rest is made, so the ROMs are needed for --scan only. Entries are matched to
-the players below by their initials; a player's initials can differ between
+tools/mame/region_dump.lua; the HBMAME hack, TE Special Edition 5.02, from its
+zip in tools/hbmame_sets.py's folder) and writes tools/tunit_splist.txt, from
+which the rest is made, so the ROMs are needed for --scan only. Entries are
+matched to the players below by their initials; a player's initials can differ between
 revisions (TE proto 2.00's placeholders such as JZG for JPG, the Grim
 Reaper's BIG and GRM), and TE 3.0 (2-26-94) adds 17 to the first letter of
 everyone but the NBA players (a player can only enter 0-26: they are
-disabled there, the picture and name are still in the game). Every entry was
-seen by name on MAME's team select screen with the check patched to it.
+disabled there, the picture and name are still in the game). Every entry of a
+MAME revision was seen by name on MAME's team select screen with the check
+patched to it. The Special Edition's table (68 entries; its own release
+notes name Griffey and Jordan and their birthdays) was read from its program:
+KID NOV 21 (Griffey) and AIR FEB 17 (Jordan) are new, every other entry has the
+initials and birthday of an earlier revision's, and there are none for Ray
+Gay, Isiah Thomas, Chris Webber and Dennis Rodman (the notes: Jordan replaces
+Webber). These were not seen on a team select screen.
 The full names: the games' own credits, a secret player guide on GameFAQs
 (Secret Player Stats Guide by DarthMarino), and for VLK ("Kamm") The
 Cutting Room Floor (Larry DeMar's picture, Vicki Kamm's name).
 
 Usage:
-    tunit_splist.py --scan --regions DIR   write tools/tunit_splist.txt
+    tunit_splist.py --scan --regions DIR --hbmame DIR   write tools/tunit_splist.txt
     tunit_splist.py --docs nbajam|nbajamte the game page's table (markdown)
 
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
@@ -36,6 +43,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
+import hbmame_sets  # noqa: E402
 import tunit_secrets as ts  # noqa: E402
 
 TXT = os.path.join(HERE, 'tunit_splist.txt')
@@ -74,6 +82,7 @@ TE_PLAYERS = [
     ('Martin Martinez', 'Martinez', 'MAM'), ('Rachel Davies', 'Davies', 'RJD'),
     ('Kerri Hoskins', 'Hoskins', 'KER'), ('Lorraine Olivia', 'Olivia', 'LOR'),
     ('Chris Granner', 'Granner', 'CG_'), ('Ray Gay', 'Gay', 'RMG'),
+    ('Ken Griffey Jr.', 'Griffey', 'KID'),
     ('Jason Skiles', 'Skiles', 'JMS2'), ('Joe Linhoff', 'Linhoff', 'JFL JZL'),
     ('Dominique Wilkins', 'Wilkins', 'DOM'), ('Dee Brown', 'Brown', 'DEE'),
     ('Alonzo Mourning', 'Mourning', 'ZO_'), ('Scottie Pippen', 'Pippen', 'PIP'),
@@ -82,7 +91,7 @@ TE_PLAYERS = [
     ('Patrick Ewing', 'Ewing', 'PAT'), ('Charles Barkley', 'Barkley', 'BRK'),
     ('David Robinson', 'Robinson', 'ROB'), ('Shawn Kemp', 'Kemp', 'KMP'),
     ('Karl Malone', 'Malone', 'KRL'), ('Dennis Rodman', 'Rodman', 'ROD'),
-    ('Gary Payton', 'Payton', 'GEE'), ('Sub-Zero', 'Sub-Zero', 'SUB'),
+    ('Gary Payton', 'Payton', 'GEE'), ('Michael Jordan', 'Jordan', 'AIR'), ('Sub-Zero', 'Sub-Zero', 'SUB'),
     ('Scorpion', 'Scorpion', 'SCO'), ('Reptile', 'Reptile', 'RPT'),
     ('Raiden', 'Raiden', 'RAD'), ('Grim Reaper', 'Reaper', 'BIG GRM'),
     ('Kongo', 'Kongo', 'KNG'), ('Tim Coman', 'Coman', 'TJC'),
@@ -98,7 +107,8 @@ TE_SETS = [('nbajamtep2', 'proto', 'proto 2.00 12-17-93'), ('nbajamte1', '1.00',
            ('nbajamte2a', '2.0', 'rev 2.0 1-28-94'), ('nbajamte2', '2.1', 'rev 2.1 2-06-94'),
            ('nbajamte3a', '3.0 2-26', 'rev 3.0 2-26-94'), ('nbajamte4', '4.0 3-03', 'rev 4.0 3-03-94'),
            ('nbajamte3', '3.0 3-04', 'rev 3.0 3-04-94'), ('nbajamte', '4.0 3-23', 'rev 4.0 3-23-94'),
-           ('nbajamten', 'Nani', 'Nani Edition, rev 5.2 8-11-95')]
+           ('nbajamten', 'Nani', 'Nani Edition, rev 5.2 8-11-95'),
+           ('nbajamtese', 'SE 5.02', 'Special Edition, rev 5.02')]
 GAMES = [('nbajam', 'NBA JAM', NJ_PLAYERS, NJ_SETS), ('nbajamte', 'NBA JAM TOURNAMENT EDITION', TE_PLAYERS, TE_SETS)]
 
 MONTHS = 'JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC'.split()
@@ -156,15 +166,39 @@ def match(entries, players):
     return out
 
 
-def scan(regions):
-    """tools/tunit_splist.txt from the region dumps."""
+def hack_program(hack, hbmame):
+    """The maincpu region of an HBMAME hack (tools/hbmame_sets.py): its zip's two
+    program files, uj12 the even bytes and ug12 the odd, as MAME loads them."""
+    import zipfile
+    import zlib
+    files = {n.rsplit('.', 1)[1]: (n, int(c, 16)) for n, c in hack['files'].items() if n.rsplit('.', 1)[1] in ('uj12', 'ug12')}
+    if sorted(files) != ['ug12', 'uj12']:
+        raise SystemExit('%s: program files not among the hack\'s' % hack['name'])
+    z = zipfile.ZipFile(os.path.join(hbmame, hack['zip']))
+    data = {}
+    for k, (name, crc) in files.items():
+        data[k] = z.read(name)
+        if zlib.crc32(data[k]) != crc:
+            raise SystemExit('%s: %s has the wrong CRC' % (hack['zip'], name))
+    buf = bytearray(len(data['uj12']) * 2)
+    buf[0::2], buf[1::2] = data['uj12'], data['ug12']
+    return bytes(buf)
+
+
+def scan(regions, hbmame):
+    """tools/tunit_splist.txt from the region dumps (and the hacks' zips)."""
     lines = ['# Secret players, from tools/tunit_splist.py --scan (the games\' tables).',
              '# game | full name | team select name | initials | birthday | versions',
              '# (initials: _ is a space; versions: the list names of tunit_splist.py, oldest first)']
     for game, _, players, sets in GAMES:
         have = {}                            # (player, initials, birthday) -> versions
         for setname, rev, _ in sets:
-            t = table(ts.Prog(open(os.path.join(regions, setname, 'maincpu.bin'), 'rb').read()))
+            hack = next((h for h in hbmame_sets.HACKS if h['name'] == setname), None)
+            if hack:
+                prog = hack_program(hack, hbmame)
+            else:
+                prog = open(os.path.join(regions, setname, 'maincpu.bin'), 'rb').read()
+            t = table(ts.Prog(prog))
             if t is None:
                 print('%-11s no secret players' % setname)
                 continue
@@ -251,8 +285,8 @@ def docs(game):
 
 def main():
     a = sys.argv[1:]
-    if a[:1] == ['--scan'] and len(a) == 3 and a[1] == '--regions':
-        scan(a[2])
+    if a[:1] == ['--scan'] and len(a) == 5 and a[1] == '--regions' and a[3] == '--hbmame':
+        scan(a[2], a[4])
     elif a[:1] == ['--docs'] and len(a) == 2:
         print(docs(a[1]))
     else:
