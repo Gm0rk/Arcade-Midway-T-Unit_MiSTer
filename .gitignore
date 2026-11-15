@@ -50,3 +50,4 @@ sim/window_test/obj_dir/
 sim/vram_test/*.vvp
 sim/window_test/out/
 sim/dcs_test/obj_cpu/
+CHANGELOG.md
