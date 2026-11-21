@@ -30,14 +30,14 @@ A page is 30 rows of 56 characters; a row is a list of segments, runs of
 text in one colour (the blanks between them are not stored). ROM images
 for $readmemh:
 
-    rtl/tunit_window_row.hex   2048 x 11 bits, address {page, row}: the
+    rtl/tunit_window_row.hex   2048 x 12 bits, address {page, row}: the
                                row's first segment (0: empty row)
-    rtl/tunit_window_seg.hex   2048 x 29 bits, a segment: [13:0] its first
-                               character in the text ROM, [19:14] its
-                               length, [25:20] its column, [27:26] its
+    rtl/tunit_window_seg.hex   4096 x 30 bits, a segment: [14:0] its first
+                               character in the text ROM, [20:15] its
+                               length, [26:21] its column, [28:27] its
                                colour (0 white, 1 yellow, 2 cyan, 3 gray),
-                               [28] the row's last segment
-    rtl/tunit_window_text.hex  16384 x 7 bits: the character codes - 32
+                               [29] the row's last segment
+    rtl/tunit_window_text.hex  32768 x 7 bits: the character codes - 32
                                (segments with the same text share it)
     rtl/tunit_window_font.hex  96 x 8 rows of 8 bits (bit x: column x),
                                characters 32-127: the MiSTer OSD's font
@@ -75,6 +75,8 @@ import tunit_splist as sl   # noqa: E402
 import tunit_fmoves as fm   # noqa: E402
 import tunit_secrets as ts  # noqa: E402
 import tunit_plus as tp     # noqa: E402
+import tunit_rev4 as r4     # noqa: E402
+import tunit_mkplus as mkp  # noqa: E402
 
 OUT = {k: os.path.join(REPO, 'rtl', 'tunit_window_%s.hex' % k)
        for k in ('row', 'seg', 'text', 'font', 'bg', 'pal')}
@@ -82,9 +84,9 @@ OUT_SVH = os.path.join(REPO, 'rtl', 'tunit_window_pages.svh')
 
 COLS, ROWS = 56, 30
 LEFT, RIGHT = 1, 54                 # the columns text uses
-PAGES = 64                          # row ROM pages (the page input has 6 bits)
-SEG_SIZE = 2048                     # segment ROM entries
-TEXT_SIZE = 16384                   # text ROM characters
+PAGES = 128                         # row ROM pages (the page input has 7 bits)
+SEG_SIZE = 4096                     # segment ROM entries (the row ROM's segment index has 12 bits)
+TEXT_SIZE = 32768                   # text ROM characters (the segments' first character has 15 bits)
 WHITE, YELLOW, CYAN, GRAY = range(4)
 BG_W, BG_H, BG_COLOURS = 200, 127, 32
 BG_GAMES = ('nbajam', 'nbajamte', 'mk', 'mk2')
@@ -175,8 +177,40 @@ def title_row(left, right):
     return at((LEFT, left, CYAN), (RIGHT + 1 - len(right), right, GRAY))
 
 
+# The Move Lists' sources, a credit on the last row of each page that has a
+# blank row to spare between the page and its footer (it takes that row): the
+# list's label (its first word), "Moves:" for the lists made from the guide,
+# "Guide:" for the two stock lists (found in the game's code and played in
+# MAME; the guide is the reference), and the page's address in pieces that
+# share text in the text ROM.
+GUIDE_HOST = 'icemantraveler.github.io/mkksg/'
+CREDITS = {
+    'mk':      ('Guide:', [GUIDE_HOST, 'mk1']),
+    'mk2':     ('Guide:', [GUIDE_HOST, 'mk2']),
+    'mkplus':  ('Moves:', [GUIDE_HOST, 'fan_made/', 'mkplus']),
+    'mk2plus': ('Moves:', [GUIDE_HOST, 'fan_made/', 'mk2plus']),
+    'mk2r4':   ('Moves:', ['junkwax', '.github.io/', 'mk2-rev4']),
+}
+no_credit = []                      # the pages that had no room (--show lists them)
+
+
+def credit_row(label):
+    """The credit row of a page's label, or None (not a Move List page)."""
+    game = label.split()[0]
+    if game not in CREDITS or label.startswith('mk2plus secrets'):
+        return None
+    what, parts = CREDITS[game]
+    return row((what + ' ', CYAN), *[(p, GRAY) for p in parts])
+
+
 def compose(label, head, body, foot):
     """A page: head, body, blank rows, footer at the bottom."""
+    c = credit_row(label)
+    if c:
+        if ROWS - len(head) - len(body) - len(foot) >= 1:
+            foot = foot + [c]
+        else:
+            no_credit.append(label)
     rows = head + body + [None] * (ROWS - len(head) - len(body) - len(foot)) + foot
     if len(rows) > ROWS:
         raise SystemExit('%s: %d rows' % (label, len(rows)))
@@ -258,7 +292,7 @@ def wrap_words(text, width_):
 C_CODE = LEFT + 2                   # a code's text under its name
 CODE_FOOTER = [
     [('Press', YELLOW), (': ' + ts.CHEATS_NOTE.split(': ', 1)[1], GRAY)],
-    [("The OSD's Cheat Codes & Hidden Items page does these", GRAY)],
+    [("The OSD's Extras page does these", GRAY)],
 ]
 
 
@@ -319,10 +353,10 @@ ML_DISTANCE = [('Distance', YELLOW), (': ', GRAY), ('Sweep', YELLOW), (" = a swe
                ('Jump', YELLOW), (' = a jump away', GRAY)]
 # the stage moves' stages (by the fighter's stage move kind), MK2's rule for
 # friendships and babalities
+ML_MK_PIT = [('The Pit', YELLOW), (' (all): D+HP, close, on The Pit stage only', GRAY)]
 ML_FOOTER_STAGE = {
-    fm.K_MKPIT: [('The Pit', YELLOW), (' (all): D+HP, close, on The Pit stage only', GRAY)],
-    fm.K_STAGE: [('Pit / Spikes', YELLOW), (': The Pit II and Kombat Tomb only', GRAY)],
-    fm.K_PIT2: [('Pit', YELLOW), (': The Pit II only', GRAY)],
+    fm.K_STAGE: [('Stage Fatality', YELLOW), (': The Pit II and Kombat Tomb only', GRAY)],
+    fm.K_PIT2: [('Stage Fatality', YELLOW), (': The Pit II only', GRAY)],
 }
 ML_FRIEND = [('Friendship, Babality', YELLOW), (': a round won without punches', GRAY)]
 
@@ -350,7 +384,7 @@ def finishing(game, name, moves):
     out = []
     extra = [e for f, after, e in fm.WINDOW_EXTRA.get(game, []) if f == name]
     after = {a: e for f, a, e in fm.WINDOW_EXTRA.get(game, []) if f == name}
-    for mname, kind, cmd, prog, dmin, dmax, note in moves:
+    for mname, kind, cmd, prog, dmin, dmax, note in sorted(moves, key=fm.by_name):
         more = (note, YELLOW) if note else None
         out.append((mname, cmd, more, fm.dist(dmin, dmax)))
         if mname in after:
@@ -379,7 +413,7 @@ def special_rows(game, name, sp, col, cmd_col):
 
 
 def mk2_pages():
-    """MK2's Move List: a page per fighter (Right turns to the next one)."""
+    """MK2's Move List: a page per fighter, in alphabetical order (Right turns to the next one)."""
     out = []
     n_pages = len(fm.fighters('mk2'))
     for k, ((name, cid, moves), (n2, sp)) in enumerate(zip(fm.fighters('mk2'), fm.specials('mk2'))):
@@ -415,12 +449,12 @@ def mk2_pages():
 
 
 def mk_pages():
-    """MK's Move List: as many fighters to a page as fit (the Character
-    option's order), each with the special moves and the fatality; The Pit,
+    """MK's Move List: as many fighters to a page as fit (in alphabetical
+    order), each with the special moves and the fatality; The Pit,
     the same for all, in the footer."""
-    foot = [row(*f) for f in ML_NOTATION + [ML_DISTANCE, ML_FOOTER_STAGE[fm.K_MKPIT]]]
+    foot = [row(*f) for f in ML_NOTATION + [ML_DISTANCE, ML_MK_PIT]]
     blocks = []
-    fighters = [(n, [m for m in moves if m[1] != fm.K_MKPIT]) for n, _, moves in fm.fighters('mk')]
+    fighters = [(n, list(moves)) for n, _, moves in fm.fighters('mk')]
     c_name = LEFT + 2
     w_name = max(len(m) for (_, sp) in fm.specials('mk') for m, _ in sp)
     w_name = max([w_name] + [len('Fatality: ' + m[0]) for _, fat in fighters for m in fat])
@@ -430,7 +464,7 @@ def mk_pages():
     for (name, fat), (n2, sp) in zip(fighters, fm.specials('mk')):
         assert name == n2
         b = [row((name.upper(), CYAN))] + special_rows('mk', name, sp, c_name, c_cmd)
-        for mname, kind, cmd, prog, dmin, dmax, note in fat:
+        for mname, kind, cmd, prog, dmin, dmax, note in sorted(fat, key=fm.by_name):
             b.append(at((c_name, 'Fatality: ' + mname, WHITE), (c_cmd, cmd, YELLOW), (c_dist, fm.dist(dmin, dmax), GRAY)))
         blocks.append((name, b))
     room = ROWS - 3 - 1 - len(foot)
@@ -461,7 +495,7 @@ def mk_pages():
 MK_TITLES['mk2plus'] = 'MORTAL KOMBAT II PLUS'
 PLUS_DISTANCE = [('Sweep', YELLOW), (": a sweep's reach, ", GRAY), ('Half screen', YELLOW),
                  (': a jump away', GRAY)]
-PLUS_STAGE = [('Pit / Spikes', YELLOW), (': Kombat Tomb, The Pit II, The Pit only', GRAY)]
+PLUS_STAGE = [('Stage Fatality', YELLOW), (': Kombat Tomb, The Pit II, The Pit only', GRAY)]
 PLUS_EXTRA = [('+', YELLOW), (' needs Extra Moves On in the hack\'s settings', GRAY)]
 PLUS_SECRET = [('Unlock and select it: ', GRAY), ('OSD View Secrets', YELLOW)]
 SC_HINT = [('Left', YELLOW), (' / ', GRAY), ('Right', YELLOW), (': page    ', GRAY),
@@ -504,8 +538,8 @@ def plus_finishing_rows(fin, fw, cd):
 
 
 def plus_pages():
-    """Mortal Kombat II Plus's Move List: a page per fighter (the 12 of MK2,
-    then Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn)."""
+    """Mortal Kombat II Plus's Move List: a page per fighter, in alphabetical
+    order (the 12 of MK2 and Jade, Noob Saibot, Smoke, Kintaro and Shao Kahn)."""
     out = []
     n_pages = len(tp.FIGHTERS)
     for k, f in enumerate(tp.FIGHTERS):
@@ -537,7 +571,7 @@ def plus_pages():
         if any(tp.hold_time(c) for c in cmds):
             foot.append(ML_HOLD)
         foot.append(PLUS_DISTANCE)
-        if any(x['name'] == 'Pit / Spikes' for x in fin):
+        if any(x['name'] == 'Stage Fatality' for x in fin):
             foot.append(PLUS_STAGE)
         if any(x['name'] in ('Friendship', 'Babality') for x in fin):
             foot.append(ML_FRIEND)
@@ -615,12 +649,185 @@ def plus_secret_pages():
 
 
 # ----------------------------------------------------------------------------
+# Mortal Kombat II rev 4.0 (the hack): its own Move List
+# ----------------------------------------------------------------------------
+
+R4_TITLE = 'MORTAL KOMBAT II REV 4.0'
+R4_DISTANCE = [[('Close', YELLOW), (': a step or less, ', GRAY), ('Sweep', YELLOW), (": a sweep's reach", GRAY)],
+               [('Mid', YELLOW), (': a third to half a screen, ', GRAY), ('Far', YELLOW),
+                (': two thirds or more', GRAY)]]
+R4_STAGE = [('Stage Fatality', YELLOW), (': Kombat Tomb, Pit II, Yoteigai Tor, Pit', GRAY)]
+R4_DEADPOOL = [('Dead Pool', YELLOW), (': an uppercut, D+HP, during FINISH HIM', GRAY)]
+R4_FRIEND = [('Babality', YELLOW), (': a round won without any punch (HP, LP)', GRAY)]
+R4_NEW = [('+', YELLOW), (' new in rev 4.0 (not in arcade MK2)', GRAY)]
+
+
+def rev4_fighter(f, nw_min=16):
+    """A fighter's pages (title, head extras, body rows, footer rows, the
+    finishing-move rows): one page, or for Shang Tsung (the morphs) two"""
+    name = f['name']
+    nw = max(nw_min, max(len(m) for m, _, _, _ in f['special']) + 2)
+    special = plus_special_rows(f['special'], nw)
+    morph = []
+    if f.get('morph'):
+        morph = [row(('MORPH INTO', CYAN))] + morph_rows(f['morph']) + [row((f['morph_note'], GRAY))]
+    extra = []
+    if f.get('select'):
+        extra.append(row(('Select: ', GRAY), (f['select'], YELLOW)))
+    if f.get('note'):
+        extra.append(row((f['note'], GRAY)))
+    fin = f['finish']
+    fw = max(len(x['name']) for x in fin) + 2
+    iw = max([len(x['cmd']) for x in fin] + [len('then ' + c) for x in fin for c, _ in x['then']]) + 2
+    dw = max(len(d) for x in fin for d in [x['dist']] + [d for _, d in x['then']])
+    if not morph and max(fw, nw) + iw + dw <= RIGHT - LEFT + 1:
+        fw = max(fw, nw)
+    if fw + iw + dw > RIGHT - LEFT + 1:
+        raise SystemExit('mk2r4 %s: the finishing moves need %d columns' % (name, fw + iw + dw))
+    cd = RIGHT + 1 - max(dw, len('DISTANCE'))
+    fin_head = at((LEFT, 'FINISHING MOVES', CYAN), (cd, 'DISTANCE', CYAN))
+    fin_rows = plus_finishing_rows(fin, fw, cd)
+    cmds = [c for _, c, _, _ in f['special']] + [x['cmd'] for x in fin] + [c for x in fin for c, _ in x['then']]
+    foot = ML_NOTATION[:]
+    if any(r4.hold_time(c) for c in cmds):
+        foot.append(ML_HOLD)
+    foot += R4_DISTANCE
+    foot += [R4_STAGE, R4_DEADPOOL, R4_FRIEND]
+    legend = [R4_NEW] if (any(x['plus'] for x in fin) or any(p for _, _, _, p in f['special'])) else []
+    return name, special, morph, extra, fin_head, fin_rows, foot, legend
+
+
+def rev4_pages():
+    """Mortal Kombat II rev 4.0's Move List: a page per fighter, in alphabetical
+    order (the 12 of MK2 and Ermac, Jade and Rain, the hidden ones; Shang Tsung's
+    morphs need two), then what is different and the secret opponents."""
+    info = 3
+    pgs = []                         # (label, title, body rows, footer rows)
+    for f in r4.FIGHTERS:
+        name, special, morph, extra, fin_head, fin_rows, foot, legend = rev4_fighter(f)
+        if morph:
+            # moves and morphs, then the finishing moves
+            pgs.append(('mk2r4 %s' % name, name.upper(),
+                        [row(('SPECIAL MOVES', CYAN))] + special + morph,
+                        ML_NOTATION + [ML_HOLD, R4_NEW] if any(r4.hold_time(c) for _, c, _, _ in f['special']) else ML_NOTATION + legend))
+            pgs.append(('mk2r4 %s finishing moves' % name, name.upper(), [fin_head] + fin_rows,
+                        ML_NOTATION + [ML_HOLD] + R4_DISTANCE + [R4_STAGE, R4_DEADPOOL, R4_FRIEND] + legend))
+        else:
+            pgs.append(('mk2r4 %s' % name, name.upper(),
+                        [row(('SPECIAL MOVES', CYAN))] + special + extra + [None, fin_head] + fin_rows, foot + legend))
+    col = LEFT + 20
+    w = RIGHT + 1 - col
+    n_pages = len(pgs) + info
+    out = []
+    for k, (label, title, body, foot) in enumerate(pgs):
+        head = [title_row(title, '%s  %d/%d' % (R4_TITLE, k + 1, n_pages)), row(*ML_HINT)]
+        out.append(compose(label, head, body, [row(*x) if isinstance(x, list) else x for x in foot]))
+    # what is different, then the secret opponents
+    pages_ = []
+    for title, items in (('NEW IN REV 4.0', r4.SYSTEM_1), ('MORE CHANGES', r4.SYSTEM_2)):
+        body = []
+        for label, text in items:
+            body += label_rows(label, text, col, w) + [None]
+        pages_.append((title, body[:-1]))
+    body = []
+    for label, text in r4.SECRETS:
+        body += label_rows(label, text, col, w) + [None]
+    body += [None] + [row((t, GRAY)) for t in r4.SECRET_NOTE]
+    pages_.append(('SECRET OPPONENTS', body))
+    for k, (title, body) in enumerate(pages_):
+        head = [title_row(title, '%s  %d/%d' % (R4_TITLE, len(pgs) + k + 1, n_pages)), row(*ML_HINT), None]
+        out.append(compose('mk2r4 %s' % title.lower(), head, body, []))
+    return out
+
+
+# ----------------------------------------------------------------------------
+# Mortal Kombat Plus (tools/tunit_mkplus.py): its own Move List
+# ----------------------------------------------------------------------------
+
+MK_TITLES['mkplus'] = 'MORTAL KOMBAT PLUS'
+MKP_DISTANCE = [('Distance', YELLOW), (': ', GRAY), ('Close', YELLOW), (' = next to them, ', GRAY),
+                ('Sweep', YELLOW), (' = a sweep away', GRAY)]
+MKP_NEW = [('+', YELLOW), (' added in Plus', GRAY)]
+
+
+def mkplus_pages():
+    """Mortal Kombat Plus's Move List: as many fighters to a page as fit (each
+    with the special moves, the fatalities and the Babality; Reptile, the
+    hidden fighter, in the alphabetical order too), then the general moves and the notes."""
+    c_name = LEFT + 2
+    names = [s['name'] for f in mkp.FIGHTERS for s in f['special']]
+    names += ['Fatality: ' + x['name'] for f in mkp.FIGHTERS for x in f['fatal']] + ['Babality']
+    c_cmd = c_name + max(len(n) for n in names) + 2
+    c_dist = RIGHT + 1 - len('DISTANCE')
+    blocks = []
+    for f in mkp.FIGHTERS:
+        title = f['name'].upper() + (' (HIDDEN)' if f['hidden'] else '')
+        b = [row((title, CYAN))]
+        for s in f['special']:
+            cells = [(c_name, s['name'], WHITE), (c_cmd, s['cmd'], YELLOW)]
+            if s['dist']:
+                cells.append((c_dist, s['dist'], GRAY))
+            if s['plus']:
+                cells.insert(0, (LEFT, '+', YELLOW))
+            b.append(at(*cells))
+        for x in mkp.finishing(f):
+            b.append(at((c_name, x['name'], WHITE), (c_cmd, x['cmd'], YELLOW), (c_dist, x['dist'], GRAY)))
+        blocks.append((f['name'], b))
+    foot = [row(*f) for f in ML_NOTATION + [MKP_DISTANCE, MKP_NEW]]
+    room = ROWS - 3 - 1 - len(foot)
+    groups, cur = [], []
+    for name, b in blocks:
+        rows_ = sum(len(x) + 1 for _, x in cur) + len(b)
+        if cur and rows_ > room:
+            groups.append(cur)
+            cur = []
+        cur.append((name, b))
+    groups.append(cur)
+    n_pages = len(groups) + 2
+    out = []
+    for k, g in enumerate(groups):
+        body = []
+        for name, b in g:
+            body += ([None] if body else []) + b
+        head = [title_row('MOVE LIST  %d/%d' % (k + 1, n_pages), MK_TITLES['mkplus']), row(*ML_HINT),
+                at((c_name, 'MOVE', GRAY), (c_cmd, 'COMMAND', GRAY), (c_dist, 'DISTANCE', GRAY))]
+        out.append(compose('mkplus %s' % ', '.join(n for n, _ in g), head, body, foot))
+    # the general moves and what Plus adds, then the guide's notes
+    c_cmd2 = c_name + max(len(m) for m, _, _ in mkp.GENERAL) + 2
+    body = []
+    for m, c, d in sorted(mkp.GENERAL, key=lambda g: g[0].lower()):
+        cells = [(c_name, m, WHITE), (c_cmd2, c, YELLOW)]
+        if d:
+            cells.append((c_dist, d, GRAY))
+        body.append(at(*cells))
+    body += [None, row(('ADDED IN PLUS', CYAN))]
+    for text in mkp.ADDITIONS:
+        lines = wrap_words(text, RIGHT - LEFT - 3)
+        body.append(at((LEFT, '+', YELLOW), (LEFT + 2, lines[0], WHITE)))
+        body += [at((LEFT + 2, ln, WHITE)) for ln in lines[1:]]
+    head = [title_row('GENERAL MOVES', '%s  %d/%d' % (MK_TITLES['mkplus'], n_pages - 1, n_pages)),
+            row(*ML_HINT), at((c_name, 'MOVE', GRAY), (c_cmd2, 'COMMAND', GRAY), (c_dist, 'DISTANCE', GRAY))]
+    out.append(compose('mkplus general moves', head, body, foot[:2]))
+    col = LEFT + 14
+    w = RIGHT + 1 - col
+    body = []
+    for label, text in mkp.NOTES:
+        body += label_rows(label, text, col, w) + [None]
+    body += [row(('DISTANCES', CYAN))]
+    for label, text in mkp.DISTANCES:
+        body += label_rows(label, text, col, w)
+    head = [title_row('NOTES', '%s  %d/%d' % (MK_TITLES['mkplus'], n_pages, n_pages)), row(*ML_HINT), None]
+    out.append(compose('mkplus notes', head, body, []))
+    return out
+
+
+# ----------------------------------------------------------------------------
 # All pages, the ROM images
 # ----------------------------------------------------------------------------
 
 LISTS = [('nbajam', lambda: nba_pages('nbajam')), ('nbajamte', lambda: nba_pages('nbajamte')),
          ('mk', mk_pages), ('mk2', mk2_pages), ('mk2plus', plus_pages),
-         ('mk2plus_secrets', plus_secret_pages)]
+         ('mk2plus_secrets', plus_secret_pages), ('mk2r4', rev4_pages), ('mkplus', mkplus_pages)]
 
 
 def pages():
@@ -668,7 +875,7 @@ def images():
                     if at_ < 0:
                         at_ = len(text)
                         text += t
-                    seg.append(at_ | (len(t) << 14) | (col << 20) | (colour << 26) | ((n == len(sg) - 1) << 28))
+                    seg.append(at_ | (len(t) << 15) | (col << 21) | (colour << 27) | ((n == len(sg) - 1) << 29))
             rows.append(lists[sg])
     rows += [0] * (PAGES * 32 - len(rows))
     if len(seg) > SEG_SIZE or len(text) > TEXT_SIZE:
@@ -685,7 +892,7 @@ def images():
            '// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later',
            '']
     for name, (p0, n) in first.items():
-        svh.append("%-52s// %d page%s" % ("localparam [5:0] WIN_%s = 6'd%d;" % (name.upper(), p0),
+        svh.append("%-52s// %d page%s" % ("localparam [6:0] WIN_%s = 7'd%d;" % (name.upper(), p0),
                                           n, 's' if n > 1 else ''))
     svh += ['', '// pages of each list (Left / Right turn them while the OSD option is On)']
     for name, (p0, n) in first.items():
