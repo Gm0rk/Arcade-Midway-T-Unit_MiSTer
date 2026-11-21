@@ -32,6 +32,7 @@ module williams_adpcm
 	input             clk,             // 96 MHz
 	input             reset,
 	input             pause,
+	input       [1:0] speed,           // sound CPU speed: 0 the board's 2 MHz, 1 / 2 / 3 about 102 / 104 / 106 %
 
 	input      [15:0] prot_start,      // hidden RAM window (MAME init_*)
 	input      [15:0] prot_end,
@@ -70,6 +71,11 @@ reg         mem_ready;
 // in flight; the time lost is made up by shortening the following cycles
 // (to no less than 32 clk) so the average rate stays at 2 MHz.
 //
+// The OSD's Sound CPU Speed shaves sp_cut clk (0 to 3) off the planned cycle
+// (a fraction accumulator, 8 fraction bits, steps of 48 x (1 - 1 / ratio)),
+// so the 6809 runs 2 / 4 / 6 % faster while the YM2151 and the OKI keep their
+// clocks. At 0 nothing is shaved and the cycles are the board's.
+//
 // Settling times: the 6809 core works out its next address and register
 // values combinationally (many logic levels), so nothing samples them until
 // A_SETTLE clk after an E edge, and the read data is latched into din_r at
@@ -81,17 +87,34 @@ localparam [3:0] D_SETTLE = 4'd8;
 reg   [7:0] lag;
 reg         din_ok;              // read data latched for this cycle
 reg   [3:0] din_age;             // clk since then
-wire  [5:0] shorten = (lag > 8'd15) ? 6'd15 : lag[5:0];
-reg   [5:0] cyc_end;             // last clk of this cycle (lag only changes at the E edge)
-always @(posedge clk) cyc_end <= 6'd47 - shorten;
+
+reg   [9:0] sp_step;             // clk shaved off each cycle x 256
+always @(posedge clk)
+	case (speed)
+		2'd1:    sp_step <= 10'd241;    // 48 x (1 - 1 / 1.02)
+		2'd2:    sp_step <= 10'd473;    // 48 x (1 - 1 / 1.04)
+		2'd3:    sp_step <= 10'd696;    // 48 x (1 - 1 / 1.06)
+		default: sp_step <= 10'd0;
+	endcase
+reg   [7:0] sp_frac;
+reg   [1:0] sp_cut;              // clk shaved off this cycle (changes at the E edge)
+wire  [9:0] sp_sum = {2'd0, sp_frac} + sp_step;   // 695 + 255 at most
+// shortening and shaving together stay within 16 clk (cycles of 32 clk or more)
+wire  [5:0] sp_cap = (sp_cut == 2'd3) ? 6'd13 : (sp_cut == 2'd2) ? 6'd14 : 6'd15;
+reg   [5:0] shorten;             // lag, sp_cut only change at the E edge
+always @(posedge clk) shorten <= (lag > {2'd0, sp_cap}) ? sp_cap : lag[5:0];
+reg   [5:0] cyc_end;             // last clk of this cycle
+always @(posedge clk) cyc_end <= 6'd47 - shorten - {4'd0, sp_cut};
 wire        e_fire  = !pause && (ecnt >= cyc_end) && din_ok && (din_age >= D_SETTLE - 4'd1);   // last clk of the cycle
 
 always @(posedge clk) begin
 	fallE <= 1'b0;
 	fallQ <= 1'b0;
 	if (reset) begin
-		ecnt <= 6'd0;
-		lag  <= 8'd0;
+		ecnt    <= 6'd0;
+		lag     <= 8'd0;
+		sp_frac <= 8'd0;
+		sp_cut  <= 2'd0;
 	end
 	else if (!pause) begin
 		if (ecnt == cyc_end - 6'd12)
@@ -100,6 +123,8 @@ always @(posedge clk) begin
 			fallE <= 1'b1;
 			ecnt  <= 6'd0;
 			lag   <= lag - {2'd0, shorten} + {2'd0, ecnt - cyc_end};
+			sp_frac <= sp_sum[7:0];
+			sp_cut  <= sp_sum[9:8];
 		end
 		else if (ecnt != 6'd63)
 			ecnt <= ecnt + 6'd1;
