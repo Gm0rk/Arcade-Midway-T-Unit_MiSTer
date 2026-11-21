@@ -76,7 +76,7 @@ def main():
     for p in which:
         label, rows = pages[p]
         kind = label.split()[0]
-        game = tw.BG_GAMES.index("mk2" if kind.startswith("mk2") else kind)
+        game = tw.BG_GAMES.index("mk2" if kind.startswith("mk2") else "mk" if kind == "mkplus" else kind)   # Plus has the MK background
         r, got = frame(p, game)
         want = expected(rows, game, font, bg, pal)
         diff = sum(1 for i in range(0, len(want), 3) if got[i:i + 3] != want[i:i + 3])
