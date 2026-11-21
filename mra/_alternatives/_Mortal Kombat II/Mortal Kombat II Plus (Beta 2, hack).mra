@@ -1,29 +1,13 @@
 <misterromdescription>
 	<name>Mortal Kombat II Plus (Beta 2, hack)</name>
-	<mratimestamp>20261101</mratimestamp>
+	<mratimestamp>20261119</mratimestamp>
 	<mameversion>0289</mameversion>
-	<setname>mk2p</setname>
+	<setname>mk2s04</setname>
 	<year>1993</year>
 	<manufacturer>hack</manufacturer>
 	<category>Fighter / Versus</category>
 	<rbf>Arcade-Midway-T-Unit</rbf>
 	<remark>2 players</remark>
-	<switches default="7D,FC">
-		<dip bits="12" name="Attract Sound" ids="Off,On"/>
-		<dip bits="10" name="Bill Validator" ids="Installed,Not Present"/>
-		<dip bits="14" name="Blood" ids="Off,On"/>
-		<dip bits="8" name="Circuit Boards" ids="2,1" values="1,0"/>
-		<dip bits="2,6" name="Coinage" ids="USA-1,USA-2,USA-3,USA-4,USA-ECA,USA-Free Play,German-1,German-2,German-3,German-4,German-5,German-ECA,German-Free Play,French-1,French-2,French-3,French-4,French-ECA,French-Free Play" values="31,15,23,7,27,3,29,13,21,5,25,9,1,30,14,22,6,26,2"/>
-		<dip bits="7" name="Coinage Source" ids="Dipswitch,CMOS" values="1,0"/>
-		<dip bits="11" name="Comic Book Offer" ids="Off,On"/>
-		<dip bits="1" name="Counters" ids="One,Two" values="1,0"/>
-		<dip bits="13" name="Low Blows" ids="Off,On"/>
-		<dip bits="9" name="Powerup Test" ids="Off,On"/>
-		<dip bits="16" name="Service Credit" ids="Add credit,Add credit"/>
-		<dip bits="0" name="Test Switch" ids="Off,On" values="1,0"/>
-		<dip bits="17" name="Tilt" ids="Slam tilt,Slam tilt"/>
-		<dip bits="15" name="Violence" ids="Off,On"/>
-	</switches>
 	<buttons names="High Punch,Low Punch,High Kick,Low Kick,Block,-,Start,Coin,Test,Pause" default="Y,B,X,A,R,-,Start,Select,-,-"/>
 	<romstruct>
 rom index 0 (SDRAM 0x000000):
@@ -33,21 +17,27 @@ rom index 3 (SDRAM 0xD00000):
 0x000000 DCS sound data ROMs, packed (3 MB)
 	</romstruct>
 	<rom index="1">
-		<!-- game id (rtl/tunit_secrets.sv): the OSD shows the Plus Move List and View Secrets, and no Finishing Moves or Hidden Items, for this set: no patches or codes -->
+		<!-- game id (rtl/tunit_secrets.sv): the OSD shows the Plus Move List and View Secrets, and no hidden items, for this set: no codes; attract sound branches FF8438D0 -->
 		<part>
-		02 01 01 00
+		02 01 01 00 8D 43 F8 DF 81 C0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 		</part>
-		<!-- AI level word 01061AD0, demo fights set it at FF827BA0 (PC after the store) (Fixed AI Difficulty) -->
-		<part repeat="1104">00</part>
+		<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): round state 01061B00, P1 character 01060280, object pointer 01060220, stage 01061AC0, finish flag 010619C0; MK2 site FF876E70 is FFCF9920 in this set; MK2 hold sites: 25 of 25 the same as L3.1's; MK2 sites: 68 of 69 the same as L3.1's (91 found); MK2 direct finishers: 31 of 31 sites; AI level word 01061AD0; demo store PC FF827BA0 -->
+		<part repeat="960">00</part>
 		<part>
-		AD 61 10 00 BA 27 F8 0F
+		02 00 00 00 B0 61 10 00 28 60 10 00 E5 60 10 00 2F 60 10 00 EC 60 10 00 22 60 10 00 DF 60 10 00
+		26 60 10 00 E3 60 10 00 AC 61 10 00 9C 61 10 00 C0 27 8C FF 10 7E A1 FF 70 F2 82 FF 09 0E 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 AD 61 10 00 BA 27 F8 0F 00 00 F8 0F
+		1A 6B B9 64 95 80 30 7E 92 F9 32 6B 89 6B BB 69 27 68 E6 66 12 6A 38 6A B9 65 E0 65 89 66 8A 6A
+		B5 63 D2 63 1A 65 4B 65 87 69 76 64 A7 65 09 64 0E 68 E6 67 CC 68 D6 68 7F 68 6C 63 83 63 00 00
+		00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 20 40 AB 74 00 00 FC 0F 10 00 00 00 00 00
 		</part>
 	</rom>
-	<rom index="0" zip="/hbmame/mk2p.zip" md5="f27539dc97987541eddfe6af46ae557f" type="merged">
+	<rom index="0" zip="/hbmame/mk2.zip" md5="f27539dc97987541eddfe6af46ae557f" type="merged">
 		<!-- program ROM -->
 		<interleave output="16">
-			<part crc="05ff15a9" name="l3.1_mortal_kombat_ii_game_rom_uj12.uj12" map="01"/>
-			<part crc="b6d8ff5c" name="l3.1_mortal_kombat_ii_game_rom_ug12.ug12" map="10"/>
+			<part crc="05ff15a9" name="mk2s04/mk2s04.uj12" map="01"/>
+			<part crc="b6d8ff5c" name="mk2s04/mk2s04.ug12" map="10"/>
 		</interleave>
 		<!-- graphics -->
 		<interleave output="32">
@@ -57,10 +47,10 @@ rom index 3 (SDRAM 0xD00000):
 			<part crc="2d763156" name="l1_mortal_kombat_ii_game_rom_uj19.uj19" map="1000"/>
 		</interleave>
 		<interleave output="32">
-			<part crc="b2af2798" name="l1_mortal_kombat_ii_game_rom_ug16.ug16" map="0001"/>
-			<part crc="d70dd149" name="l1_mortal_kombat_ii_game_rom_uj16.uj16" map="0010"/>
-			<part crc="d05e970a" name="l1_mortal_kombat_ii_game_rom_ug20.ug20" map="0100"/>
-			<part crc="0f9c9a12" name="l1_mortal_kombat_ii_game_rom_uj20.uj20" map="1000"/>
+			<part crc="b2af2798" name="mk2s04/mk2s04.ug16" map="0001"/>
+			<part crc="d70dd149" name="mk2s04/mk2s04.uj16" map="0010"/>
+			<part crc="d05e970a" name="mk2s04/mk2s04.ug20" map="0100"/>
+			<part crc="0f9c9a12" name="mk2s04/mk2s04.uj20" map="1000"/>
 		</interleave>
 		<interleave output="32">
 			<part crc="937d8620" name="l1_mortal_kombat_ii_game_rom_ug17.ug17" map="0001"/>
@@ -69,9 +59,9 @@ rom index 3 (SDRAM 0xD00000):
 			<part crc="8891d785" name="l1_mortal_kombat_ii_game_rom_uj22.uj22" map="1000"/>
 		</interleave>
 	</rom>
-	<rom index="3" zip="/hbmame/mk2p.zip" md5="b9790a5f6d38c110ec6ac3d8e13e7d22" type="merged">
+	<rom index="3" zip="/hbmame/mk2.zip" md5="b9790a5f6d38c110ec6ac3d8e13e7d22" type="merged">
 		<!-- DCS sound data -->
-		<part crc="65d11dd7" name="l1_mortal_kombat_ii_sound_rom_u2.u2"/>
+		<part crc="65d11dd7" name="mk2s04/mk2pb2.u2"/>
 		<part crc="d6d92bf9" name="l1_mortal_kombat_ii_sound_rom_u3.u3"/>
 		<part crc="eebc8e0f" name="l1_mortal_kombat_ii_sound_rom_u4.u4"/>
 		<part crc="2b0b7961" name="l1_mortal_kombat_ii_sound_rom_u5.u5"/>
