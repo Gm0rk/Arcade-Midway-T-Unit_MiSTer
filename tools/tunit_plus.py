@@ -55,7 +55,7 @@ def F(name, cmd, dist, then=None, note=None, plus=False, adds=()):
 
 
 def stage(cmd):
-    return F('Pit / Spikes', cmd, CLOSE)
+    return F('Stage Fatality', cmd, CLOSE)
 
 
 def friend(cmd):
@@ -198,6 +198,13 @@ FIGHTERS = [
      'finish': [F('Matter over Mind', 'D D D F HP', CLOSE),
                 baby('D B F HK')]},
 ]
+
+for _f in FIGHTERS:            # each fighter's moves alphabetically (the Move List window and the docs)
+    _f['special'].sort(key=lambda s: s[0].lower())
+    _f['finish'].sort(key=lambda x: x['name'].lower())
+    if _f.get('morph'):
+        _f['morph'].sort(key=lambda m: m[0].lstrip('+').lower())
+FIGHTERS.sort(key=lambda f: f['name'].lower())       # the fighters' pages and tables in alphabetical order too
 
 # Hornbuckle, the opponent in the Smoke fight, has Liu Kang's moves and
 # finishing moves; he has no page of his own
