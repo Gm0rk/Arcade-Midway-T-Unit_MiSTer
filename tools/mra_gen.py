@@ -11,18 +11,19 @@ mra/_alternatives/_<Game>/. Each MRA carries
     after it the set's secrets table (codes and read patches for the OSD
     Secrets and cheats, tools/tunit_secrets.py) and, for MK and MK2 at byte
     0x400, the fight variables the finishing-move player follows and the
-    AI level word of Fixed AI Difficulty (tools/tunit_fmoves.py); both need
-    --zips: they are found in the set's own program ROM. A set with its own
+    AI level word of Fixed AI Difficulty (tools/tunit_fmoves.py); for NBA Jam
+    and TE, at 0x454, the sites of Fixed AI Difficulty (tools/tunit_nbaai.py);
+    all need --zips: they are found in the set's own program ROM. A set with its own
     extras (hbmame_sets.py hide_extras: Mortal Kombat II Plus) has the game
-    id with the flag instead: no table, and the OSD shows the hack's Move
-    List and View Secrets (tools/tunit_plus.py) but no Finishing Moves or
-    Hidden Items (and the AI level word and the demo store, at bytes
-    0x454-0x45B); it has the cheats like the other Mortal Kombat II sets,
+    id with the flag instead of the table, and the OSD shows the hack's Move
+    List and View Secrets (tools/tunit_plus.py) but no hidden items; it has
+    the fight variables, the direct finisher sites and the Finishing Moves
+    page like the other Mortal Kombat II sets, and the cheats,
   - the program and graphics ROMs (rom index 0) and the sound ROMs (rom
     index 3), laid out as tools/tunit_layout.py describes,
-  - MAME's DIP switches for the set (less the ones the set does not use,
-    UNUSED_DIPS) and the core's Service Credit and Tilt (OSD DIP Switches
-    page, in alphabetical order), button names, NVRAM (16 KB).
+  - button names and NVRAM (16 KB). No DIP switches (<switches>): they are
+    options of the core's OSD (System Options page, tools/tunit_dips.py), so
+    Main_MiSTer draws no DIP Switches menu of its own.
 
 Merged sets: every <rom> names "set.zip|parent.zip" and every part carries
 its CRC, so Main_MiSTer finds files in a merged or split zip.
@@ -48,6 +49,8 @@ import argparse
 import datetime
 import glob
 import os
+import re
+import struct
 import sys
 from xml.sax.saxutils import escape
 
@@ -57,6 +60,7 @@ import hbmame_sets
 import tunit_layout as L
 import tunit_secrets
 import tunit_fmoves
+import tunit_nbaai
 import tunit_cheats
 
 RBF = 'Arcade-Midway-T-Unit'
@@ -108,61 +112,6 @@ def folder_name(desc):
     return '_' + base.replace('/', '-').replace(':', ' -')
 
 # --------------------------------------------------------------------------
-# DIP switches
-# --------------------------------------------------------------------------
-
-def dsw_default(dips):
-    v = 0xFFFF
-    for d in dips:
-        v = (v & ~d.mask) | (d.default & d.mask)
-    return v
-
-
-def dip_xml(d):
-    bits = [b for b in range(16) if d.mask >> b & 1]
-    lo = bits[0]
-    if bits != list(range(lo, bits[-1] + 1)):
-        raise ValueError('DIP %s: mask %04X not contiguous' % (d.name, d.mask))
-    bit_attr = str(lo) if len(bits) == 1 else '%d,%d' % (lo, bits[-1])
-    # settings MAME marks Unused are left out; MRA ids are comma separated,
-    # so a comma inside a name becomes " -"
-    sets = [(v, n) for v, n in d.settings if n != 'Unused']
-    ids = ','.join(n.replace(',', ' -') for v, n in sets)
-    vals = [(v & d.mask) >> lo for v, n in sets]
-    # values can be left out when they are just 0, 1, 2, ...
-    if vals == list(range(len(vals))):
-        return '\t\t<dip bits="%s" name="%s" ids="%s"/>' % (bit_attr, escape(d.name), escape(ids))
-    return '\t\t<dip bits="%s" name="%s" ids="%s" values="%s"/>' % (
-        bit_attr, escape(d.name), escape(ids), ','.join(map(str, vals)))
-
-# MAME's DIP switches that a set does not use: its own DIP switch screen
-# (diagnostics, DIP Switch Test) marks the switch UNUSED and setting it
-# changes nothing. They are left off the OSD; the bit keeps MAME's default.
-#   - MK (all three sets): MAME's Skip Post Test (bit 8); toggling it does
-#     not change the power-up either.
-#   - MK2 L1.1 and L1.4: Bill Validator, Powerup Test, Circuit Boards (bits
-#     10, 9, 8); L2.0 and L2.1: Powerup Test, Circuit Boards. L3.0 and later
-#     use all three.
-#   - NBA Jam rev 2.00, rev 1.00 and both prototypes: Players, Video Clips,
-#     Powerup Test (bits 7, 5, 1); their power-up ROM test runs whatever
-#     bit 1 says. Rev 3.01 uses all three.
-_MK2_OLD = ['Bill Validator', 'Powerup Test', 'Circuit Boards']
-_NJ_OLD = ['Players', 'Video Clips', 'Powerup Test']
-UNUSED_DIPS = {
-    'mk': ['Skip Post Test'], 'mkr4': ['Skip Post Test'], 'mktturbo': ['Skip Post Test'],
-    'mk2r11': _MK2_OLD, 'mk2r14': _MK2_OLD,
-    'mk2r20': ['Powerup Test', 'Circuit Boards'], 'mk2r21': ['Powerup Test', 'Circuit Boards'],
-    'nbajamr2': _NJ_OLD, 'nbajamr1': _NJ_OLD, 'nbajamp2': _NJ_OLD, 'nbajamp1': _NJ_OLD,
-}
-
-# The core's own lines of the DIP Switches page: switches bits 16 and 17
-# (the game's DIP switches are 0-15). The top level adds a service credit or
-# slams the tilt switch each time the bit flips, so both settings read the
-# same.
-CORE_DIPS = [('Service Credit', '\t\t<dip bits="16" name="Service Credit" ids="Add credit,Add credit"/>'),
-             ('Tilt', '\t\t<dip bits="17" name="Tilt" ids="Slam tilt,Slam tilt"/>')]
-
-# --------------------------------------------------------------------------
 # ROM parts
 # --------------------------------------------------------------------------
 
@@ -209,14 +158,50 @@ def rom_xml(index, zipattr, pieces, md5, comments):
 # Main
 # --------------------------------------------------------------------------
 
+TIMEZONE = 'America/New_York'        # the maintainer's zone: the MRAs' date is the date there
+
+
+def _nth_sunday(year, month, n):
+    d = datetime.date(year, month, 1)
+    d += datetime.timedelta(days=(6 - d.weekday()) % 7)             # the first Sunday
+    return d + datetime.timedelta(weeks=n - 1)
+
+
+def _eastern(utc):
+    """The wall clock in US Eastern time at an aware UTC datetime (the rules
+    since 2007: daylight time from the second Sunday of March, 02:00, to the
+    first Sunday of November, 02:00). Used when the machine has no time zone
+    database (Python's zoneinfo on Windows needs the tzdata package)."""
+    start = datetime.datetime.combine(_nth_sunday(utc.year, 3, 2), datetime.time(7), tzinfo=utc.tzinfo)
+    end = datetime.datetime.combine(_nth_sunday(utc.year, 11, 1), datetime.time(6), tzinfo=utc.tzinfo)
+    return (utc + datetime.timedelta(hours=-4 if start <= utc < end else -5)).replace(tzinfo=None)
+
+
+def today(tz=TIMEZONE, now=None):
+    """YYYYMMDD: the date now in zone tz (US Eastern by default), not the machine's."""
+    now = now or datetime.datetime.now(datetime.timezone.utc)
+    try:
+        from zoneinfo import ZoneInfo
+        return now.astimezone(ZoneInfo(tz)).strftime('%Y%m%d')
+    except (ImportError, LookupError):
+        if tz != 'America/New_York':
+            raise SystemExit('no time zone database for %s: install the tzdata package (pip install tzdata) or give --date' % tz)
+        return _eastern(now).strftime('%Y%m%d')
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('driver')
     ap.add_argument('outdir')
     ap.add_argument('--zips', help='folder with MAME zips (for md5)')
     ap.add_argument('--hbmame', help='folder with the HBMAME hack zips (tools/hbmame_sets.py)')
-    ap.add_argument('--date', default=datetime.date.today().strftime('%Y%m%d'))
+    ap.add_argument('--date', help='the MRAs\' <mratimestamp> (YYYYMMDD); default: today in --tz')
+    ap.add_argument('--tz', default=TIMEZONE, help='IANA time zone of the default date (default %s)' % TIMEZONE)
     a = ap.parse_args()
+    if not a.date:
+        a.date = today(a.tz)
+    elif not re.fullmatch(r'\d{8}', a.date):
+        ap.error('--date is YYYYMMDD')
 
     games, sets, inputs = mame_src.parse_driver(a.driver)
     zips = None
@@ -243,12 +228,6 @@ def main():
         gid = L.game_id(g)
         cat, players, bnames, bdef = GAME_INFO[gid]
         top = parents[g.parent] if g.parent else g
-        dips = [d for d in inputs[g.inputs]['DSW'] if d.name != 'Unused']
-        unused = UNUSED_DIPS.get(g.name, [])
-        missing = set(unused) - {d.name for d in dips}
-        if missing:
-            raise ValueError('%s: UNUSED_DIPS names not among its DIP switches: %s' % (g.name, sorted(missing)))
-        dips = [d for d in dips if d.name not in unused]
         if g.name in hack_zips:
             zipattr = g.zipattr
         else:
@@ -267,13 +246,6 @@ def main():
         out.append('\t<rbf>%s</rbf>' % RBF)
         out.append('\t<remark>%d players</remark>' % players)
 
-        dv = dsw_default(inputs[g.inputs]['DSW'])
-        out.append('\t<switches default="%02X,%02X">' % (dv & 0xFF, dv >> 8))
-        lines = [(d.name, dip_xml(d)) for d in dips] + CORE_DIPS
-        for _, line in sorted(lines, key=lambda x: x[0].lower()):
-            out.append(line)
-        out.append('\t</switches>')
-
         names = bnames + ['-'] * (6 - len(bnames))
         defs = bdef + ['-'] * (6 - len(bdef))
         out.append('\t<buttons names="%s,Start,Coin,Test,Pause" default="%s,Start,Select,-,-"/>'
@@ -290,17 +262,27 @@ def main():
         prog = mame_src.build_region(g.romset.regions['maincpu'], gz) if gz else None
         out.append('\t<rom index="1">')
         if getattr(g, 'hide_extras', False):
-            # the OSD shows the hack's own Move List and View Secrets but no
-            # Finishing Moves or Hidden Items: the game id with the flag, no
-            # secrets table, no fight variables; the AI level word (Fixed AI
-            # Difficulty stays) and the cheats (below)
-            table, notes = tunit_secrets.hidden_table(gid)
+            # the OSD shows the hack's own Move List and View Secrets but no Hidden
+            # Items: the game id with the flag and the Attract Sound patches, no
+            # codes; the fight variables, the direct finishers' sites and the AI
+            # level word (the Finishing Moves page and Fixed AI Difficulty stay: the
+            # hack is rev L3.1 with more code, its moves are L3.1's) and the cheats (below)
+            table, notes = tunit_secrets.hidden_table(gid, prog or b'')
             out.append('\t\t<!-- game id (rtl/tunit_secrets.sv): %s -->' % escape('; '.join(notes)))
             out.append('\t\t<part>')
             out += tunit_secrets.part_hex(table)
             out.append('\t\t</part>')
-            lv, lv_note = tunit_fmoves.level_part(prog) if gz else (b'', '')
-            if lv:
+            fm, fm_notes = tunit_fmoves.build(gid, prog, g.name) if gz else (b'', [])
+            lv, lv_note = (b'', '') if fm or not gz else tunit_fmoves.level_part(prog)
+            if fm:
+                # at byte 0x400 (word 0x200), after the table's room
+                out.append('\t\t<!-- fight variables for the finishing moves (rtl/tunit_fmoves.sv): %s -->'
+                           % escape('; '.join(fm_notes)))
+                out.append('\t\t<part repeat="%d">00</part>' % (tunit_fmoves.CFG_BASE * 2 - len(table)))
+                out.append('\t\t<part>')
+                out += tunit_secrets.part_hex(fm)
+                out.append('\t\t</part>')
+            elif lv:
                 # at bytes 0x454-0x45B (rtl/tunit_fmoves.sv's words 0x22A-0x22D)
                 out.append('\t\t<!-- %s (Fixed AI Difficulty) -->' % escape(lv_note))
                 out.append('\t\t<part repeat="%d">00</part>'
@@ -310,6 +292,18 @@ def main():
                 out.append('\t\t</part>')
         elif gz:
             table, notes = tunit_secrets.build(gid, prog)
+            if getattr(g, 'move_list', None) == 'rev4':
+                # the flag in word 0: the OSD's Move List shows rev 4.0's own pages
+                table = bytearray(table)
+                table[0:2] = struct.pack('<H', (table[0] | table[1] << 8) | tunit_secrets.MOVE_LIST_REV4)
+                table = bytes(table)
+                notes.append("the Move List shows rev 4.0's own pages (word 0 bit 9)")
+            if getattr(g, 'mkplus_list', False):
+                # the flag in word 0: the Move List shows Mortal Kombat Plus's own pages
+                table = bytearray(table)
+                table[0:2] = struct.pack('<H', (table[0] | table[1] << 8) | tunit_secrets.MKPLUS_LIST)
+                table = bytes(table)
+                notes.append("the Move List shows Mortal Kombat Plus's own pages (word 0 bit 10)")
             out.append('\t\t<!-- game id and secrets table (rtl/tunit_secrets.sv): %s -->'
                        % escape('; '.join(notes)))
             out.append('\t\t<part>')
@@ -326,6 +320,14 @@ def main():
                 out.append('\t\t</part>')
             elif fm_notes:
                 out.append('\t\t<!-- finishing moves: %s -->' % escape('; '.join(fm_notes)))
+            ai, ai_note = tunit_nbaai.part(prog) if gid in (L.G_NBAJAM, L.G_NBAJAMTE) else (b'', '')
+            if ai:
+                # at bytes 0x454-0x47F (rtl "Fixed AI Difficulty"): the hard routines' word, the program ROM words
+                out.append('\t\t<!-- Fixed AI Difficulty (tools/tunit_nbaai.py): %s -->' % escape(ai_note))
+                out.append('\t\t<part repeat="%d">00</part>' % (tunit_nbaai.TABLE_BASE - len(table)))
+                out.append('\t\t<part>')
+                out += tunit_secrets.part_hex(ai)
+                out.append('\t\t</part>')
         else:
             out.append('\t\t<part>%02X</part>' % gid)
         out.append('\t</rom>')
