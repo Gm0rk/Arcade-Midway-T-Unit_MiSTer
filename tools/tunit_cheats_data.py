@@ -184,13 +184,24 @@ CHEATS = {
         ('P4 Infinite Turbo', [(0x010E66F0, 0x002F, 0x00FF, '')]),
         ('Unlock All-Star Jam Team', [(0xFF9C6D00, 0xC003, 0xFFFF, 'F'), (0xFF9C7450, 0xC001, 0xFFFF, 'F'), (0xFF9C7030, 0xC001, 0xFFFF, 'F'), (0xFF9BFF60, 0xC009, 0xFFFF, 'F'), (0xFF9C2C80, 0xC009, 0xFFFF, 'F')]),
     ],
-    # Special Edition 5.02 (tools/hbmame_sets.py), which no cheat file covers:
-    # derived from nbajamte's by tools/tunit_relocate.py (the same code rebuilt
-    # from source: the RAM variables moved 7F60h bits, the ROM words keep their
-    # place in the code). Not in it: Dunks Always Break Backbrd (its jump target
-    # could not be matched) and Unlock All-Star Jam Team (the Special Edition
-    # has its own team lists and a CMOS option for it).
-    'nbajamtese': [
+    # Special Edition 5.0 and 5.02 (tools/hbmame_sets.py), which no cheat file
+    # covers: derived from nbajamte's by tools/tunit_relocate.py (the same code
+    # rebuilt from source: the RAM variables moved 7F60h bits, the ROM words keep
+    # their place in the code). Not in them: Dunks Always Break Backbrd (its jump
+    # target could not be matched) and, in 5.02, Unlock All-Star Jam Team (5.02
+    # has its own team lists and a CMOS option for it; 5.0's code around the
+    # unlock tests is the parent's).
+    'nbajam03': [
+        ('Disable In-Game Play Tip', [(0xFF93F240, 0xC032, 0xFFFF, 'F'), (0xFF943520, 0xC01D, 0xFFFF, 'F')]),
+        ('Infinite Shot Time', [(0x010EAE20, 0x0009, 0x00FF, '')]),
+        ('Never Miss A Shot', [(0xFF8A0660, 0xCB76, 0xFFFF, 'F'), (0xFF8A3200, 0xC400, 0xFFFF, 'F')]),
+        ('P1 Infinite Turbo', [(0x010E6360, 0x002F, 0x00FF, '')]),
+        ('P2 Infinite Turbo', [(0x010E6490, 0x002F, 0x00FF, '')]),
+        ('P3 Infinite Turbo', [(0x010E65C0, 0x002F, 0x00FF, '')]),
+        ('P4 Infinite Turbo', [(0x010E66F0, 0x002F, 0x00FF, '')]),
+        ('Unlock All-Star Jam Team', [(0xFF9CA980, 0xC003, 0xFFFF, 'F'), (0xFF9CB0D0, 0xC001, 0xFFFF, 'F'), (0xFF9CACB0, 0xC001, 0xFFFF, 'F'), (0xFF9C3BD0, 0xC009, 0xFFFF, 'F'), (0xFF9C6900, 0xC009, 0xFFFF, 'F')]),
+    ],
+    'nbajam05': [
         ('Disable In-Game Play Tip', [(0xFF953EE0, 0xC032, 0xFFFF, 'F'), (0xFF9581C0, 0xC01D, 0xFFFF, 'F')]),
         ('Infinite Shot Time', [(0x010F2D80, 0x0009, 0x00FF, '')]),
         ('Never Miss A Shot', [(0xFF8B6560, 0xCB76, 0xFFFF, 'F'), (0xFF8B9100, 0xC400, 0xFFFF, 'F')]),
@@ -201,8 +212,15 @@ CHEATS = {
     ],
 }
 
-# NBA Jam Rewind, with and without "Get that Bleep outta here" (tools/hbmame_sets.py):
-# rev 2.0's program (nbajamte2a) with changes elsewhere, so every pick of
-# nbajamte2a is at the same place in both (tools/tunit_relocate.py finds each of
+# NBA Jam Rewind 1.1, 1.2 and 4 Jam (unprotected) (tools/hbmame_sets.py): rev
+# 2.0's program (nbajamte2a) with changes elsewhere, so every pick of nbajamte2a
+# is at the same place in all of them (tools/tunit_relocate.py finds each of
 # them unmoved).
-CHEATS['nbajamre'] = CHEATS['nbajamreb'] = CHEATS['nbajamte2a']
+CHEATS['nbajam02'] = CHEATS['nbajam04'] = CHEATS['nbajam07'] = CHEATS['nbajamte2a']
+
+# Mortal Kombat Plus (mk07, tools/hbmame_sets.py): rev 5.0's program with
+# changes and additions elsewhere, so all 23 picks of mk are at the same place
+# in it (tools/tunit_relocate.py finds each of them unmoved; the RAM variables
+# are the same too). The finder's pick, Always have Reptile Clues, is not made
+# for it: its Reptile hint code is not found.
+CHEATS['mk07'] = CHEATS['mk']
