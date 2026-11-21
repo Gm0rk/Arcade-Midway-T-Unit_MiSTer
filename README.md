@@ -12,8 +12,6 @@ Kombat II, NBA Jam, NBA Jam Tournament Edition and Judge Dredd.
 - [Hardware](#hardware)
 - [Games](#games)
 - [Timing and resources](#timing-and-resources)
-- [Features](#features)
-- [OSD](#osd)
 - [ROMs](#roms)
 - [Credits and references](#credits-and-references)
 - [License](#license)
@@ -46,85 +44,41 @@ listed in [Extra content](docs/ExtraContent.md).
 | [NBA Jam](docs/NBAJam.md) | nbajam (rev 3.01) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam.png" width="300" alt="NBA Jam title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_2.png" width="300" alt="NBA Jam gameplay"> |
 | [NBA Jam Tournament Edition](docs/NBAJamTE.md) | nbajamte (rev 4.0) | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE.png" width="300" alt="NBA Jam Tournament Edition title screen"> | <img src="https://github.com/Gm0rk/Arcade-Midway-T-Unit_MiSTer/blob/main/media/NBA_Jam_TE_2.png" width="300" alt="NBA Jam Tournament Edition gameplay"> |
 
-Other versions, prototypes and hacks are in the `_alternatives` folder of the
-MRAs.
-
 ## Timing and resources
 
-<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 62's). -->
+<!-- Update the cells from the Quartus reports of the latest compilation (these are Build 104's). -->
 Built with Quartus Prime 17.0.2 Lite for the DE10-Nano (Cyclone V
-5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Figures are from the
-compilation of Build 62 (2026-11-06). Timing is met on every clock, and so is
-every hold, recovery, removal and minimum pulse width check.
+5CSEBA6U23I7), timing model Slow 1100 mV 100 C. Timing and resource use are
+from the Build 104 compilation.
+
+Timing is met on every clock, and on every hold, recovery, removal and minimum
+pulse width check. The margins move a little with every compilation.
 
 | Clock | Frequency | Setup slack |
 |---|---|---|
-| System (core PLL) | 96 MHz | +0.409 ns |
+| System (core PLL) | 96 MHz | 0.083 ns |
+| HDMI PLL | 148.54 MHz | 0.440 ns |
 
-| Resource | Used | Percent used |
-|---|---|---|
-| Logic (ALMs) | 33,206 / 41,910 | 79 % |
-| Block RAM (M10K blocks) | 405 / 553 | 73 % |
-| DSP blocks | 67 / 112 | 60 % |
+Every other clock has at least 4.0 ns of setup slack.
 
-## Features
-
-- CRT Adjust by rmonic79, with CRT V-Size (experimental): makes the picture
-  taller or shorter in up to 7 steps of 3 lines, in PVM mode (changes the
-  lines per frame, for monitors that follow line rate changes) or Cabinet mode
-  (keeps the native timing and blends neighbouring lines)
-- Video Timing: the board's own 54.7 Hz, or 57 Hz for TVs that do not hold
-  54.7 Hz (games run about 4 % faster, audio pitch is unchanged)
-- CMOS saved as NVRAM: settings, audits and high scores survive power-off
-  (saved when the OSD is opened, if the game changed them)
-- Shortcuts to the hidden menus, screens and debug features of the games that
-  have them; the core enters the codes for you
-- Mortal Kombat, Mortal Kombat II: Move List, Finishing Moves and Fixed AI
-  Difficulty; Mortal Kombat also has Reptile on demand (see the
-  [Mortal Kombat page](docs/MortalKombat.md))
-- A Cheats menu for every game: 24 cheats for Mortal Kombat, 44 for Mortal
-  Kombat II, 26 for NBA Jam, up to 30 for NBA Jam Tournament Edition and 9 for
-  Judge Dredd (infinite health, energy, lives, time and turbo, invincibility,
-  power-ups, night mode and more; the list is on each game's page)
-- Support for Mortal Kombat II Plus: its own Move List and View Secrets (the secret
-  characters, the Kombat Kodes), Fixed AI Difficulty and four Cheats
-- Support for NBA Jam Tournament Edition Special Edition 5.02 (a ROM hack): the
-  Tournament Edition's extras, with the Special Edition's own secret players in
-  the Secret Player List
-- Support for NBA Jam Rewind (a ROM hack of the Tournament Edition rev 2.0),
-  with and without "Get that Bleep outta here": the Tournament Edition's extras,
-  including its 30 cheats and the Secret Player List, whose Versions column
-  names Rewind (it has rev 2.0's players)
-- NBA Jam, NBA Jam Tournament Edition: a Secret Player List with the cheat codes
-
-## OSD
-
-| Item | |
+| Resource | Used |
 |---|---|
-| Video Settings | Aspect ratio, scandoubler, scale, Video Timing, CRT Adjust |
-| Move List | Mortal Kombat games: shows each fighter's moves over the game; with the OSD closed, Left or Right turns the page |
-| Finishing Moves | Mortal Kombat, Mortal Kombat II: enters the chosen fatality at the next FINISH HIM/HER |
-| Fixed AI Difficulty | Mortal Kombat, Mortal Kombat II, Mortal Kombat II Plus: the computer opponent's level, Off or 0 (easiest) to 9 |
-| Cheats | Every game (Mortal Kombat II Plus included): select a cheat to switch it on or off (a mark shows it is on; all are off after a game loads); at most 8 cheat units can be on at once, and the game's page lists each cheat with the units it uses |
-| View Secret Players | NBA Jam games: shows the secret players and cheat codes over the game; with the OSD closed, Left or Right turns the page |
-| View Secrets | Mortal Kombat II Plus: shows how to unlock the secret characters, the Kombat Kodes and other secrets; with the OSD closed, Left or Right turns the page |
-| DIP Switches | The game's DIP switches, with Service Credit and Tilt |
-| Hidden Items | Hidden menus and screens, for the games that have them (named Secret Menus for Judge Dredd and Cheat Codes & Hidden Items for the NBA Jam games) |
-| Service Mode | The cabinet's test switch |
-| Pause when OSD is open | On by default |
-| Reset / Reset and close OSD | Reset keeps the OSD open |
+| Logic (ALMs) | 34,359 / 41,910 (82 %) |
+| Block RAM (M10K blocks) | 432 / 553 (78 %) |
+| DSP blocks | 67 / 112 (60 %) |
 
 ## ROMs
 
 ROMs are **not** included in this repository; you need your own dumps of the
-games.
+games.  Use **merged** ROM sets. Files are found by CRC.  Put the zips in
+`games/mame`, the MRA files in `_Arcade` (other versions, prototypes and hacks
+in `_Arcade/_alternatives`) and the core in `_Arcade/cores`.
 
-Use **merged** ROM sets. Files are found by CRC. Put the zips in `games/mame`, 
-the MRA files in `_Arcade` (other versions in `_Arcade/_alternatives`) 
-and the core in `_Arcade/cores`. Mortal Kombat II Plus (`mk2p.zip`), the NBA Jam
-Tournament Edition Special Edition 5.02 (`nbajamtese.zip`) and NBA Jam Rewind
-(`nbajamre.zip`, and `nbajamreb.zip` for Get that Bleep outta here) go in
-`games/hbmame`.
+Mortal Kombat Plus (HBMAME's merged `mk.zip`), Mortal Kombat II rev 4.0 and
+Mortal Kombat II Plus (HBMAME's merged `mk2.zip`), and the NBA Jam Tournament
+Edition hacks, the Special Edition and Rewind (HBMAME's merged `nbajamte.zip`),
+go in `games/hbmame`; MAME's `mk.zip`, `mk2.zip` and `nbajamte.zip` stay in
+`games/mame`.
 
 ## Credits and references
 
@@ -143,26 +97,38 @@ Tournament Edition Special Edition 5.02 (`nbajamtese.zip`) and NBA Jam Rewind
   [MiSTer-CRT-Adjust](https://github.com/rmonic79/MiSTer-CRT-Adjust)
 - ppriest: [MiSTer-CoreSkill](https://github.com/ppriest/MiSTer-CoreSkill),
   the arcade core guidance used while developing and checking this core
-- Cheats: the MAME cheat collection (cheat.txt, release 27 July 2025 for MAME
-  0.279, https://www.mamecheat.co.uk) kept by Martin Pugh (Pugsy). The names
-  its cheat.txt credits for the sets whose cheats the Cheats menu uses:
-  - Mortal Kombat (mk): Abystus; Steph and ugetab; Pugsy (Clues, Secret Game
-    Over, CPU Fatality, EJB Menu); nolberto82 (Hit Anywhere, One Button
-    Fatalities)
-  - Mortal Kombat II (mk2): ugetab; Pugsy (Clues, Secret Game Over, CPU
-    Fatality, EJB Menu); nolberto82 (Hit Anywhere, Jade Low Kick Requirement,
-    One Key Fatals); CLE (Automatic Fatality, Automatic Stage Fatality);
-    syndromtr (the others)
-  - NBA Jam (nbajam): Abystus (most of them); Pugsy (Invincibility on 3D Tank
-    Game, Computer Assistance Off)
-  - NBA Jam Tournament Edition: syndromtr, Abystus and Pugsy (nbajamte; the
-    Special Edition's, nbajamtese, are some of these moved to where the hack
-    keeps them; Rewind's, nbajamre and nbajamreb, are nbajamte2a's);
-    syndromtr and Abystus (nbajamte1, nbajamte2a, nbajamte3)
-  - Judge Dredd (jdreddp), NBA Jam rev 2.00 (nbajamr2) and the Tournament
-    Edition sets nbajamte2, nbajamte3a and nbajamte4 are not in cheat.txt's
-    list; their files point to it for the contributors. The cheats the core
-    found in each game's program itself are not from the collection
+- Move Lists: the Mortal Kombat Plus, Mortal Kombat II Plus and Mortal Kombat
+  II rev 4.0 lists follow their guides: MKKomplete's
+  [Mortal Kombat Plus](https://icemantraveler.github.io/mkksg/fan_made/mkplus/default.htm)
+  and [Mortal Kombat II Plus](https://icemantraveler.github.io/mkksg/fan_made/mk2plus/default.htm)
+  (the latter credits Karl Lindsey for additional information on the
+  fatalities) and the [MK II v4.0 Move List](https://junkwax.github.io/mk2-rev4/)
+  (project junkwax/mk2-rev4). The Mortal Kombat and Mortal Kombat II lists were
+  found in the games' programs and played in MAME; MKKomplete's
+  [Mortal Kombat](https://icemantraveler.github.io/mkksg/mk1/default.htm) and
+  [Mortal Kombat II](https://icemantraveler.github.io/mkksg/mk2/default.htm)
+  guides are the reference for them. Each Move List page that has a free
+  row ends with the address of its guide
+
+### Cheat credits
+
+The cheats for these games come from the MAME cheat collection (the cheat.txt
+of the 27 July 2025 release, for MAME 0.279;
+[mamecheat.co.uk](https://www.mamecheat.co.uk)), kept by Martin Pugh (Pugsy)
+with the cheat finders named in its contributor list. The Cheats menu offers
+them; the cheats the core found in each game's program itself are not from the
+collection. Per game, as cheat.txt gives it:
+
+| Game | Credit in cheat.txt |
+|---|---|
+| Mortal Kombat (mk) | Abystus; Steph and ugetab; Pugsy: Clues, Secret Game Over, CPU Fatality, EJB Menu; nolberto82: Hit Anywhere, One Button Fatalities |
+| Mortal Kombat II (mk2) | ugetab; Pugsy: Clues, Secret Game Over, CPU Fatality, EJB Menu; nolberto82: Hit Anywhere, Jade Low Kick Requirement, One Key Fatals; CLE: Automatic Fatality, Automatic Stage Fatality; syndromtr: the others |
+| NBA Jam (nbajam) | Abystus: most of them; Pugsy: Invincibility on 3D Tank Game, Computer Assistance Off |
+| NBA Jam Tournament Edition (nbajamte) | syndromtr, Abystus and Pugsy |
+| NBA Jam Tournament Edition, Special Edition (nbajam03, nbajam05) | Some of nbajamte's, moved to where the hack keeps them |
+| NBA Jam Tournament Edition, Rewind (nbajam02, nbajam04, nbajam07) | nbajamte2a's |
+| NBA Jam Tournament Edition (nbajamte1, nbajamte2a, nbajamte3) | syndromtr and Abystus |
+| Judge Dredd (jdreddp), NBA Jam rev 2.00 (nbajamr2), Tournament Edition (nbajamte2, nbajamte3a, nbajamte4) | Not in cheat.txt's list; their files point to it for the contributors |
 
 ## License
 
