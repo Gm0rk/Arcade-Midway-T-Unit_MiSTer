@@ -69,13 +69,14 @@ module midway_tunit
 	input      [63:0] in_ports,
 
 	// read patches: entries 0-7 from tunit_secrets.sv (OSD secrets), 8-15 from
-	// tunit_cheats.sv (OSD cheats): word addresses and values, enables
-	input     [447:0] pt_addr,       // 16 x 28-bit word addresses: 8 OSD secrets, 8 cheats
-	input     [255:0] pt_data,
-	input      [15:0] pt_en,
-	input      [15:0] pt_fetch,      // entry applies to instruction fetches only (program code)
-	input      [15:0] pt_store,      // entry also replaces the value the CPU writes to the word (main RAM)
-	input     [255:0] pt_mask,       // 16 x 16-bit: the bits of the word the entry's value covers (FFFF: all)
+	// tunit_cheats.sv (OSD cheats), 16 from tunit_fmoves.sv (Mortal Kombat's
+	// direct finishers): word addresses and values, enables
+	input     [475:0] pt_addr,       // 17 x 28-bit word addresses: 8 OSD secrets, 8 cheats, 1 direct finisher
+	input     [271:0] pt_data,
+	input      [16:0] pt_en,
+	input      [16:0] pt_fetch,      // entry applies to instruction fetches only (program code)
+	input      [16:0] pt_store,      // entry also replaces the value the CPU writes to the word (main RAM)
+	input     [271:0] pt_mask,       // 17 x 16-bit: the bits of the word the entry's value covers (FFFF: all)
 	input       [7:0] pt_pk,         // cheat entries 8-15: a one-shot write is in the entry (no read patch)
 	input       [7:0] pt_fire,       // one clock: that one-shot is new (tunit_cheats.sv)
 
@@ -85,7 +86,13 @@ module midway_tunit
 	input      [27:0] lvl_addr,      // the level word's word address (bit address >> 4)
 	input      [27:0] lvl_dpc,       // the CPU's PC (word address) as the demo fights' store of the level
 	                                 // completes (0: none); the pin is off for the demo fights
-	input       [3:0] lvl_val,       // 0 (easiest) to 9
+	input       [3:0] lvl_val,       // 0 (easiest) to 9 (NBA Jam and TE: 0 or 1, the word that selects the hard routines)
+
+	// Fixed AI Difficulty (NBA Jam, TE): four program ROM words that read as ai_val while
+	// the CPU fetches them as code (ai_en: the entry is on)
+	input       [3:0] ai_en,
+	input     [111:0] ai_pc,         // 4 x 28-bit word addresses
+	input      [63:0] ai_val,        // 4 x 16-bit values
 
 	// sound board
 	output reg        snd_wr,        // one pulse per write of the sound data word
@@ -426,6 +433,16 @@ wire [27:0] wa = b_addr;
 // keeps the lower copy until the next hit, so an entry that goes on also
 // writes its value to the word once (see "Cheat pokes" below).
 //
+// The Direct Finishers of Mortal Kombat and Mortal Kombat II (tunit_fmoves.sv)
+// are one more entry (16), a program ROM entry with the fetch mark and a mask
+// of bit 8 whose value the move player gives (fp_set). A fighter's handler
+// ends its test of the joystick history with a jump that skips the move when
+// the history does not match: JRNC (opcode C9xx), which with bit 8 cleared
+// reads as JRC (C8xx) and does not jump when the history does not match; a
+// JRC (Scorpion's Toasty) with bit 8 set reads as JRNC. The handler goes on to
+// its own checks (FINISH HIM, the distance, the loser's state). The entry is
+// on only while the move player plays a direct finisher.
+//
 // Fixed AI Difficulty is one more entry of the same kind, with its value
 // from the OSD (lvl_val, 0 to 9) instead of the table: MK and MK2 keep their
 // CPU opponent's level in one main RAM word (the AI picks entries of its
@@ -446,6 +463,12 @@ wire [27:0] wa = b_addr;
 // the adjust routine, the RAM clear at power-up), and while it is set the
 // pin is off. The write is looked at on the clock after it completes, when
 // the registered copy of its address and PC still holds it.
+//
+// In NBA Jam and TE the same pin (lvl_on, lvl_addr, lvl_val) is the word that
+// selects the AI's hard routines (the level's 0 or 1), and four more entries
+// of the program ROM kind (ai_en, ai_pc, ai_val: instruction fetches only, 16
+// bits replaced) give every CPU opponent the same skill value from the start
+// of the game and clear the CPU players' catch-up (tools/tunit_nbaai.py).
 //----------------------------------------------------------------------------
 
 reg         lvl_wr_q = 1'b0;    // a CPU write completed on the previous clock
@@ -453,11 +476,11 @@ reg         lvl_demo = 1'b0;    // the level word was last written by the demo f
 reg  [15:0] pt_q = 16'd0;       // the matching entries' values (ORed; 0 outside their masks)
 reg  [15:0] pt_k = 16'hFFFF;    // the bits of the game's own value that are kept
 reg  [15:0] pt_q_n, pt_k_n;
-integer     pt_i;
+integer     pt_i, ai_i;
 always @(posedge clk) begin
 	pt_q_n = 16'd0;
 	pt_k_n = 16'hFFFF;
-	for (pt_i = 0; pt_i < 16; pt_i = pt_i + 1)
+	for (pt_i = 0; pt_i < 17; pt_i = pt_i + 1)
 		if (pt_en[pt_i] && wa == pt_addr[28 * pt_i +: 28] &&
 		    (pt_fetch[pt_i] ? (b_pc == wa) : ((wa[27:18] != 10'h004) || b_ie))) begin   // 0x004: main RAM
 			pt_q_n = pt_q_n | pt_data[16 * pt_i +: 16];
@@ -467,6 +490,11 @@ always @(posedge clk) begin
 		pt_q_n = {12'd0, lvl_val};
 		pt_k_n = 16'd0;
 	end
+	for (ai_i = 0; ai_i < 4; ai_i = ai_i + 1)
+		if (ai_en[ai_i] && wa == ai_pc[28 * ai_i +: 28] && b_pc == wa) begin
+			pt_q_n = ai_val[16 * ai_i +: 16];
+			pt_k_n = 16'd0;
+		end
 	pt_q <= pt_q_n;
 	pt_k <= pt_k_n;
 end
