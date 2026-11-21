@@ -52,7 +52,19 @@ assign BUTTONS   = 0;
 `include "build_id.v"
 `include "rtl/tunit_fmoves_osd.svh"
 `include "rtl/tunit_secrets_osd.svh"
+`include "rtl/tunit_dips_osd.svh"
 `include "rtl/tunit_window_pages.svh"
+// The Sound Options page has the Attract Sound option only (Mortal Kombat,
+// Mortal Kombat II and their hacks; the page header shows for those games'
+// menu mask bits 4, 5 and 15 and is hidden for the others) and a line that
+// says a reset applies a change. The ADPCM Sound
+// CPU Speed option is left out of the OSD while it is being finished:
+// SPEED_OSD is 0, which holds the speed at 100 % whatever a saved
+// configuration has (the option's line, "P2O[18:17],ADPCM Sound CPU Speed,
+// 100% (MAME),102%,104%,106%;", goes back after the Attract Sound line with
+// SPEED_OSD set to 1).
+localparam SOUND_OSD = 1'b1;
+localparam SPEED_OSD = 1'b0;
 localparam CONF_STR = {
 	"A.MIDWAYT;;",
 	"-;",
@@ -69,56 +81,93 @@ localparam CONF_STR = {
 	"H1P1O[78:74],CRT V-Shift,0,+1,+2,+3,+4,+5,+6,+7,+8,+9,+10,+11,+12,+13,+14,+15,-16,-15,-14,-13,-12,-11,-10,-9,-8,-7,-6,-5,-4,-3,-2,-1;",
 	"H1P1O[107:104],CRT V-Size,0,+1,+2,+3,+4,+5,+6,+7,-7,-6,-5,-4,-3,-2,-1;",
 	"H1P1O[108],CRT V-Size Mode,PVM,Cabinet;",
+	"h4P2,Sound Options;",
+	"h5HFP2,Sound Options;",
+	"hFP2,Sound Options;",
+	"P2-;",
+	"P2O[19],Attract Sound,Default,Always On;",
+	"P2-;",
+	"P2-,Reset to Apply Changes;",
+	"P3,System Options;",
+	"P3-,Dip Switches;",
+	`DIPS_OSD,
+	"P3-;",
+	"P3O[9],Service Menu,Off,On;",
 	"-;",
-	`FMOVES_OSD,
-	"hEO[113:110],Fixed AI Difficulty,Off,0,1,2,3,4,5,6,7,8,9;",
-	"DIP;",
-	`NBA_OSD,
-	`PLUS_OSD,
-	"h7P3,Secret Menus;",
-	"P3-;",
-	"P3R[14],Secret Audit Menu;",
-	"P3R[15],Secret Audit Menu + Credits;",
-	"P3-;",
-	"P3-,Codes work in attract mode;",
-	"h3P6,Hidden Items;",
-	"P6-;",
-	"P6R[14],EJB Menu;",
-	"h4P6R[15],EJB Menu (Copyright Screen);",
-	"h4P6O[42],Moon Silhouettes Always,Off,On;",
-	"h4P6T[41],Reptile Fight Next;",
-	"h5P6O[16],Security Screen,Off,On;",
-	"P6-;",
-	"P6-,EJB Menu: attract mode only;",
-	"h0C,Cheats;",
-	"O[9],Service Mode,Off,On;",
-	"O[8],Pause when OSD is open,On,Off;",
+	"P5,Extras;",
+	"-;",
+	"O[8],Pause When OSD is Open,On,Off;",
 	"-;",
 	"T[0],Reset;",
 	"R[0],Reset and close OSD;",
+	// The Extras page (P5), its items in alphabetical order (a game shows the ones it has, and
+	// the page closes up around the others): Auto Finishing Moves opens the Finishing Moves
+	// page (P4), the page's own lines are FMOVES_OSD
+	"P5-;",
+	`FMOVES_AFM,
+	"h0P5C,Cheats;",
+	"hDH6P5R[14],EJB Menu;",
+	"h4hDP5R[15],EJB Menu (Copyright Screen);",
+	"hEP5O[113:110],Fixed AI Difficulty,Off,0,1,2,3,4,5,6,7,8,9;",
+	`NBA_OSD,
+	"h4hDP5O[42],Moon Silhouettes,Off,On;",
+	`FMOVES_LIST,
+	"h4hDP5T[41],Reptile Fight Next;",
+	"h7H5P5R[14],Secret Audit Menu;",
+	"h7H5P5R[15],Secret Audit Menu + Credits;",
+	"h5hDP5O[16],Security Screen,Off,On;",
+	`PLUS_OSD,
+	"hDH6P5-;",
+	"hDH6P5-,Note: EJB Menu;",
+	"hDH6P5-,Attract Mode Only;",
+	"h7H5P5-;",
+	"h7H5P5-,Codes work in attract mode;",
+	`FMOVES_OSD,
 	"J1,B1,B2,B3,B4,B5,B6,Start,Coin,Test,Pause;",
 	"jn,A,B,X,Y,L,R,Start,Select,,;",
 	`CORE_INFO,
 	"V,v",`BUILD_DATE
 };
 
-// OSD menu mask bits (assigned in "Game configuration"): bit 0 a game with a
-// Cheats menu (menu_cheats: every game); the next bits which
-// secrets the loaded game has;
-// bits 8-11 the fighter picked on the Finishing Moves page;
-// bit 13 NBA Jam TE (its own Secrets lines, rtl/tunit_secrets_osd.svh);
-// bit 14 the Fixed AI Difficulty line (MK and MK2, see below); bit 15 Mortal
-// Kombat II Plus (menu_plus). Bits 2 and 12 carry the class of the loaded
-// Mortal Kombat II revision (fm_class, below): the Finishing Moves page lists
-// only the moves that revision has. osd_ejb and
-// osd_mk2 are menu_ejb and menu_mk2 less a set whose MRA hides the extras
-// (hide_ext, Mortal Kombat II Plus): they show or hide the Move List, the
-// Finishing Moves page and the Hidden Items page. The Plus set has a Move
-// List and a View Secrets list of its own (menu_plus).
+// OSD menu mask bits (assigned in "Game configuration"): the OSD shows only
+// what the loaded set has, so a line or page that a set lacks is not there
+// (no "not available" message). Bit 0 a game with a Cheats menu (menu_cheats:
+// every game); bit 1 CRT Adjust is On; bit 3 the Move List and the Finishing
+// Moves page (osd_list: Mortal Kombat, Mortal Kombat Plus and Mortal Kombat II,
+// Plus included: Plus has the page, and a Move List of its own, menu_plus); bit 4
+// Mortal Kombat, bit 5 Mortal Kombat II (osd_mk2, Plus included), bit 6 NBA Jam or
+// TE, bits 8-11 the fighter picked on the Finishing Moves page (his line, see
+// below; Plus has 17 fighters: its bit 12 is the fifth bit); bit 14 the
+// Fixed AI Difficulty line (MK and MK2, see below); bit 15 Mortal Kombat II
+// Plus (menu_plus), which has a Move List and a View Secrets list of its own
+// (so its lines for the stock MK2 ones hide: Move List, Sound Options).
+// Mortal Kombat Plus (menu_mkp) sets bit 2 too (no class in Mortal Kombat): the Finishing
+// Moves page has lines of its own for it, hidden from the other Mortal Kombat sets.
+// Bits 2 and 12 carry the class of the loaded Mortal Kombat II revision
+// (fm_class, below; Plus has none, class 0: bit 12 is its fighter's bit 4): the
+// Finishing Moves page lists only the moves that revision has. Two bits mean one thing for one family of
+// games and another for the other (a line tests the bit only inside its
+// family): bit 7 is Judge Dredd (its Secret Audit Menu lines of the Extras
+// page, which hide for Mortal Kombat II) or Mortal Kombat II rev 4.0 (menu_rev4,
+// index 1 word 0 bit 9: its own Move List pages and its own Finishing Moves
+// lines); bit 13 is NBA Jam TE (its No CPU Assistance line) or, in Mortal
+// Kombat and Mortal Kombat II, osd_items: the Extras page has the EJB Menu,
+// Moon Silhouettes, Reptile Fight Next and Security Screen lines when the
+// set's table has a code or a hidden item (rev 4.0 and the Plus sets have
+// none; the Plus sets' MRA hides them).
+//
+// The OSD's pages: 1 Video Settings, 2 Sound Options, 3 System Options (the
+// DIP switches, tools/tunit_dips.py, which also tests bits 2, 12 and 6 for the
+// switches a Mortal Kombat II revision or an NBA Jam version lacks; Service Credit,
+// Tilt, Service Menu), 4 Auto Finishing Moves (opened from the Extras page), 5 Extras
+// (Cheats and the game's own items, in alphabetical order).
 wire        menu_ejb, menu_mk, menu_mk2, menu_nba, menu_jd, menu_nj, menu_te, menu_cheats;
-wire        osd_ejb, osd_mk2, menu_plus;
+wire        osd_list, osd_items, osd_mk2, menu_plus, menu_rev4, menu_mkp;
+wire        mask_7, mask_d;
+wire  [1:0] code_avail;         // the set has code 1 / code 2 (rtl/tunit_secrets.sv)
+wire [10:0] opt_avail;          // the set has the option slot's patch
 wire        lvl_items;
-wire  [3:0] fm_line;
+wire  [4:0] fm_line;
 reg   [1:0] fm_class = 2'd0;
 wire        info_req;
 wire  [7:0] info;
@@ -153,7 +202,7 @@ hps_io #(.CONF_STR(CONF_STR), .CONF_STR_BRAM(1), .WIDE(1)) hps_io
 
 	.buttons             (buttons),
 	.status              (status),
-	.status_menumask     ({menu_plus, lvl_items, menu_te, fm_class[1], fm_line, menu_jd, menu_nba, osd_mk2, menu_mk, osd_ejb, fm_class[0], ~status[101], menu_cheats}),
+	.status_menumask     ({menu_plus, lvl_items, mask_d, menu_plus ? fm_line[4] : fm_class[1], fm_line[3:0], mask_7, menu_nba, osd_mk2, menu_mk, osd_list, fm_class[0] | menu_mkp, ~status[101], menu_cheats}),
 	.info_req            (info_req),
 	.info                (info),
 
@@ -210,10 +259,11 @@ end
 
 // The NVRAM file follows the ROMs in a separate transfer. Hold the board in
 // reset for half a second after a download so the game never boots on an
-// empty CMOS that is about to be replaced. Not for the DIP switches (index
-// 254) or the cheats (index 255): Main_MiSTer sends them again each time one
-// changes on the OSD, and the game goes on (it reads most of the DIP switches
-// at power-up; Service Credit and Tilt act at once; a cheat acts at once).
+// empty CMOS that is about to be replaced. Not for the cheats (index 255):
+// Main_MiSTer sends them again each time one changes on the OSD, and the game
+// goes on (a cheat acts at once). Nor for the DIP switches (index 254): the
+// MRAs of Build 104 have none, and an older MRA's are ignored (the switches
+// are the OSD's options now).
 wire dl_other = ioctl_download && ioctl_index != 16'd254 && ioctl_index != 16'd255;
 reg  [25:0] boot_hold;
 always @(posedge clk_sys) begin
@@ -258,7 +308,9 @@ localparam G_JDREDDP  = 3'd5;    // Judge Dredd (location test)
 localparam L_MK = 2'd0, L_MK2 = 2'd1, L_NBA = 2'd2, L_JD = 2'd3;
 
 reg   [2:0] game_id;
-reg         hide_ext = 1'b0;    // Mortal Kombat II Plus: the set has no Finishing Moves, Hidden Items or MK2 Move List, and its own Move List and View Secrets (index 1, word 0 bit 8)
+reg         rev4_list = 1'b0;   // Mortal Kombat II rev 4.0: its own Move List pages (index 1, word 0 bit 9)
+reg         mkp_list = 1'b0;    // Mortal Kombat Plus: its own Move List pages (index 1, word 0 bit 10)
+reg         hide_ext = 1'b0;    // Mortal Kombat II Plus: the set has no EJB Menu or Security Screen or MK2 Move List, and its own Move List and View Secrets (index 1, word 0 bit 8)
 reg   [2:0] cfg_prot;
 reg         cfg_turbo;
 reg         cfg_dcs;
@@ -314,13 +366,18 @@ assign menu_nj      = (game_id == G_NBAJAM);
 assign menu_te      = (game_id == G_NBAJAMTE);
 assign menu_jd      = (game_id == G_JDREDDP);
 assign menu_cheats  = menu_mk | menu_mk2 | menu_nba | menu_jd;   // every game has a Cheats menu
-assign osd_ejb      = menu_ejb & ~hide_ext;
-assign osd_mk2      = menu_mk2 & ~hide_ext;
+assign osd_list     = menu_ejb;
+assign osd_items    = menu_ejb & ~hide_ext & (code_avail != 2'd0 || opt_avail[1:0] != 2'd0);
+assign osd_mk2      = menu_mk2;
 assign menu_plus    = menu_mk2 & hide_ext;
+assign menu_rev4    = menu_mk2 & ~hide_ext & rev4_list;
+assign menu_mkp     = menu_mk & mkp_list;
+assign mask_7       = menu_jd | menu_rev4;
+assign mask_d       = menu_te | osd_items;
 
 //////////////////////////////////////////////////////////////////
-// Downloads: ROMs (index 0 and 3), game id and secrets table (1), NVRAM (2),
-// DIP switches (254)
+// Downloads: ROMs (index 0 and 3), game id and secrets table (1), NVRAM (2)
+// (the DIP switches are OSD options, see "DIP switches" below)
 //
 // Index 1 is the per-set table of rtl/tunit_secrets.sv; its first word is
 // the game id.
@@ -334,16 +391,15 @@ assign menu_plus    = menu_mk2 & hide_ext;
 // board reads 0 above it, as from MAME's empty region.
 //////////////////////////////////////////////////////////////////
 
-reg  [63:0] dsw;
 reg  [26:0] rom0_end;           // last byte address of the index 0 download
 
 always @(posedge clk_sys) begin
 	if (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr == 27'd0) begin
 		game_id  <= ioctl_dout[2:0];
 		hide_ext <= ioctl_dout[8];
+		rev4_list <= ioctl_dout[9];
+		mkp_list <= ioctl_dout[10];
 	end
-	if (ioctl_wr && ioctl_index == 16'd254 && ioctl_addr[26:3] == 24'd0)
-		dsw[{ioctl_addr[2:1], 4'b0000} +: 16] <= ioctl_dout;
 	if (ioctl_download && ioctl_index == 16'd0 && !rom_was_dl)
 		rom0_end <= 27'd0;
 	else if (ioctl_wr && ioctl_index == 16'd0)
@@ -431,7 +487,7 @@ wire [15:0] nv_din  = cmos_clr ? 16'h0000 : ioctl_dout;
 // follow MAME's input ports (midtunit.cpp).
 //
 // Service Credit and Tilt are not on the controllers: they are lines of the
-// OSD's DIP Switches page, handled in "Service credit and tilt" below.
+// OSD's System Options page, handled in "Service credit and tilt" below.
 //////////////////////////////////////////////////////////////////
 
 // {R, L, D, U} as MAME's bit order up, down, left, right
@@ -455,6 +511,9 @@ wire  [1:0] code_start;
 // replaces the winner's controls
 wire  [1:0] fm_drive;
 wire  [8:0] fm_keys;
+wire        fm_fp_en;            // Mortal Kombat's and Mortal Kombat II's direct finisher patch (tunit_fmoves.sv): on, and the word's address
+wire [27:0] fm_fp_addr;
+wire        fm_fp_set;           // the value of bit 8 the patch reads: 0 for a JRNC (it reads as JRC), 1 for a JRC (JRNC)
 
 // active-high port images, inverted at the end
 reg  [15:0] in0, in1, in2;
@@ -543,15 +602,16 @@ always @(posedge clk_sys) begin
 end
 
 // the information windows (see Video) hold the game too. View Secret Players
-// (NBA Jam, TE; O[115]), Move List (MK, MK2, MK2 Plus; O[114]) and View
+// (NBA Jam, TE; O[115]), Move List (MK, MK Plus, MK2, MK2 Plus; O[114]) and View
 // Secrets (MK2 Plus; O[116]) are Off or On: while one is On, the page is
 // turned with the controller's Left and Right (any player) with the OSD
 // closed (rtl/tunit_mlpage.sv). The Plus set has two lists; with both On the
 // one switched on last is shown.
 wire [4:0] list_n      = menu_te ? WIN_NBAJAMTE_N : menu_nj ? WIN_NBAJAM_N :
-                         menu_plus ? WIN_MK2PLUS_N : menu_mk2 ? WIN_MK2_N : WIN_MK_N;
+                         menu_plus ? WIN_MK2PLUS_N : menu_rev4 ? WIN_MK2R4_N : menu_mk2 ? WIN_MK2_N :
+                         menu_mkp ? WIN_MKPLUS_N : WIN_MK_N;
 wire       splist_on   = menu_nba & status[115];
-wire       movelist_on = (osd_ejb | menu_plus) & status[114];
+wire       movelist_on = osd_list & status[114];
 wire       secrets_on  = menu_plus & status[116];
 wire       win_b;
 wire [4:0] ml_page;
@@ -626,68 +686,94 @@ assign core_hb = load_black ? idl_hb : brd_hb;
 assign core_vb = load_black ? idl_vb : brd_vb;
 
 //////////////////////////////////////////////////////////////////
-// Service credit and tilt (OSD DIP Switches page)
+// DIP switches (the System Options page)
 //
-// The MRAs list them with the game's DIP switches (bits 16 and 17 of the
-// switches, tools/mra_gen.py). Main_MiSTer sends all the switches each time
-// one changes, so selecting the line flips its bit: each flip after the
-// first download (the saved values when the game loads) holds the matching
-// cabinet switch closed for 8 frames (about 150 ms), long enough for the
-// game's switch scan to accept it, like a real coin or slam switch. Frames
-// are counted only while the game runs, so with "Pause when OSD is open"
-// the switch closes when the OSD is shut.
+// The games' DIP switches are options of the OSD (tools/tunit_dips.py writes
+// rtl/tunit_dips_osd.svh, their CONF_STR lines, and rtl/tunit_dsw.sv, which
+// turns the options' status bits into the board's 16-bit switch word for the
+// loaded game family). The MRAs carry no <switches>, so Main_MiSTer has no
+// DIP Switches menu of its own (that one cannot be put in a page of the
+// OSD) and the switches live inside System Options, as in the Wolf Unit core.
+// Every option's first value is MAME's default: a configuration with all
+// the bits clear has the default switches. The word is registered (a game
+// reads most of the switches at power-up; a change is seen from the next clock).
 //////////////////////////////////////////////////////////////////
 
+wire [15:0] dsw_c;
+reg  [15:0] dsw = 16'hFFFF;
+
+tunit_dsw tunit_dsw
+(
+	.game_id (game_id),
+	.status  (status),
+	.dsw     (dsw_c)
+);
+
+always @(posedge clk_sys) dsw <= dsw_c;
+
+//////////////////////////////////////////////////////////////////
+// Service credit and tilt (System Options page)
+//
+// Each is a trigger of the OSD (T[12], T[13]): the HPS sets its status bit
+// briefly when the line is selected. The matching cabinet switch is then held
+// closed for 8 frames (about 150 ms), long enough for the game's switch scan
+// to accept it, like a real coin or slam switch. Frames are counted only
+// while the game runs, so with "Pause When OSD is Open" the switch closes
+// when the OSD is shut.
+//////////////////////////////////////////////////////////////////
+
+reg  [1:0] osd_sw_d;
 reg        osd_vb_d;
 wire       osd_frame = brd_vb & ~osd_vb_d & ~pause;    // start of a running frame
 
-reg        dsw_seen = 1'b0;      // the switches' second word has come once since the ROMs
-wire       dsw_w1   = ioctl_wr && ioctl_index == 16'd254 && ioctl_addr[26:1] == 26'd1;
-wire       svc_flip  = dsw_w1 && dsw_seen && (ioctl_dout[0] ^ dsw[16]);
-wire       tilt_flip = dsw_w1 && dsw_seen && (ioctl_dout[1] ^ dsw[17]);
-
 always @(posedge clk_sys) begin
+	osd_sw_d <= status[13:12];
 	osd_vb_d <= brd_vb;
-	if (rom_download)  dsw_seen <= 1'b0;     // a new game: its saved switches come next
-	else if (dsw_w1)   dsw_seen <= 1'b1;
 
 	if (reset) begin
 		svc_cnt  <= 4'd0;
 		tilt_cnt <= 4'd0;
 	end
 	else begin
-		if (svc_flip)                    svc_cnt  <= 4'd8;
+		if (status[12] & ~osd_sw_d[0])   svc_cnt  <= 4'd8;
 		else if (osd_frame && svc_sw)    svc_cnt  <= svc_cnt - 4'd1;
 
-		if (tilt_flip)                   tilt_cnt <= 4'd8;
+		if (status[13] & ~osd_sw_d[1])   tilt_cnt <= 4'd8;
 		else if (osd_frame && tilt_sw)   tilt_cnt <= tilt_cnt - 4'd1;
 	end
 end
 
 //////////////////////////////////////////////////////////////////
-// OSD secrets (Secret Menus, Hidden Items, Cheat Codes & Hidden Items)
+// OSD secrets (the Extras page: Secret Audit Menus, EJB Menu, Midway Menu and the rest)
 //
 // R[14] / R[15] play the loaded set's code 1 / code 2 (hidden menus, entered
 // on the controls during the attract mode); the options switch its read
 // patches through the option slots of rtl/tunit_secrets.sv (MK: Reptile Fight
-// Next and Moon Silhouettes Always, see Reptile below; MK2, O[16]: the
-// security screen; TE, O[53]: No CPU Assistance). The other items that used to
+// Next and Moon Silhouettes, see Reptile below; MK2, O[16]: the
+// security screen; TE, O[53]: No CPU Assistance; slot 10, O[19], on the Sound
+// Options page: Attract Sound, the branch that stops the attract mode's sound
+// of Mortal Kombat and Mortal Kombat II; one OSD line for each of Mortal
+// Kombat, Mortal Kombat II and Mortal Kombat II Plus, bits 4, 5 and 15 of the
+// menu mask, so that the NBA Jam games and Judge Dredd, which have the
+// setting in their service menus, do not show it). The other items that used to
 // be here (the power-ups of NBA Jam and TE, their Tank Game and Tournament
 // Mode, MK's Reptile Hints, MK2's hitboxes, Pong, Noob Saibot, Jade and Smoke
 // fights) are cheats in the OSD's Cheats menu now. The codes and patch
 // addresses come with the MRA (ROM index 1), found per revision by
-// tools/tunit_secrets.py.
-// Frames are counted while the game runs, so with "Pause when OSD is open"
+// tools/tunit_secrets.py. What a set's table lacks is not in its OSD (the
+// EJB Menu and Security Screen lines of Mortal Kombat II rev 4.0 and of the Plus
+// sets: osd_items, above), so no item needs a "not available" message.
+// Frames are counted while the game runs, so with "Pause When OSD is Open"
 // a code starts when the OSD closes.
 //////////////////////////////////////////////////////////////////
 
 reg         rep_arm  = 1'b0;                   // MK: Reptile Fight Next set (Reptile below)
-wire [10:0] sec_opt  = hide_ext ? 11'd0 :
-                       menu_mk2 ? {10'd0, status[16]} :
-                       menu_mk  ? {9'd0, status[42], rep_arm} :
-                       menu_te  ? {3'd0, status[53], 7'd0} :
-                                  11'd0;
-wire [10:0] opt_avail;
+wire  [9:0] sec_opt_g = hide_ext ? 10'd0 :
+                        menu_mk2 ? {9'd0, status[16]} :
+                        menu_mk  ? {8'd0, status[42], rep_arm} :
+                        menu_te  ? {2'd0, status[53], 7'd0} :
+                                   10'd0;
+wire [10:0] sec_opt  = {status[19] & SOUND_OSD, sec_opt_g};      // slot 10: Attract Sound (Mortal Kombat, Mortal Kombat II; only their lines show it)
 
 wire [223:0] pt_addr;
 wire [127:0] pt_data;
@@ -707,7 +793,6 @@ wire  [27:0] cpu_wa;
 wire  [15:0] cpu_wd;
 wire         code_ok, code_fail;
 wire         code_cur;           // the code that ended: 0 code 1, 1 code 2
-wire   [1:0] code_avail;         // the set has code 1 / code 2
 
 reg  secrets_dl_d = 1'b0;
 wire secrets_dl   = ioctl_download && ioctl_index == 16'd1;
@@ -786,12 +871,12 @@ tunit_cheats cheats
 //////////////////////////////////////////////////////////////////
 // Reptile (MK, MK Turbo)
 //
-// Three Hidden Items lines, option slots 1-3 of the secrets module: "Reptile
+// Three lines of the Extras page, option slots 1-3 of the secrets module: "Reptile
 // Fight Next" (T[41]) sets or clears a one-time Reptile fight after the next
 // match won in a 1-player game; it is used up when his fight starts (the
 // CPU writes 1 to his flag, whose word address the MRA gives at ROM index 1
 // words 0x228-0x229, tools/tunit_fmoves.py; other code writes other values
-// there in the attract mode). "Moon Silhouettes Always" (O[42]) and
+// there in the attract mode). "Moon Silhouettes" (O[42]) and
 // "Reptile Hints Always" (O[43]) stay on. The patches are program
 // instructions: the board applies them to instruction fetches only
 // (pt_fetch, as every program ROM patch), so the game's data reads of its
@@ -800,13 +885,12 @@ tunit_cheats cheats
 
 reg  [27:0] rep_flag = 28'd0;    // his flag's word address (0: none)
 reg         rep_trig_d;
-reg         rep_msg_set, rep_msg_clr, rep_msg_none;
+reg         rep_msg_set, rep_msg_clr;
 
 always @(posedge clk_sys) begin
 	rep_trig_d   <= status[41];
 	rep_msg_set  <= 1'b0;
 	rep_msg_clr  <= 1'b0;
-	rep_msg_none <= 1'b0;
 
 	if (secrets_dl & ~secrets_dl_d)
 		rep_flag <= 28'd0;
@@ -823,15 +907,13 @@ always @(posedge clk_sys) begin
 			rep_msg_set <= ~rep_arm;
 			rep_msg_clr <= rep_arm;
 		end
-		else
-			rep_msg_none <= 1'b1;
 	end
 	else if (cpu_wr && cpu_wa == rep_flag && rep_flag != 28'd0 && cpu_wd == 16'd1)
 		rep_arm <= 1'b0;             // his fight has started (the game sets the flag to 1)
 end
 
 //////////////////////////////////////////////////////////////////
-// Fixed AI Difficulty (MK, MK2)
+// Fixed AI Difficulty (MK, MK2, NBA Jam, NBA Jam TE)
 //
 // MK and MK2 keep the CPU opponent's level (0 easiest to 9) in one main RAM
 // word: the AI picks entries of its 10-entry tables with it, the game raises
@@ -843,9 +925,21 @@ end
 // chosen level for the CPU's reads of that word (with interrupts enabled,
 // rtl/midway_tunit.sv "Read patches"): the game's own writes go on as before,
 // so Off hands its own value back at once. The demo fights keep the game's
-// own level (5). It is off while the test menu is selected (the Service Mode
+// own level (5). It is off while the test menu is selected (the Service Menu
 // option, a test button or the Test Switch DIP), so the diagnostics see the
 // game's RAM as it is.
+//
+// NBA Jam and TE keep each CPU player's skill in two fields of its object
+// (tools/tunit_nbaai.py): one set at the start of the game from the player's
+// rating and the human's record, one that follows the score all the time. The
+// level (0-9) gives every CPU opponent the skill 2 x level - 10 from the start
+// of the game and the CPU players no catch-up: four program ROM words of the
+// MRA (bytes 0x460-0x47F, four entries of four words: word address low,
+// {flags, word address high}, value, unused; flag bit 12: the value is the
+// level's skill) read as their patched instructions while the CPU fetches
+// them, and the word that selects the AI's hard routines (the one the table's
+// bytes 0x454-0x457 give, like the level word of MK) reads 1 from level 6 and
+// 0 below it. The human's own values and the CPU teammate's stay the game's.
 //////////////////////////////////////////////////////////////////
 
 // The early Mortal Kombat II revisions lack some finishing moves, and which
@@ -882,24 +976,58 @@ end
 
 wire [3:0] lvl_sel  = status[113:110];                    // Off, then levels 0-9
 wire       lvl_test = test_sw | ~dsw[0];                  // the test menu is selected
-assign lvl_items    = (menu_mk | menu_mk2) & (lvl_wa != 28'd0);
+assign lvl_items    = (menu_mk | menu_mk2 | menu_nba) & (lvl_wa != 28'd0);
 wire       lvl_on   = lvl_items & (lvl_sel != 4'd0) & ~lvl_test;
-wire [3:0] lvl_val  = (lvl_sel > 4'd10) ? 4'd9 : (lvl_sel - 4'd1);
+wire [3:0] lvl_lev  = (lvl_sel > 4'd10) ? 4'd9 : (lvl_sel - 4'd1);
+wire [3:0] lvl_val  = menu_nba ? {3'd0, lvl_lev >= 4'd6} : lvl_lev;   // NBA Jam, TE: the hard routines' word
+
+// NBA Jam, TE: the four program ROM words of the MRA (bytes 0x460-0x47F), word
+// address and value (the level's skill when the entry's flag says so)
+reg [111:0] ai_pc  = 112'd0;
+reg  [63:0] ai_v   = 64'd0;
+reg   [3:0] ai_dyn = 4'd0;
+wire        ai_wr  = ioctl_wr && ioctl_index == 16'd1 && ioctl_addr[26:5] == 22'h23;   // 0x460 >> 5
+wire  [1:0] ai_k   = ioctl_addr[4:3];
+wire  [1:0] ai_w   = ioctl_addr[2:1];
+always @(posedge clk_sys) begin
+	if (secrets_dl & ~secrets_dl_d) begin
+		ai_pc  <= 112'd0;
+		ai_v   <= 64'd0;
+		ai_dyn <= 4'd0;
+	end
+	else if (ai_wr) begin
+		if (ai_w == 2'd0) ai_pc[28 * ai_k +: 16] <= ioctl_dout;
+		if (ai_w == 2'd1) begin
+			ai_pc[28 * ai_k + 16 +: 12] <= ioctl_dout[11:0];
+			ai_dyn[ai_k]                <= ioctl_dout[12];
+		end
+		if (ai_w == 2'd2) ai_v[16 * ai_k +: 16] <= ioctl_dout;
+	end
+end
+
+wire  [4:0] ai_h5 = {lvl_lev, 1'b0} - 5'd10;              // the skill 2 x level - 10, -10 to 8
+wire [15:0] ai_h  = {{11{ai_h5[4]}}, ai_h5};
+wire  [3:0] ai_en = {4{lvl_on & menu_nba}} & {ai_pc[84 +: 28] != 28'd0, ai_pc[56 +: 28] != 28'd0, ai_pc[28 +: 28] != 28'd0, ai_pc[0 +: 28] != 28'd0};
+wire [63:0] ai_val = {ai_dyn[3] ? ai_h : ai_v[63:48], ai_dyn[2] ? ai_h : ai_v[47:32],
+                      ai_dyn[1] ? ai_h : ai_v[31:16], ai_dyn[0] ? ai_h : ai_v[15:0]};
 
 //////////////////////////////////////////////////////////////////
-// Finishing moves (MK, MK2)
+// Finishing moves (MK, MK2, MK2 rev 4.0)
 //
-// The Finishing Moves page picks a character (O[30:28] MK, O[27:24] MK2;
-// the menu mask's bits 8-11 show that character's lines) and one of its
-// moves (R[32]-R[39], the character's lines in order; R[40] clears the set
-// move). (The main menu's Move List option, O[114], only shows the moves
+// The Finishing Moves page picks a character (O[30:28] MK, O[27:24] MK2 and
+// rev 4.0, the same twelve fighters; the menu mask's bits 8-11 show that
+// character's lines) and one of its moves (R[32]-R[39]; R[40] clears the set
+// move). Rev 4.0 has its own moves (menu_rev4 shows its lines, hides the
+// stock revisions' that differ, and tells the player which table to use). (The main menu's Move List option, O[114], only shows the moves
 // in the window, see Video.)
 // rtl/tunit_fmoves.sv plays it at the winner's next FINISH HIM, following
 // the fight through the CPU's writes to the variables the MRA gives (ROM
-// index 1, bytes 0x400-0x44F, tools/tunit_fmoves.py).
+// index 1, bytes 0x400-0x46D, tools/tunit_fmoves.py).
 //////////////////////////////////////////////////////////////////
 
-assign fm_line = menu_mk2 ? status[27:24] : {1'b0, status[30:28]};
+// The Character option's pick as the page's line: MK2's (stock) is the line, rev 4.0's and Plus's alphabetical
+// lists (15 and 17 fighters, fm_pick) follow the twelve of MK2 with their hidden fighters.
+assign fm_line = menu_mk2 ? fm_pick({menu_plus, menu_rev4}, menu_plus ? status[28:24] : {1'b0, status[27:24]}) : {2'd0, status[30:28]};
 
 reg   [8:0] fm_bits_d;
 reg         fm_sel;
@@ -924,10 +1052,12 @@ tunit_fmoves fmoves
 	.reset     (reset),
 	.game_mk   (menu_mk),
 	.game_mk2  (osd_mk2),
+	.game_rev4 (menu_rev4),
+	.game_mkp  (menu_mkp),
 
 	.dl_start  (secrets_dl & ~secrets_dl_d),
-	.dl_wr     (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr[26:7] == 20'h8),
-	.dl_addr   (ioctl_addr[6:1]),
+	.dl_wr     (ioctl_wr && ioctl_index == 16'd1 && ioctl_addr[26:8] == 19'h4),    // bytes 0x400-0x4FF
+	.dl_addr   (ioctl_addr[7:1]),
 	.dl_data   (ioctl_dout),
 
 	.sel       (fm_sel),
@@ -941,6 +1071,9 @@ tunit_fmoves fmoves
 
 	.drive     (fm_drive),
 	.keys      (fm_keys),
+	.fp_en     (fm_fp_en),
+	.fp_addr   (fm_fp_addr),
+	.fp_set    (fm_fp_set),
 	.msg_req   (fm_msg_req),
 	.msg       (fm_msg)
 );
@@ -952,8 +1085,9 @@ tunit_fmoves fmoves
 // game took them, or not; a code this revision lacks), Reptile Fight Next
 // set or cleared, and the hidden items' and power-ups' options turned on
 // (looked at when the OSD closes: what an MK / MK2 option does, that an NBA
-// Jam / TE power-up is on for all players, or that this revision does not
-// have it). Main_MiSTer shows a message for 2 s, and only with the OSD
+// Jam / TE power-up is on for all players), and Attract Sound switched either
+// way ("Attract Sound: Always On" / "Attract Sound: Default"; the change
+// applies after a reset, as the Sound Options page says). Main_MiSTer shows a message for 2 s, and only with the OSD
 // closed: messages wait in a set (lowest number first) and go out one every
 // 2.2 s, starting 0.3 s after the OSD closes.
 //////////////////////////////////////////////////////////////////
@@ -962,7 +1096,6 @@ localparam [27:0] MSG_GAP   = 28'd211_200_000;     // 2.2 s at 96 MHz
 localparam [27:0] MSG_DELAY = 28'd28_800_000;      // 0.3 s
 
 reg  [31:1] msg_pend;
-reg   [1:0] code_trig_d;         // R[15:14] last clock: a code picked that the set lacks
 reg  [10:0] sec_open;            // Secrets option slots when the OSD opened
 reg  [27:0] msg_timer;
 reg         osd_was;
@@ -1000,24 +1133,25 @@ end
 always @(posedge clk_sys) begin
 	osd_was <= OSD_STATUS;
 	msg_out <= 1'b0;
-	code_trig_d <= status[15:14];
 
 	if (OSD_STATUS & ~osd_was) sec_open <= sec_opt;
 
 	if (fm_msg_req) msg_pend[fm_msg] <= 1'b1;
 	if (rep_msg_set)  begin msg_pend[MSG_REPT_SET] <= 1'b1; msg_pend[MSG_REPT_CLEARED] <= 1'b0; end
 	if (rep_msg_clr)  begin msg_pend[MSG_REPT_CLEARED] <= 1'b1; msg_pend[MSG_REPT_SET] <= 1'b0; end
-	if (rep_msg_none) msg_pend[MSG_NOT_HERE] <= 1'b1;
 	if (code_ok)    msg_pend[MSG_CODE_OK] <= 1'b1;
 	if (code_fail)  msg_pend[(menu_nba && code_cur) ? MSG_CODE_MATCHUP : MSG_CODE_FAIL] <= 1'b1;
-	for (si = 0; si < 2; si = si + 1)
-		if (status[14 + si] & ~code_trig_d[si] & ~code_avail[si]) msg_pend[MSG_NOT_HERE] <= 1'b1;
 	if (~OSD_STATUS & osd_was) begin
-		for (si = 0; si < 11; si = si + 1)
+		for (si = 0; si < 10; si = si + 1)
 			if (sec_opt[si] & ~sec_open[si] & ~(menu_mk && si == 0))
-				msg_pend[~opt_avail[si] ? MSG_NOT_HERE : menu_mk2 ? sec_msg_mk2(si) :
+				msg_pend[menu_mk2 ? sec_msg_mk2(si) :
 				         menu_mk ? sec_msg_mk(si) :
 				         (si == 0 || (menu_te && si <= 2)) ? MSG_ON_NEXT : MSG_ON_ALL] <= 1'b1;
+		// Attract Sound (slot 10): said when it is switched either way
+		if (sec_opt[10] != sec_open[10]) begin
+			msg_pend[MSG_ATTRACT]     <= sec_opt[10];
+			msg_pend[MSG_ATTRACT_OFF] <= ~sec_opt[10];
+		end
 	end
 
 	if (reset)
@@ -1056,12 +1190,12 @@ midway_tunit board
 
 	.in_ports       (in_ports),
 
-	.pt_addr        ({ck_addr, pt_addr}),
-	.pt_data        ({ck_data, pt_data}),
-	.pt_en          ({ck_en, pt_en}),
-	.pt_fetch       ({ck_fetch, pt_fetch}),         // program code patches: instruction fetches only
-	.pt_store       ({ck_store, 8'd0}),             // cheat entries that also replace the CPU's writes
-	.pt_mask        ({ck_mask, {8{16'hFFFF}}}),     // the secrets' entries cover the whole word
+	.pt_addr        ({fm_fp_addr, ck_addr, pt_addr}),
+	.pt_data        ({7'd0, fm_fp_set, 8'd0, ck_data, pt_data}),
+	.pt_en          ({fm_fp_en, ck_en, pt_en}),
+	.pt_fetch       ({1'b1, ck_fetch, pt_fetch}),   // program code patches: instruction fetches only
+	.pt_store       ({1'b0, ck_store, 8'd0}),       // cheat entries that also replace the CPU's writes
+	.pt_mask        ({16'h0100, ck_mask, {8{16'hFFFF}}}),   // the secrets' entries cover the whole word; the direct finisher's, bit 8 (its value fm_fp_set)
 	.pt_pk          (ck_pk),                        // cheat entries that are one-shot writes
 	.pt_fire        (ck_fire),
 
@@ -1069,6 +1203,10 @@ midway_tunit board
 	.lvl_addr       (lvl_wa),
 	.lvl_dpc        (lvl_dpc),
 	.lvl_val        (lvl_val),
+
+	.ai_en          (ai_en),            // Fixed AI Difficulty, NBA Jam and TE
+	.ai_pc          (ai_pc),
+	.ai_val         (ai_val),
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
@@ -1153,6 +1291,7 @@ williams_adpcm sound
 	.clk        (clk_sys),
 	.reset      (reset | cfg_dcs),
 	.pause      (pause),
+	.speed      (SPEED_OSD ? status[18:17] : 2'd0),    // Sound CPU Speed (100 % while its OSD option is left out)
 
 	.prot_start (cfg_sprot_start),
 	.prot_end   (cfg_sprot_end),
@@ -1291,18 +1430,19 @@ sdram sdram
 // ---- Information window (rtl/tunit_window.sv) ----
 //
 // View Secret Players (NBA Jam, TE; O[115]: Off, On; the pages: the players,
-// then the cheat codes), Move List (MK, MK2, MK2 Plus; O[114]: Off, On; the
-// pages: MK two lists with several fighters to a page, MK2 and Plus a page
-// per fighter) and View Secrets (MK2 Plus; O[116]: Off, On; the pages: the
+// then the cheat codes), Move List (MK, MK Plus, MK2, MK2 Plus; O[114]: Off,
+// On; the pages: MK two lists with several fighters to a page, MK Plus four,
+// MK2 and MK2 Plus a page per fighter) and View Secrets (MK2 Plus; O[116]: Off, On; the pages: the
 // secret characters, the bosses, the Kombat Kodes, the other secrets) draw a
 // page over the game's dimmed title screen in place of the picture, Left /
 // Right turning the page; the game waits meanwhile (pause above). The first
 // page and page count of each list: rtl/tunit_window_pages.svh.
 
-wire [5:0] list_p0  = win_b ? WIN_MK2PLUS_SECRETS :
+wire [6:0] list_p0  = win_b ? WIN_MK2PLUS_SECRETS :
                       menu_te ? WIN_NBAJAMTE : menu_nj ? WIN_NBAJAM :
-                      menu_plus ? WIN_MK2PLUS : menu_mk2 ? WIN_MK2 : WIN_MK;
-wire [5:0] win_page = list_p0 + {1'b0, ml_page};
+                      menu_plus ? WIN_MK2PLUS : menu_rev4 ? WIN_MK2R4 : menu_mk2 ? WIN_MK2 :
+                      menu_mkp ? WIN_MKPLUS : WIN_MK;
+wire [6:0] win_page = list_p0 + {2'b0, ml_page};
 wire [1:0] win_game = menu_nj ? 2'd0 : menu_te ? 2'd1 : menu_mk2 ? 2'd3 : 2'd2;
 
 tunit_window tunit_window
