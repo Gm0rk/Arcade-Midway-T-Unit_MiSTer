@@ -17,6 +17,7 @@ module sim_top
 	input             reset,
 	input             pause,
 	input             vtiming,       // Video Timing option: 0 native, 1 57 Hz
+	input       [1:0] sndspeed,      // ADPCM Sound CPU Speed option: 0 100 %, 1 102 %, 2 104 %, 3 106 %
 
 	// game configuration (the top level's game table)
 	input       [2:0] prot_id,
@@ -52,6 +53,11 @@ module sim_top
 	input      [27:0] lvl_dpc,
 	input       [3:0] lvl_val,
 
+	// Fixed AI Difficulty (NBA Jam, TE): program ROM words that read as ai_val when fetched
+	input       [3:0] ai_en,
+	input     [111:0] ai_pc,
+	input      [63:0] ai_val,
+
 	// DDR3 (C++ model)
 	input             ddr_busy,
 	output      [7:0] ddr_burstcnt,
@@ -84,6 +90,7 @@ module sim_top
 	output            dbg_retire,
 	output            dbg_blit_busy,
 	output            dbg_snd_wr,
+	output reg [31:0] dbg_snd_e,     // ADPCM sound CPU E edges since reset
 	output     [15:0] dbg_snd_data,
 	output            dbg_dcs_we,      // DCS: a sample copied into the DAC queue
 	output     [15:0] dbg_dcs_smp,
@@ -125,6 +132,10 @@ wire signed [15:0] adpcm_audio, dcs_audio;
 assign audio = dcs ? dcs_audio : adpcm_audio;
 
 assign dbg_snd_wr   = snd_wr;
+always @(posedge clk) begin
+	if (reset) dbg_snd_e <= 32'd0;
+	else if (sound.fallE) dbg_snd_e <= dbg_snd_e + 32'd1;
+end
 assign dbg_snd_data = snd_data;
 assign dbg_dcs_we    = dcs_board.board.f_push & dcs_board.board.ce;
 assign dbg_dcs_smp   = dcs_board.board.f_pd;
@@ -219,12 +230,12 @@ midway_tunit board
 
 	.in_ports       (ports),
 
-	.pt_addr        ({ck_addr, pt_addr}),
-	.pt_data        ({ck_data, pt_data}),
-	.pt_en          ({ck_en, pt_en}),
-	.pt_fetch       ({ck_fetch, pt_fetch}),   // program code patches: instruction fetches only
-	.pt_store       ({ck_store, 8'd0}),       // cheat entries that also replace the CPU's writes
-	.pt_mask        ({ck_mask, {8{16'hFFFF}}}),
+	.pt_addr        ({28'd0, ck_addr, pt_addr}),
+	.pt_data        ({16'd0, ck_data, pt_data}),
+	.pt_en          ({1'b0, ck_en, pt_en}),
+	.pt_fetch       ({1'b0, ck_fetch, pt_fetch}),   // program code patches: instruction fetches only
+	.pt_store       ({1'b0, ck_store, 8'd0}),       // cheat entries that also replace the CPU's writes
+	.pt_mask        ({16'd0, ck_mask, {8{16'hFFFF}}}),
 	.pt_pk          (ck_pk),
 	.pt_fire        (ck_fire),
 
@@ -232,6 +243,10 @@ midway_tunit board
 	.lvl_addr       (lvl_addr),
 	.lvl_dpc        (lvl_dpc),
 	.lvl_val        (lvl_val),
+
+	.ai_en          (ai_en),
+	.ai_pc          (ai_pc),
+	.ai_val         (ai_val),
 
 	.snd_wr         (snd_wr),
 	.snd_data       (snd_data),
@@ -296,6 +311,7 @@ williams_adpcm sound
 	.clk        (clk),
 	.reset      (reset | dcs | snd_off),
 	.pause      (pause),
+	.speed      (sndspeed),
 
 	.prot_start (sprot_start),
 	.prot_end   (sprot_end),
