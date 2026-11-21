@@ -536,8 +536,17 @@ module crt_vsize #(
     wire [9:0] t_over     = (t_need_end > t_bot_lim) ? (t_need_end - t_bot_lim) : 10'd0;
     wire [9:0] t_cap2     = (win_start_t > {6'd0, vs_lines} + 10'd8)
                             ? (win_start_t - {6'd0, vs_lines} - 10'd4) : 10'd0;
-    wire [9:0] t_k1       = (t_over > 10'd24) ? 10'd24 : t_over;
-    wire [9:0] t_k        = (t_k1 > t_cap2) ? t_cap2 : t_k1;
+    // t_over and t_cap2 are registered: the chain from a_nat / vsize_eff /
+    // nl_top (two adders and three comparators) into t_vsdel was clk_sys' worst
+    // path (-0.016 ns in the Build 83 compilation). Every input is a per-frame
+    // value (a_nat, lines_nat and vs_lines change on vs_rise itself, nl_top on
+    // the first picture line, vsize_eff on a menu step), so the one clock of
+    // latency is not seen at the vs_rise that loads t_vsdel.
+    reg  [9:0] t_over_r, t_cap2_r;
+    initial begin t_over_r = 10'd0; t_cap2_r = 10'd0; end
+    always @(posedge clk) begin t_over_r <= t_over; t_cap2_r <= t_cap2; end
+    wire [9:0] t_k1       = (t_over_r > 10'd24) ? 10'd24 : t_over_r;
+    wire [9:0] t_k        = (t_k1 > t_cap2_r) ? t_cap2_r : t_k1;
     always @(posedge clk) if (vs_rise) t_vsdel <= tube_mode ? t_k[4:0] : 5'd0;
 
     wire [17:0] t_pos_n = t_pos + {8'd0, step_q8};
@@ -592,20 +601,33 @@ module crt_vsize #(
         end
     endfunction
 
-    function [7:0] isqrt_l(input [31:0] xr);
+    // T-Unit core, Build 101: the last four steps are two stages of two (isqrt_m,
+    // then isqrt_n). As one stage (isqrt_l: four compare-and-subtract steps in a
+    // row, 10.1 ns of data delay) `t_h1` to `t_out` was clk_sys' worst path in
+    // several compilations and failed in Build 100's (-0.300 ns); each half is
+    // about half of it. The steps are the same, so the result is the same.
+    function [31:0] isqrt_m(input [31:0] xr);
         reg [15:0] x, res;
         begin
             x = xr[31:16]; res = xr[15:0];
             if (x >= res + 16'h0040) begin x = x - (res + 16'h0040); res = (res >> 1) + 16'h0040; end else res = res >> 1;
             if (x >= res + 16'h0010) begin x = x - (res + 16'h0010); res = (res >> 1) + 16'h0010; end else res = res >> 1;
-            if (x >= res + 16'h0004) begin x = x - (res + 16'h0004); res = (res >> 1) + 16'h0004; end else res = res >> 1;
-            if (x >= res + 16'h0001) begin x = x - (res + 16'h0001); res = (res >> 1) + 16'h0001; end else res = res >> 1;
-            isqrt_l = res[7:0];
+            isqrt_m = {x, res};
         end
     endfunction
 
-    // ---- pipeline pixel a 9 sottofasi (p_cnt 0..8 tra un CE e l'altro;
-    //      upstream: 8 sottofasi, 0..7 — see the Build 49 note below) ----
+    function [7:0] isqrt_n(input [31:0] xr);
+        reg [15:0] x, res;
+        begin
+            x = xr[31:16]; res = xr[15:0];
+            if (x >= res + 16'h0004) begin x = x - (res + 16'h0004); res = (res >> 1) + 16'h0004; end else res = res >> 1;
+            if (x >= res + 16'h0001) begin x = x - (res + 16'h0001); res = (res >> 1) + 16'h0001; end else res = res >> 1;
+            isqrt_n = res[7:0];
+        end
+    endfunction
+
+    // ---- pipeline pixel a 10 sottofasi (p_cnt 0..9 tra un CE e l'altro;
+    //      upstream: 8 sottofasi, 0..7 — see the Build 49 and Build 101 notes) ----
     reg  [9:0]  t_px, t_px_l;
     reg         t_fetch;
     reg  [7:0]  t_al;
@@ -613,12 +635,14 @@ module crt_vsize #(
     reg  [15:0] t_sqb_r, t_sqb_g, t_sqb_b;
     reg  [15:0] t_bl_r, t_bl_g, t_bl_b;
     reg  [31:0] t_h1_r, t_h1_g, t_h1_b;
+    reg  [31:0] t_h2_r, t_h2_g, t_h2_b;
     reg  [23:0] t_out;
     reg         t_out_v;
     initial begin
         t_px=0; t_px_l=0; t_fetch=0; t_al=0;
         t_sqa_r=0; t_sqa_g=0; t_sqa_b=0; t_sqb_r=0; t_sqb_g=0; t_sqb_b=0;
         t_bl_r=0; t_bl_g=0; t_bl_b=0; t_h1_r=0; t_h1_g=0; t_h1_b=0;
+        t_h2_r=0; t_h2_g=0; t_h2_b=0;
         t_out=0; t_out_v=0;
     end
 
@@ -651,7 +675,8 @@ module crt_vsize #(
         // into the next DSP's input register: -0.193 ns at 96 MHz in the
         // Build 48 compilation (the M10K's clock arrives 1.26 ns later than
         // the DSP's). The result at the pixel enable is the same; the
-        // pipeline needs 9 clocks per pixel instead of 8 (12 in this core).
+        // pipeline needs 9 clocks per pixel instead of 8 (12 in this core);
+        // Build 101 makes it 10 (the last square-root step is two phases).
         case (p_cnt)
             5'd0: rd_addr_t <= line_base(t_slotA) + t_px_l;
             5'd1: rd_addr_t <= line_base(t_slotB) + t_px_l;
@@ -676,7 +701,12 @@ module crt_vsize #(
                 t_h1_b <= isqrt_h(t_bl_b);
             end
             5'd8: begin
-                t_out   <= {isqrt_l(t_h1_r), isqrt_l(t_h1_g), isqrt_l(t_h1_b)};
+                t_h2_r <= isqrt_m(t_h1_r);
+                t_h2_g <= isqrt_m(t_h1_g);
+                t_h2_b <= isqrt_m(t_h1_b);
+            end
+            5'd9: begin
+                t_out   <= {isqrt_n(t_h2_r), isqrt_n(t_h2_g), isqrt_n(t_h2_b)};
                 t_out_v <= t_fetch;
             end
             default: ;
