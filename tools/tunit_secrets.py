@@ -16,7 +16,7 @@ revisions). A feature whose code is not found is left out of that set's
 table, and the script says so. mra_gen.py calls build() for every set; run
 alone, it prints what it finds in a region dump
 (tools/mame/region_dump.lua). --gen writes the NBA Jam / TE lines of the OSD
-(View Secret Players and the Cheat Codes & Hidden Items page); CHEATS
+(Midway Menu, No CPU Assistance and View Secret Players, lines of the Extras page); CHEATS
 below is what the Secret Player List window (tools/tunit_window.py) and the
 game pages show of the codes.
 
@@ -47,7 +47,7 @@ TE 4.0, Judge Dredd TA1, MK 5.0):
                  first stage as well as The Pit. The options patch the
                  check's first test after the one-player one to SETC / RETS
                  (Reptile Fight Next), the two cooldown branches to NOPs
-                 (Moon Silhouettes Always; Turbo Ninja: the moon's only),
+                 (Moon Silhouettes; Turbo Ninja: the moon's only),
                  and the counter's branch to a NOP and a jump over the audit
                  clearing (Reptile Hints Always).
   MK2            EJB menu: as MK, table 5 P1, 10 P2, 2 P1, 8 P2, 2 P1 (L2.0
@@ -123,6 +123,22 @@ TE 4.0, Judge Dredd TA1, MK 5.0):
                  audits, each turned by any press. Holding both start buttons
                  when the last page ends shows the staff credits (FFCFBCD0).
 
+  Attract sound  The attract mode of Mortal Kombat and Mortal Kombat II stops
+                 its sound (the OSD's Attract Sound: Always On keeps it
+                 playing; table option 13):
+                 MK, MK Turbo: each attract cycle counts a byte down
+                 (*A13(2B0h)) and, when it reaches 0, calls a routine that
+                 stops the sounds and sets a mute flag (@01051830) the sound
+                 routines test; the JRNE that skips the call (FFC8C9E0)
+                 becomes a JRUC. MK2: the attract process counts its cycles
+                 on its stack, compares the count with 3 and, once it has
+                 reached it, calls the same stop-and-mute routine (flag
+                 @01061990, FF8438D0); the JRC back to the cycle's start
+                 becomes a JRUC. NBA Jam, TE and Judge Dredd have an
+                 ATTRACT-MODE SOUND adjustment in their service menu (NBA
+                 Jam: the attract mode sets a sound lock, @010F16F0, and
+                 clears it when the adjustment is on); not patched.
+
 Table layout: rtl/tunit_secrets.sv.
 
 Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
@@ -152,6 +168,7 @@ OPT_NOOB, OPT_JADE, OPT_SMOKE = 6, 7, 8           # O[19], O[20], O[21]
 OPT_REP_NEXT, OPT_REP_MOON, OPT_REP_HINT = 1, 2, 3
 # NBA Jam / TE: option codes of the table; the top level maps each game's
 # OSD bits to the option slots (codes 1-3, 6-13)
+OPT_ATTRACT = 13                 # O[19] Attract Sound: Always On (option slot 10); MK, MK2
 NJ_BIG, NJ_DEF, NJ_INT, NJ_SHOT, NJ_NOCPU = 1, 2, 3, 6, 7
 TE_BIG, TE_HUGE, TE_BABY, TE_MAX, TE_QUICK, TE_GOAL, TE_SHOT, TE_NOCPU = 1, 2, 3, 6, 7, 8, 9, 10
 NOP, JRUC = 0x0300, 0xC000
@@ -163,7 +180,7 @@ SETC, RETS = 0x0DE0, 0x0960
 OSD_VIEW = 115                  # O[115] View Secret Players: Off, On (the pages: rtl/tunit_mlpage.sv, tools/tunit_window.py)
 OSD_PLUS_VIEW = 116             # O[116] View Secrets (Mortal Kombat II Plus): Off, On (the pages: tools/tunit_plus.py)
 MASK_PLUS = 'F'                 # status_menumask bit 15: Mortal Kombat II Plus
-OSD_PAGE = 7                     # the Cheat Codes & Hidden Items page
+OSD_PAGE = 5                     # the Extras page (Arcade-Midway-T-Unit.sv)
 OSD_HEADS = 48                   # NBA Jam: Big Heads; TE: O[49:48] Head Size
 OSD_DEF = 50                     # NBA Jam: Power-Up Defense; TE: Power-Up Goaltending
 OSD_INT = 51                     # NBA Jam: Power-Up Interceptions; TE: Quick Hands
@@ -346,8 +363,9 @@ def mk_reptile(p, notes):
             patches.append((bit_address(i + 5) >> 4, OPT_REP_MOON, NOP))
     # hints: CMPI 7D0h,A1 / JRC / MMFM SP,A0 / MOVE A0,-*A12 / MOVI 10h,A0 /
     # CALLA (clear the audits) ... MOVI 201Eh,A1 (the hint process): the JRC
-    # becomes a NOP, the MOVI 10h a JRUC to the MOVI 201Eh
-    h = p.find([0x0B41, 0xF82F, X, 0x09AF, 0x0001, 0xA20C, 0x09C0, 0x0010])
+    # becomes a NOP, the MOVI 10h a JRUC to the MOVI 201Eh (the limit is
+    # whatever the set uses: 7D0h, and 64h in Mortal Kombat Plus)
+    h = p.find([0x0B41, X, X, 0x09AF, 0x0001, 0xA20C, 0x09C0, 0x0010])
     if len(h) != 1 or w[h[0] + 2] >> 8 != 0xC8:
         notes.append('Reptile hints not found')
         return None
@@ -360,6 +378,45 @@ def mk_reptile(p, notes):
     patches.append((bit_address(h[0] + 6) >> 4, OPT_REP_HINT, JRUC | disp))
     notes.append('Reptile check %08X, flag %08X, %d patches' % (bit_address(chk), flag, len(patches)))
     return patches, flag
+
+
+def attract_sound(gid, p, notes):
+    """The Attract Sound: Always On patches (program ROM words, OPT_ATTRACT) of
+    Mortal Kombat and Mortal Kombat II: the branch that lets the attract mode
+    stop its sound becomes one that never does (see the module doc). The
+    other games have no patch: their service menus have the setting."""
+    w = p.w
+    patches = []
+
+    def muter(call):
+        """The CALLR at call is to a routine that mutes: its stop sounds call
+        is followed by MOVK 1,A0 / MOVE A0,@flag."""
+        t = call + 2 + s16(w[call + 1])
+        return 0 <= t < len(w) - 8 and any(w[t + k] == 0x1820 and w[t + k + 1] == 0x0580 for k in range(1, 6))
+
+    if gid in (G_MK, G_MKTURBO):
+        # MOVB *A13(n),A0 / JREQ (long) / DEC A0 / MOVB A0,*A13(n) / JRNE
+        # (long) / CALLR mute: the JRNE becomes a JRUC (word 7; its
+        # displacement stays)
+        for i in p.find([0xAFA0, X, 0xCA00, X, 0x1420, 0xAC0D, X, 0xCB00, X, 0x0D3F, X]):
+            if w[i + 1] == w[i + 6] and muter(i + 9):
+                patches.append((bit_address(i + 7) >> 4, OPT_ATTRACT, JRUC))
+    elif gid == G_MK2:
+        # MOVK 1,A0 .. CMPI n,A0 / JRC (back to the cycle's start) /
+        # MOVE A0,-*SP / CALLA stop sounds / MOVK 1,A0 / MOVE A0,@mute: the
+        # JRC (word 2) becomes a JRUC with the same displacement
+        # (L1.4 to L2.1: the JRC is the long form, C800 and a displacement
+        # word: the C800 becomes C000)
+        for i in p.find([0x0B40, X, X, 0xA20F, 0x0D5F, X, X, 0x1820, 0x0580, X, X]):
+            if w[i + 2] >> 8 == 0xC8 and w[i + 2] & 0x80:
+                patches.append((bit_address(i + 2) >> 4, OPT_ATTRACT, 0xC000 | (w[i + 2] & 0xFF)))
+        for i in p.find([0x0B40, X, 0xC800, X, 0xA20F, 0x0D5F, X, X, 0x1820, 0x0580, X, X]):
+            patches.append((bit_address(i + 2) >> 4, OPT_ATTRACT, JRUC))
+    if patches:
+        notes.append('attract sound branches %s' % ' '.join('%08X' % (a << 4) for a, _, _ in patches))
+    elif gid in (G_MK, G_MKTURBO, G_MK2):
+        notes.append('attract sound branch not found')
+    return patches
 
 
 def mk2_codes(p, notes):
@@ -635,15 +692,22 @@ def jd_codes(p, notes):
 # Table
 # --------------------------------------------------------------------------
 
-HIDE_EXTRAS = 0x100      # word 0, bit 8: the set is Mortal Kombat II Plus: the OSD hides the Finishing Moves and Hidden Items and has its own Move List and View Secrets
+MOVE_LIST_REV4 = 0x200    # word 0, bit 9: the set is Mortal Kombat II rev 4.0: the Finishing Moves and hidden items stay and the Move List shows rev 4.0's own pages (tools/tunit_rev4.py)
+MKPLUS_LIST = 0x400      # word 0, bit 10: the set is Mortal Kombat Plus (mk07): the Move List shows the hack's own pages (tools/tunit_mkplus.py); its Finishing Moves and hidden items stay
+HIDE_EXTRAS = 0x100      # word 0, bit 8: the set is Mortal Kombat II Plus: the OSD hides the hidden items (the Finishing Moves stay) and has its own Move List and View Secrets
 
 
-def hidden_table(gid):
-    """Table bytes and notes for a set with its own extras, the secrets and
-    finishing moves hidden (tools/hbmame_sets.py, Mortal Kombat II Plus): the
-    game id with HIDE_EXTRAS and the format word, no patches, no codes."""
-    return (struct.pack('<2H', gid | HIDE_EXTRAS, FORMAT),
-            ['the OSD shows the Plus Move List and View Secrets, and no Finishing Moves or Hidden Items, for this set: no patches or codes'])
+def hidden_table(gid, prog_bytes):
+    """Table bytes and notes for a set with its own extras, the secrets
+    hidden (tools/hbmame_sets.py, Mortal Kombat II Plus; its fight variables
+    and finisher sites come after, tools/tunit_fmoves.py): the game id with
+    HIDE_EXTRAS and the format word, the Attract Sound patches only, no codes."""
+    notes = ['the OSD shows the Plus Move List and View Secrets, and no hidden items, for this set: no codes']
+    patches = attract_sound(gid, Prog(prog_bytes), notes)
+    t = [gid | HIDE_EXTRAS, FORMAT] + [0] * (STEP_BASE - 2 if patches else 0)
+    for k, (addr, opt, val) in enumerate(patches):
+        t[2 + 3 * k], t[3 + 3 * k], t[4 + 3 * k] = addr & 0xFFFF, (opt << 12) | (addr >> 16), val
+    return struct.pack('<%dH' % len(t), *t), notes
 
 
 # The options that are cheats now (the OSD's Cheats menu, tools/tunit_cheats.py):
@@ -672,7 +736,8 @@ def collect(gid, p, notes):
         codes, patches = jd_codes(p, notes)
     else:
         codes, patches = [], None
-    return codes, patches or []
+    patches = (patches or []) + attract_sound(gid, p, notes)
+    return codes, patches
 
 
 def build(gid, prog_bytes):
@@ -789,12 +854,11 @@ def cheats_docs(game):
 # --------------------------------------------------------------------------
 
 def osd_lines():
-    """The NBA Jam / TE lines of the OSD: View Secret Players in the main
-    menu (Off or On: the window of rtl/tunit_window.sv, its pages turned
-    with Left and Right), then the Cheat Codes & Hidden Items page: the
-    secret menu code (R[14]) and, for TE, No CPU Assistance. The power-ups,
-    the tank game and tournament mode are cheats of the Cheats menu now
-    (tools/tunit_cheats.py). Lines both games have test the NBA mask bit; the
+    """The NBA Jam / TE lines of the Extras page (P5), in alphabetical order: Midway
+    Menu (the secret menu code, R[14]), No CPU Assistance (TE) and View Secret Players
+    (Off or On: the window of rtl/tunit_window.sv, its pages turned with Left and
+    Right). The power-ups, the tank game and tournament mode are cheats of the Cheats
+    menu now (tools/tunit_cheats.py). Lines both games have test the NBA mask bit; the
     others the game's own bit."""
     te, nba = MASK_TE, MASK_NBA
     pg = 'P%d' % OSD_PAGE
@@ -803,24 +867,20 @@ def osd_lines():
     n = tunit_window.page_counts()
     if max(n.values()) > 31:
         raise ValueError('too many window pages for the page register (5 bits)')
-    return ['h%sO[%d],View Secret Players,Off,On;' % (nba, OSD_VIEW),
-            'h%s%s,Cheat Codes & Hidden Items;' % (nba, pg),
-            '%s-;' % pg,
-            '%sR[14],Open Secret Menu (Attract);' % pg,
-            'h%s%sO[%d],No CPU Assistance,Off,On;' % (te, pg, OSD_NOCPU)]
+    return ['h%s%sR[14],Midway Menu;' % (nba, pg),
+            'h%sh%s%sO[%d],No CPU Assistance,Off,On;' % (nba, te, pg, OSD_NOCPU),
+            'h%s%sO[%d],View Secret Players,Off,On;' % (nba, pg, OSD_VIEW)]
 
 
 def plus_osd_lines():
-    """Mortal Kombat II Plus's line of the OSD: View Secrets in the main menu
-    (Off or On: the window of rtl/tunit_window.sv, its pages turned with Left
-    and Right)."""
-    return ['h%sO[%d],View Secrets,Off,On;' % (MASK_PLUS, OSD_PLUS_VIEW)]
+    """Mortal Kombat II Plus's line of the Extras page: View Secrets (Off or On:
+    the window of rtl/tunit_window.sv, its pages turned with Left and Right)."""
+    return ['h%sP%dO[%d],View Secrets,Off,On;' % (MASK_PLUS, OSD_PAGE, OSD_PLUS_VIEW)]
 
 
 def gen_osd():
-    o = ['// tunit_secrets_osd.svh - the NBA Jam and TE lines of the OSD (View Secret',
-         '// Players, the Cheat Codes & Hidden Items page) and Mortal Kombat II Plus\'s',
-         '// (View Secrets)',
+    o = ['// tunit_secrets_osd.svh - the NBA Jam and TE lines of the Extras page (Midway Menu,',
+         '// No CPU Assistance, View Secret Players) and Mortal Kombat II Plus\'s (View Secrets)',
          '// Generated by tools/tunit_secrets.py --gen; do not edit.',
          '//',
          '// Copyright (C) 2026 Gm0rk - GPL-3.0-or-later',
