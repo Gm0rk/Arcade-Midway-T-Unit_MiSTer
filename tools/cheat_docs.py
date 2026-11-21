@@ -17,7 +17,7 @@ import sys
 import xml.etree.ElementTree as ET
 
 GAMES = {
-    'mk': ('Mortal Kombat', lambda n: n.startswith('Mortal Kombat (')),
+    'mk': ('Mortal Kombat', lambda n: n.startswith(('Mortal Kombat (', 'Mortal Kombat Plus'))),
     'mk2': ('Mortal Kombat II', lambda n: n.startswith('Mortal Kombat II')),
     'nba': ('NBA Jam', lambda n: n.startswith('NBA Jam (')),
     'te': ('NBA Jam Tournament Edition', lambda n: n.startswith('NBA Jam Tournament Edition')),
