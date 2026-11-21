@@ -1,25 +1,13 @@
 <misterromdescription>
 	<name>NBA Jam Tournament Edition (SE rev 5.02, hack)</name>
-	<mratimestamp>20261101</mratimestamp>
+	<mratimestamp>20261119</mratimestamp>
 	<mameversion>0289</mameversion>
-	<setname>nbajamtese</setname>
+	<setname>nbajam05</setname>
 	<year>1994</year>
 	<manufacturer>hack</manufacturer>
 	<category>Sports / Basketball</category>
 	<rbf>Arcade-Midway-T-Unit</rbf>
 	<remark>4 players</remark>
-	<switches default="FD,7F">
-		<dip bits="8,9" name="Coin Counters" ids="1 Counter - 1 count/coin,1 Counter - Totalizing,2 Counters - 1 count/coin" values="3,2,1"/>
-		<dip bits="12,14" name="Coinage" ids="1,2,3,4,ECA,Free Play" values="7,3,5,1,6,0"/>
-		<dip bits="15" name="Coinage Source" ids="Dipswitch,CMOS" values="1,0"/>
-		<dip bits="10,11" name="Country" ids="USA,French,German" values="3,2,1"/>
-		<dip bits="6" name="Dollar Bill Validator" ids="Installed,Not Present"/>
-		<dip bits="7" name="Players" ids="2,4"/>
-		<dip bits="1" name="Powerup Test" ids="Off,On"/>
-		<dip bits="16" name="Service Credit" ids="Add credit,Add credit"/>
-		<dip bits="0" name="Test Switch" ids="Off,On" values="1,0"/>
-		<dip bits="17" name="Tilt" ids="Slam tilt,Slam tilt"/>
-	</switches>
 	<buttons names="Turbo,Shoot/Block,Pass/Steal,-,-,-,Start,Coin,Test,Pause" default="R,A,B,-,-,-,Start,Select,-,-"/>
 	<romstruct>
 rom index 0 (SDRAM 0x000000):
@@ -39,12 +27,18 @@ rom index 3 (SDRAM 0xD00000):
 		00 20 03 00 00 00 03 00 10 00 03 00 00 00 03 00 20 00 03 00 00 00 03 00 00 40 03 00 00 00 03 00
 		00 40 03 00 00 00 03 80
 		</part>
+		<!-- Fixed AI Difficulty (tools/tunit_nbaai.py): hard word 010EA1D0, FF88CE60 B5C1-&gt;09C0, FF88CE70 01A0-&gt;level, FF88CE80 CB01-&gt;C001, FF8C0720 C913-&gt;C912 -->
+		<part repeat="940">00</part>
+		<part>
+		1D EA 10 00 00 00 00 00 00 00 00 00 E6 8C F8 0F C0 09 00 00 E7 8C F8 1F 00 00 00 00 E8 8C F8 0F
+		01 C0 00 00 72 C0 F8 0F 12 C9 00 00
+		</part>
 	</rom>
-	<rom index="0" zip="/hbmame/nbajamtese.zip" md5="9fd451f66367ecb105509b4cbe7f2aec" type="merged">
+	<rom index="0" zip="/hbmame/nbajamte.zip" md5="9fd451f66367ecb105509b4cbe7f2aec" type="merged">
 		<!-- program ROM -->
 		<interleave output="16">
-			<part crc="08507007" name="l4_nba_jam_tournament_game_rom_uj12.uj12" map="01"/>
-			<part crc="d784608e" name="l4_nba_jam_tournament_game_rom_ug12.ug12" map="10"/>
+			<part crc="08507007" name="nbajam05/nbajam05.uj12" map="01"/>
+			<part crc="d784608e" name="nbajam05/nbajam05.ug12" map="10"/>
 		</interleave>
 		<!-- graphics -->
 		<interleave output="32">
@@ -54,22 +48,22 @@ rom index 3 (SDRAM 0xD00000):
 			<part crc="8130a8a2" name="l1_nba_jam_tournament_game_rom_uj19.uj19" map="1000"/>
 		</interleave>
 		<interleave output="32">
-			<part crc="c8da980e" name="l1_nba_jam_tournament_game_rom_ug16.ug16" map="0001"/>
-			<part crc="205c5fb7" name="l1_nba_jam_tournament_game_rom_uj16.uj16" map="0010"/>
-			<part crc="9cd4f985" name="l1_nba_jam_tournament_game_rom_ug20.ug20" map="0100"/>
-			<part crc="7a47f364" name="l1_nba_jam_tournament_game_rom_uj20.uj20" map="1000"/>
+			<part crc="c8da980e" name="nbajam03/nbajam03.ug16" map="0001"/>
+			<part crc="205c5fb7" name="nbajam03/nbajam03.uj16" map="0010"/>
+			<part crc="9cd4f985" name="nbajam03/nbajam03.ug20" map="0100"/>
+			<part crc="7a47f364" name="nbajam03/nbajam03.uj20" map="1000"/>
 		</interleave>
 		<interleave output="32">
-			<part crc="1b7ddbe9" name="l1_nba_jam_tournament_game_rom_ug17.ug17" map="0001"/>
-			<part crc="cb08465f" name="l1_nba_jam_tournament_game_rom_uj17.uj17" map="0010"/>
-			<part crc="5427ca82" name="l1_nba_jam_tournament_game_rom_ug22.ug22" map="0100"/>
-			<part crc="569b1ae5" name="l1_nba_jam_tournament_game_rom_uj22.uj22" map="1000"/>
+			<part crc="1b7ddbe9" name="nbajam03/nbajam03.ug17" map="0001"/>
+			<part crc="cb08465f" name="nbajam03/nbajam03.uj17" map="0010"/>
+			<part crc="5427ca82" name="nbajam03/nbajam03.ug22" map="0100"/>
+			<part crc="569b1ae5" name="nbajam03/nbajam03.uj22" map="1000"/>
 		</interleave>
 		<interleave output="32">
-			<part crc="a182457b" name="l1_nba_jam_tournament_game_rom_ug18.ug18" map="0001"/>
-			<part crc="ed6b08a5" name="l1_nba_jam_tournament_game_rom_uj18.uj18" map="0010"/>
-			<part crc="7755db95" name="l1_nba_jam_tournament_game_rom_ug23.ug23" map="0100"/>
-			<part crc="a659b604" name="l1_nba_jam_tournament_game_rom_uj23.uj23" map="1000"/>
+			<part crc="a182457b" name="nbajam05/nbajam05.ug18" map="0001"/>
+			<part crc="ed6b08a5" name="nbajam05/nbajam05.uj18" map="0010"/>
+			<part crc="7755db95" name="nbajam05/nbajam05.ug23" map="0100"/>
+			<part crc="a659b604" name="nbajam05/nbajam05.uj23" map="1000"/>
 		</interleave>
 	</rom>
 	<rom index="3" zip="/hbmame/nbajamte.zip" md5="c43e66e16653d1f8fc18fde2f5b22c01" type="merged">
@@ -77,8 +71,8 @@ rom index 3 (SDRAM 0xD00000):
 		<part crc="d4551195" name="l1_nba_jam_tournament_u3_sound_rom.u3"/>
 		<part crc="d4551195" name="l1_nba_jam_tournament_u3_sound_rom.u3"/>
 		<!-- OKI samples -->
-		<part crc="7be1622b" name="l1_nba_jam_tournament_u12_sound_rom.u12"/>
-		<part crc="f939bfcb" name="l1_nba_jam_tournament_u13_sound_rom.u13"/>
+		<part crc="7be1622b" name="nbajam05/nbajam05.u12"/>
+		<part crc="f939bfcb" name="nbajam05/nbajam05.u13"/>
 	</rom>
 	<nvram index="2" size="16384"/>
 	<!-- cheats (rtl/tunit_cheats.sv): power-ups: counters 010F30C0, big heads 010EE8B0, quick hands 010EE8C0, 8 patches; 27 cheats -->
