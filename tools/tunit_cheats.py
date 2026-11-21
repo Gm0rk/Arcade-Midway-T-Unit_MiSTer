@@ -153,8 +153,9 @@ def damage_table(p, r):
     which are the two energy words) / MOVE *A6,A1,0 (the energy) / SUB A10,A1
     (the hit) / JRNN / CLR A1 / MOVE A1,*A6,0 (stored back, the flags decide
     between a hit and a knockout). In Mortal Kombat II Plus the subtraction is
-    a JA to the hack's routine, which starts with the same SUB A10,A1 and
-    comes back to the store, and the table has moved. The table is found by
+    a JA to the hack's routine, which starts with the same SUB A10,A1 (after a
+    CALLA of its own in Beta 1) and comes back to the store, and the table has
+    moved (not in Beta 1). The table is found by
     that code (one place in each program) and must hold the two energy words."""
     hits = p.find([0x24A6, 0x0B26, X, X, 0x96C6, 0x84C1])
     if len(hits) != 1:
@@ -170,12 +171,17 @@ def damage_table(p, r):
         pass
     elif p.w[k + 6] == 0xC080:                     # the hack: JA to a routine that starts with the SUB
         j = p.word_index(p.u32(k + 7))
+        if 0 <= j < len(p.w) - 4 and p.w[j] == 0x0D5F:     # Beta 1: a CALLA of its own comes first
+            j += 3
         if not 0 <= j < len(p.w) - 1 or p.w[j] != 0x4541:
             return None
     else:
         return None
     if p.w[k + 9] != 0x8026:                       # MOVE A1,*A6,0
-        return None
+        # Mortal Kombat II rev 4.0 (mk2s08) tests two flags between the SUB and
+        # the store (CLR A1 when both are set); the store is still MOVE A1,*A6,0
+        if not (p.w[k + 6] == 0x4541 and 0x8026 in p.w[k + 9:k + 24]):
+            return None
     return t
 
 
@@ -204,7 +210,8 @@ def finish_wait(p, r):
     exits when the finish flag is set (a move started) or the other flag is
     set (the winner hit the loser) and otherwise counts A11 down once per
     frame. The second wait is 80h frames (FFh in Mortal Kombat II
-    Challenger, whose last loop is FF00h); the first 28h and the later waits stay.
+    Challenger, whose last loop is FF00h; 1E0h in rev 4.0); the first 28h and the
+    later waits stay.
 
     In Mortal Kombat II Plus the CALLA in front of that MOVI is a JA to a
     routine of the hack, which calls the same sub, loads A11 with 80h itself
@@ -221,7 +228,7 @@ def finish_wait(p, r):
     if len(first) != 1:
         return None
     nxt = p.find([0x09CB], first[0] + 2, first[0] + 0x100)    # the next MOVI .,A11
-    if not nxt or p.w[nxt[0] + 1] not in (0x0080, 0x00FF):
+    if not nxt or p.w[nxt[0] + 1] not in (0x0080, 0x00FF, 0x01E0):      # 1E0h: Mortal Kombat II rev 4.0
         return None
     if not (p.find([0x09CB, 0x0200], nxt[0], nxt[0] + 0x100) or      # ends in the 200h loop
             p.find([0x09CB, 0xFF00], nxt[0], nxt[0] + 0x100)):         # (FF00h in Challenger)
