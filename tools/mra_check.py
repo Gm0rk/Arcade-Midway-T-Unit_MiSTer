@@ -19,6 +19,9 @@ loaded streams are also compared with what MAME itself loaded, region by
 region, so a parser mistake in the generator cannot hide behind a matching
 md5. This check is independent of mra_gen.py and tunit_layout.py.
 
+No set has <switches>: the DIP switches are options of the core's OSD (System
+Options page, tools/tunit_dips.py).
+
 Every set carries the OSD's Cheats list (<cheats size="8"
 max="8">; tools/tunit_cheats.py, rtl/tunit_cheats.sv).
 Every cheat is whole 8-byte units (at most 8) with a name of 27 characters at
@@ -51,15 +54,31 @@ one-shots of those two energy words.
 
 ROM index 1's first word must hold only the game id and the flag (bit 8,
 Mortal Kombat II Plus: the OSD shows the hack's Move List and View Secrets and
-hides the Finishing Moves and Hidden Items), and a set with
-the flag has no table after the format word but the AI level word (bytes
-0x454-0x45B, zeros before them). Every MK and MK2 set must carry the AI level
+hides the hidden items), and a set with the flag has no secrets table after the
+Attract Sound patches (zeros up to 0x400, then the fight variables and the direct
+finisher sites like the other sets). Every MK and MK2 set must carry the AI level
 word (Fixed AI Difficulty) there, and it must be the one an independent scan
 of the loaded program ROM finds: the routine that reads the CPU opponent's
 level, adds to it, clamps it to 0..9 and writes it back (exactly one in the
 ROM, with the same word read and written). Behind it comes the PC after the
 demo fights' store of the level (bytes 0x458-0x45B), which the scan finds as
 MOVK 5,A0 / MOVE A0,@level,0 (exactly one in the ROM).
+
+NBA Jam and TE carry the sites of Fixed AI Difficulty (bytes 0x454-0x47F: the word
+that selects the AI's hard routines, then four program ROM words, nba_ai_scan finds
+them on its own): the start of a game's store of a CPU opponent's skill (the load of
+the human's record field, which becomes MOVI h,A0, and the jump after it) and the
+catch-up's jump for the CPU players. The sets without those places (rev 1.00,
+2.00, the prototypes) have no bytes after 0x454.
+
+Mortal Kombat's direct finishers (bytes 0x45C-0x46D: a word with a bit per
+character id, the high 12 bits of the word addresses, and the low 16 bits by
+id) are the handlers' no-match jumps that the scan finds on its own
+(direct_scan). Mortal Kombat II's direct finishers (words 47-94, bytes
+0x45E-0x4BD) use the same words by site id: mk2_site_checks finds each site again
+in the program ROM (a jump after a call of one of the two matcher routines) and
+checks the polarity bits, the second 1 Mbit window (words 91-94) and, for rev L3.1,
+Plus and rev 4.0, the move tables' addresses.
 
 The word at byte 0x43E is the OSD class of the revision (0 to 3): the Finishing
 Moves page shows each move line for the classes that have the move, so a
@@ -199,6 +218,220 @@ def demo_scan(prog, lv):
     return 0xFF800000 + (hits[0] + 4) * 16
 
 
+def nba_ai_scan(prog):
+    """The sites of NBA Jam's and TE's Fixed AI Difficulty in the program ROM, found
+    on their own (not by tools/tunit_nbaai.py): (the hard routines' word address
+    (word address, bit address >> 4), [(word address, flags, value)]) or None when the
+    set lacks one of the three places. Written here on its own."""
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+
+    def find(pat):
+        return [i for i in range(n - len(pat))
+                if all(v is None or w[i + j] == v for j, v in enumerate(pat))]
+    # the start of a game: SUB A2,A0 / MOVE *A14(1A0h),A1 / JRNE +1 / SUBK 4,A0 / MOVE A0,*A13(460h)
+    a = find([0x4440, 0xB5C1, 0x01A0, 0xCB01, 0x1480, 0xB00D, 0x0460])
+    # JRLT +3 / MOVE A2,@hard / MOVK 4,A2 / SUBK 4,A1 / JRLE +1 / MOVK 1,A2 / SUB A2,A0 (the same routine)
+    h = find([0xC403, 0x0582, None, None, 0x1882, 0x1481, 0xC601, 0x1822, 0x4440])
+    # CLR A2 / MOVE *A6+,A0,1 / MOVE A2,*A0(440h),0
+    c = find([0x5642, 0x96C0, 0xB040, 0x0440])
+    if len(a) != 1 or len(h) != 1 or len(c) != 1 or a[0] != h[0] + 8:
+        return None
+    jr = [i for i in range(c[0] - 40, c[0]) if w[i] == 0x2FE5 and w[i + 1] >> 8 == 0xC9
+          and i + 2 + (w[i + 1] & 0xFF) == c[0] + 1]
+    if len(jr) != 1:
+        return None
+    base = 0xFF800000 >> 4
+    ent = [(base + a[0] + 1, 0, 0x09C0), (base + a[0] + 2, 1, 0), (base + a[0] + 3, 0, 0xC001),
+           (base + jr[0] + 1, 0, w[jr[0] + 1] - 1)]
+    return (w[h[0] + 2] | w[h[0] + 3] << 16) >> 4, ent
+
+
+# Mortal Kombat's direct finishers: each fighter's fatality (character id: its
+# command, from the games' Fatality lists). A fighter's move handler tests the
+# joystick history with the matcher routine, MOVI pattern,A11 / CALLR matcher /
+# JRNC exit, the pattern being the command's directions, newest first, 1 Up,
+# 2 Forward, 3 Down, 4 Back, and a zero. Written here on its own, not taken from
+# tools/tunit_fmoves.py.
+MK_FATALITIES = {0: 'F F F HP', 1: 'B D F LP', 2: 'F B B B HP', 3: 'D B U F D', 4: 'U U', 5: 'F D F HP', 6: 'F F B B BL'}
+DIR_CODE = {'U': 1, 'F': 2, 'D': 3, 'B': 4}
+
+
+def direct_scan(prog):
+    """{character id: word index of its handler's JRNC (the opcode word)} in the
+    program ROM, or an error text. The matcher is the routine the most CALLRs go
+    to right after a MOVI table,A11; a handler is a call to it that comes right
+    before a JRNC, the table holding the character's directions."""
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+    calls = {}
+    for i in range(3, n - 1):
+        if w[i] == 0x0D3F and w[i - 3] == 0x09EB:
+            off = w[i + 1] - 65536 if w[i + 1] & 0x8000 else w[i + 1]
+            calls.setdefault(i + 2 + off, []).append(i)
+    if not calls:
+        return 'no CALLR in the program ROM'
+    matcher = max(calls, key=lambda k: len(calls[k]))
+    want = {tuple(DIR_CODE[k] for k in reversed([t for t in cmd.split() if t in DIR_CODE])): c
+            for c, cmd in MK_FATALITIES.items()}
+    found = {}
+    for i in calls[matcher]:
+        if i < 3 or w[i - 3] != 0x09EB or w[i + 2] >> 8 != 0xC9:
+            continue
+        t = ((w[i - 2] | w[i - 1] << 16) - 0xFF800000) >> 4
+        if not 0 <= t < n - 10:
+            continue
+        ev = []
+        for k in range(1, 10):
+            if w[t + k] == 0:
+                break
+            ev.append(w[t + k])
+        c = want.get(tuple(ev))
+        if c is not None:
+            found.setdefault(c, []).append(i + 2)
+    out = {}
+    for c in sorted(found):
+        if len(found[c]) != 1:
+            return 'character %d has %d handlers that call the matcher with its directions' % (c, len(found[c]))
+        out[c] = found[c][0]
+    return out
+
+
+# Mortal Kombat Plus's Babality routines (sites 7: ends with High Kick, 8: Low Kick): CALLA matcher /
+# JRNC / MOVI A0 (the button's mask) / MOVI A1 / CALLA / JRNE / JR. {site: word index of the JRNC}
+BABALITY_MASKS = {7: (0x0030, 0x3000), 8: (0x0070, 0x1000)}
+
+
+def babality_scan(prog):
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+    out = {}
+    for site, (lo, hi) in BABALITY_MASKS.items():
+        hits = [i + 3 for i in range(n - 14)
+                if w[i] == 0x0D5F and w[i + 3] >> 8 == 0xC9 and w[i + 4] == 0x09E0 and w[i + 5] == lo
+                and w[i + 6] == hi and w[i + 7] == 0x09E1 and w[i + 10] == 0x0D5F
+                and w[i + 13] >> 8 == 0xCB and w[i + 14] >> 8 == 0xC0]
+        if len(hits) == 1:
+            out[site] = hits[0]
+    return out
+
+
+# MK2's hold-time direct sites (rev L3.1 and Plus, rev 4.0): the jump's bit address -> (the button's press stamp, the limit in frames);
+# tools/tunit_mk2sites.py has them (HOLD_REF: L3.1's, REV4_HOLD: rev 4.0's), each one read from the program ROM and played in MAME
+import tunit_mk2sites as _MS    # noqa: E402
+HOLD_SITES = {**dict(_MS.HOLD_REF), **_MS.REV4_HOLD}
+
+
+# Sets without one of the sites: L2.0 and L2.1 have no Kintaro (Shang Tsung's friendship there is another move) and no Super Uppercut
+NO_SITE = {'mk2r20': (0xFF863D20, 0xFF863830), 'mk2r21': (0xFF863D20, 0xFF863830)}
+
+
+def mk2_site_checks(setname, prog, dw):
+    """Mortal Kombat II's direct finisher sites in a set's ROM index 1 (dw: words 46-94),
+    checked against the program ROM: a set with direct finishers (tools/tunit_fmoves.py
+    MK2_DIRECT_SETS: the stock revisions and Plus, REV4_DIRECT_SETS: rev 4.0) has every site of
+    its move table (by site id) and no other set has any. A site is the word address of a jump
+    opcode (JRNC C9xx or JRC C8xx) that comes right after a call (CALLR or CALLA) of one of the two
+    matcher routines, the ones the most CALLRs go to after a MOVI table,A11 (the global moves'
+    handlers set the table up otherwise); its polarity bit is set for a JRC. A site in another
+    1 Mbit window than word 47's has its bit in words 92-94 and the window in word 91. Rev L3.1
+    (mk2), Plus Beta 1 (mk2s03) and rev 4.0 (mk2s08) have them at the table's addresses, Plus
+    Beta 2 with the stage fatality's moved (tunit_fmoves.PLUS_SITES), the other revisions in the
+    table's order."""
+    import tunit_fmoves as TF
+    game = 'rev4' if setname in TF.REV4_DIRECT_SETS else 'mk2'
+    ids = TF._mk2_site_ids(game)
+    out = []
+    if dw[0]:
+        out.append('word 46 is %04X, not 0' % dw[0])
+    if setname not in TF.MK2_DIRECT_SETS and setname not in TF.REV4_DIRECT_SETS:
+        if any(dw):
+            out.append('rom 1 has direct finisher words in %s, which has no direct finishers' % setname)
+        return out
+    n = len(prog) // 2
+    w = [prog[2 * i] | prog[2 * i + 1] << 8 for i in range(n)]
+    n3 = n - 3
+    calls = {}                                  # the routine called -> the word after the call (a jump?)
+    first = {}                                  # the same for the calls that follow a MOVI table,A11
+    for i in range(3, n3):
+        if w[i] == 0x0D3F:
+            off = w[i + 1] - 65536 if w[i + 1] & 0x8000 else w[i + 1]
+            tgt, nxt = i + 2 + off, i + 2
+        elif w[i] == 0x0D5F:
+            tgt, nxt = ((w[i + 1] | w[i + 2] << 16) - 0xFF800000) >> 4, i + 3
+        else:
+            continue
+        calls.setdefault(tgt, []).append(nxt)
+        if w[i] == 0x0D3F and w[i - 3] == 0x09EB:      # (a CALLA after MOVI table,A11 is another routine)
+            first.setdefault(tgt, []).append(nxt)
+    matchers = sorted(first, key=lambda k: -len(first[k]))[:2]
+    jumps = {j for m in matchers for j in calls[m]}
+    hi, hi2 = dw[1], dw[45]
+    pol = dw[42] | dw[43] << 16 | dw[44] << 32
+    alt = dw[46] | dw[47] << 16 | dw[48] << 32
+    if hi == 0:
+        return out + ['rom 1 has no direct finisher sites']
+    sites = []
+    moved = TF.PLUS_SITES.get(setname, {})
+    exact = setname in ('mk2', 'mk2s03', 'mk2s04', 'mk2s08')      # (the other revisions have their own addresses)
+    for k in range(40):
+        lo = dw[2 + k]
+        if k >= len(ids):
+            if lo:
+                out.append('site %d is %04X, there are only %d sites' % (k, lo, len(ids)))
+            continue
+        if lo == 0:
+            if ids[k] not in NO_SITE.get(setname, ()):
+                out.append('site %d (%08X) is missing' % (k, ids[k]))
+            sites.append(None)
+            continue
+        if ids[k] in NO_SITE.get(setname, ()):
+            out.append('site %d (%08X) is there, %s has no such move' % (k, ids[k], setname))
+        h = hi2 if alt >> k & 1 else hi
+        j = ((h << 16 | lo) * 16 - 0xFF800000) >> 4
+        if not 0 <= j < n:
+            out.append('site %d is outside the program ROM' % k)
+            sites.append(None)
+            continue
+        op = w[j] >> 8
+        # (a hold-time site: MOVI stamp,A0 / CALLA routine / CMPI ~limit,A1 / JRC, Raiden's Electrocution and Shang Tsung's Kintaro;
+        # Raiden's Super Uppercut has the round state tested between the CALLA and the CMPI: MOVE @state,A0 / CMPI 3,A0 / JRNE)
+        back = 0
+        if ids[k] in HOLD_SITES and op == 0xC8:
+            for d in (8, 14):
+                if j >= d and w[j - d] == 0x09E0 and w[j - d + 3] == 0x0D5F and w[j - 2] == 0x0B41 and (d == 8 or w[j - d + 6] == 0x05A0):
+                    back = d
+                    break
+        hold = bool(back)
+        if not hold and (j not in jumps or op not in (0xC8, 0xC9)):
+            out.append('site %d (word %05X) is not a jump after a matcher call or a hold check (%04X)' % (k, j, w[j]))
+        if hold and exact:
+            stamp, lim = w[j - back + 1] | w[j - back + 2] << 16, ~w[j - 1] & 0xFFFF
+            if (stamp, lim) != HOLD_SITES[ids[k]]:
+                out.append('hold site %d is the press stamp %07X and the limit %X, expected %s' % (k, stamp, lim, HOLD_SITES[ids[k]]))
+        if (pol >> k & 1) != (op == 0xC8):
+            out.append('site %d polarity bit is %d, its jump is %04X' % (k, pol >> k & 1, w[j]))
+        sites.append(j)
+        want = moved.get(ids[k], ids[k])
+        if exact and (h << 20 | (lo << 4)) != want:
+            out.append('site %d is %08X, the table has %08X' % (k, h << 20 | (lo << 4), want))
+        if (h << 20 | (lo << 4)) >> 20 != hi and not alt >> k & 1:
+            out.append('site %d is in another window than word 47 and has no alternate bit' % k)
+    if pol >> len(ids):
+        out.append('polarity bits beyond the sites: %X' % (pol >> len(ids)))
+    if alt >> len(ids):
+        out.append('alternate window bits beyond the sites: %X' % (alt >> len(ids)))
+    if bool(alt) != bool(hi2):
+        out.append('alternate window word 91 is %03X with the bits %X' % (hi2, alt))
+    have = [(j, k) for k, j in enumerate(sites) if j is not None]
+    want = [k for k in range(len(ids)) if ids[k] not in NO_SITE.get(setname, ())]
+    if len(have) != len(want):
+        out.append('%d of %d sites' % (len(have), len(want)))
+    elif not moved and [k for j, k in sorted(have)] != sorted(want, key=lambda k: ids[k]):
+        out.append('the sites are not in the table\'s order')
+    return out
+
+
 MK2_CHEATS = ['Infinite Health P1', 'Infinite Health P2', 'Infinite Round Time', 'Stop Finishing Move Timer']
 F_FETCH, F_STORE, F_POKE = 1, 2, 4
 
@@ -293,14 +526,19 @@ def mk2_health_checks(u1, u2, w, n):
     if len(dm) != 1:
         return ['%d damage routines (SLL 5,A6 / ADDI table,A6 / MOVE *A6+,A6,1 / MOVE *A6,A1,0), not 1' % len(dm)], None, None
     i = dm[0]
-    # the hit and the store back: SUB A10,A1 (Plus: a JA to a routine that starts with it) .. MOVE A1,*A6,0
+    # the hit and the store back: SUB A10,A1 (Plus: a JA to a routine that starts with it, after a CALLA
+    # of its own in Beta 1) .. MOVE A1,*A6,0 (rev 4.0 of Mortal Kombat II tests two flags in between)
     if w[i + 6] == 0xC080:
         t = w[i + 7] | w[i + 8] << 16
         j = (t - 0xFF800000) >> 4 if t >= 0xFF800000 and not t & 15 else -1
+        if 0 <= j < n - 3 and w[j] == 0x0D5F:
+            j += 3
         hit = 0 <= j < n and w[j] == 0x4541
+        store = w[i + 9] == 0x8026
     else:
         hit = w[i + 6] == 0x4541
-    if not hit or w[i + 9] != 0x8026:
+        store = w[i + 9] == 0x8026 or (hit and 0x8026 in w[i + 9:i + 24])
+    if not hit or not store:
         errs.append('the damage routine at %08X does not subtract A10 from the energy and store it back' % (0xFF800000 + 16 * i))
     tab = w[i + 2] | w[i + 3] << 16
     ti = (tab - 0xFF800000) >> 4 if tab >= 0xFF800000 and not tab & 15 else -1
@@ -375,13 +613,14 @@ def mk2_cheat_checks(allc, hides, w, n):
             errs.append('%d clock process starts (MOVK 9,A11 / MOVK 9,A10 / MOVE A10,@ / MOVE A11,@) before %08X' % (len(start), cw))
         if cv != 0x4D4A or cf != F_FETCH:
             errs.append('the round time cheat is %04X flags %d, not 4D4A (MOVE A10,A10) as an instruction word' % (cv, cf))
-    # the timer: the immediate of the second wait's MOVI .,A11 (Plus: the hack's, 80h and then 140h)
+    # the timer: the immediate of the second wait's MOVI .,A11 (Plus: the hack's, 80h and then 140h;
+    # rev 4.0 of Mortal Kombat II: 1E0h)
     for k, (tw, tv, tf, _) in enumerate(units[3]):
         i = (tw - 0xFF800000) >> 4 if tw >= 0xFF800000 and not tw & 15 else -1
         if i < 1 or i >= n:
             errs.append('the timer word %08X is not in the program ROM' % tw)
             continue
-        ok_imm = (0x0080, 0x00FF) if k == 0 else (0x0140,)
+        ok_imm = (0x0080, 0x00FF, 0x01E0) if k == 0 else (0x0140,)
         if w[i - 1] != 0x09CB or w[i] not in ok_imm:
             errs.append('the timer word %08X is %04X after %04X, not %s after MOVI .,A11'
                         % (tw, w[i], w[i - 1], '/'.join('%02Xh' % v for v in ok_imm)))
@@ -474,21 +713,37 @@ def main():
                 open(os.path.join(a.out, '%s_rom%d.bin' % (setname, idx)), 'wb').write(data)
         if a.regions and hb is None:
             msgs += region_checks(setname, streams, a.regions)
-        # ROM index 1, word 0: the game id (bits 2:0) and, for a set that hides
-        # the Plus set's own Move List and View Secrets (no Finishing Moves or
-        # Hidden Items), bit 8; that set's table is the two words (game id and
-        # format), nothing else
+        # ROM index 1, word 0: the game id (bits 2:0), for a set that hides
+        # the Plus set's own Move List and View Secrets (no hidden items) bit 8,
+        # for rev 4.0 (its own Move List) bit 9, for Mortal Kombat Plus (its own
+        # Move List) bit 10; the Plus set's table is the two words (game id and
+        # format) and the Attract Sound patches, then the fight variables and the
+        # direct finisher sites at 0x400 like the other Mortal Kombat II sets
         t = streams.get(1, b'')
-        hides = False
+        hides = rev4 = nolist = False
         if len(t) >= 2:
             w0 = t[0] | t[1] << 8
             hides = bool(w0 & 0x100)
-            if w0 & ~0x107:
-                msgs.append('rom 1 word 0 is %04X: bits other than the game id and the hide flag' % w0)
+            rev4 = bool(w0 & 0x200)
+            nolist = bool(w0 & 0x400)
+            if w0 & ~0x707:
+                msgs.append('rom 1 word 0 is %04X: bits other than the game id and the flags' % w0)
             gid = w0 & 7
-            if hides and (len(t) != 0x45C or any(t[4:0x454])):
-                msgs.append('rom 1 hides the extras but is %d bytes, not game id and format, zeros, '
-                            'and the AI level word and the demo store at 0x454' % len(t))
+            if rev4 and (hides or gid != 2 or setname != 'mk2s08'):
+                msgs.append('rom 1 word 0 is %04X: the rev 4.0 Move List flag (bit 9) is only for Mortal '
+                            'Kombat II rev 4.0 (game id 2, not hiding the extras)' % w0)
+            if setname == 'mk2s08' and not rev4:
+                msgs.append('rom 1 word 0 is %04X: Mortal Kombat II rev 4.0 needs the Move List flag (bit 9)' % w0)
+            if nolist and (hides or gid not in (0, 1) or setname != 'mk07'):
+                msgs.append('rom 1 word 0 is %04X: the Mortal Kombat Plus flag (bit 10) is only for Mortal '
+                            'Kombat Plus (mk07: game id 0 or 1, not hiding the extras)' % w0)
+            if setname == 'mk07' and not nolist:
+                msgs.append('rom 1 word 0 is %04X: Mortal Kombat Plus needs the Mortal Kombat Plus flag (bit 10)' % w0)
+            if hides and (len(t) != 0x4BE or any(t[0x34:0x400]) or
+                          any(any(t[4 + 6 * k:10 + 6 * k]) and t[7 + 6 * k] >> 4 != 13 for k in range(8))):
+                msgs.append('rom 1 hides the extras but is %d bytes, not game id and format, the Attract '
+                            'Sound patches (option 13), zeros, and the fight variables and the direct '
+                            'finisher sites from 0x400 (0x4BE bytes)' % len(t))
             if gid <= 2:      # MK, MK Turbo, MK2: the AI level word, as the scan finds it
                 lv = level_scan(streams.get(0, b'')[:0x100000])
                 if len(t) < 0x45C:
@@ -506,6 +761,73 @@ def main():
                             msgs.append(dm)
                         elif gotd != dm:
                             msgs.append('rom 1 demo store PC is %08X, the program ROM\'s is %08X' % (gotd, dm))
+        if gid in (3, 4):
+            # NBA Jam, TE: Fixed AI Difficulty (bytes 0x454-0x47F): the hard routines' word, the
+            # program ROM words of the patches, as the independent scan finds them; the sets
+            # without the three places (NBA Jam rev 1.00, 2.00, the prototypes) have no table
+            sc = nba_ai_scan(streams.get(0, b'')[:0x100000])
+            if sc is None:
+                if len(t) > 0x454:
+                    msgs.append('rom 1 has Fixed AI Difficulty bytes but the program ROM lacks the places')
+            elif len(t) != 0x480:
+                msgs.append('rom 1 is %d bytes, not 0x480 (the Fixed AI Difficulty entries end it)' % len(t))
+            else:
+                hard = t[0x454] | t[0x455] << 8 | (t[0x456] | t[0x457] << 8) << 16
+                if hard != sc[0] or any(t[0x458:0x460]):
+                    msgs.append('rom 1 Fixed AI Difficulty word is %07X (the demo PC and the unused words 0), '
+                                'the program ROM\'s is %07X' % (hard, sc[0]))
+                got = []
+                for k in range(4):
+                    b = 0x460 + 8 * k
+                    lo = t[b] | t[b + 1] << 8
+                    hi = (t[b + 2] | t[b + 3] << 8)
+                    val = t[b + 4] | t[b + 5] << 8
+                    got.append(((hi & 0xFFF) << 16 | lo, hi >> 12, val))
+                    if t[b + 6] or t[b + 7]:
+                        msgs.append('rom 1 Fixed AI Difficulty entry %d has a nonzero unused word' % k)
+                if got != sc[1]:
+                    msgs.append('rom 1 Fixed AI Difficulty entries %s, the program ROM\'s %s'
+                                % (['%07X/%d/%04X' % e for e in got], ['%07X/%d/%04X' % e for e in sc[1]]))
+        if gid <= 2 and len(t) >= 2:
+            # the direct finishers' sites (words 47-94, bytes 0x45E-0x4BD; word 46, 0x45C, is
+            # not used): the high 12 bits of the jumps' word addresses, the low 16 bits by
+            # site id (MK: the character; MK2: the order of the move table, rev 4.0's own),
+            # a bit per site that is a JRC, then a second high part with a bit per site
+            # that uses it. L1.x has none (all zero)
+            if len(t) != 0x4BE:
+                msgs.append('rom 1 is %d bytes, not 0x4BE (the direct finisher sites end it)' % len(t))
+            else:
+                dw = [t[0x45C + 2 * k] | t[0x45D + 2 * k] << 8 for k in range(49)]
+                if gid == 2:
+                    msgs += mk2_site_checks(setname, streams.get(0, b'')[:0x100000], dw)
+                else:
+                    ds = direct_scan(streams.get(0, b'')[:0x100000])
+                    if isinstance(ds, str):
+                        msgs.append(ds)
+                    else:
+                        bad_d = []
+                        bs = babality_scan(streams.get(0, b'')[:0x100000]) if setname == 'mk07' else {}
+                        if bs and sorted(bs) != [7, 8]:
+                            bad_d.append('the scan does not find both Babality routines')
+                        if dw[0] or (any(dw[9:]) and not bs):
+                            bad_d.append('words other than 47-54 are not zero')
+                        if bs:        # Mortal Kombat Plus: the Babalities' sites 7 and 8 (words 55 and 56), in a second window
+                            alt = {(0xFF800000 + 16 * j) >> 20 for j in bs.values()}
+                            if len(alt) != 1 or dw[45] != next(iter(alt)) or dw[46] != 0x180 or dw[47] or dw[48] or any(dw[11:45]):
+                                bad_d.append('the second window (words 91-94) or words 57-90 are not the Babalities\'')
+                            for site, j in bs.items():
+                                if dw[2 + site] != ((0xFF800000 + 16 * j) >> 4) & 0xFFFF:
+                                    bad_d.append('Babality site %d is %04X' % (site, dw[2 + site]))
+                        if ds and dw[1] != (0xFF800000 + 16 * next(iter(ds.values()))) >> 20:
+                            bad_d.append('high %03X' % dw[1])
+                        for c in range(7):
+                            want = ((0xFF800000 + 16 * ds[c]) >> 4) & 0xFFFF if c in ds else 0
+                            if dw[2 + c] != want:
+                                bad_d.append('character %d is %04X' % (c, dw[2 + c]))
+                        if len(ds) != 7:
+                            bad_d.append('the scan finds %d fighters, not 7' % len(ds))
+                        if bad_d:
+                            msgs.append('rom 1 direct finishers differ from the program ROM\'s: ' + ', '.join(bad_d))
         if len(t) >= 0x450:
             cls = t[0x43E] | t[0x43F] << 8
             gone = bytes(t[0x440:0x450])
@@ -523,11 +845,16 @@ def main():
                         msgs.append('rom 1 OSD class %d, and %d for another set that lacks the same moves' % (cls, c))
         if len(t) >= 2:
             msgs += cheat_checks(root, t[0] & 7, hides, streams.get(0, b'')[:0x100000], setname)
+        if root.find('switches') is not None:
+            msgs.append('the MRA has <switches>: the DIP switches are options of the OSD (tools/tunit_dips.py) '
+                        'and Main_MiSTer would draw a DIP Switches menu of its own')
         status = 'OK' if not msgs else 'FAIL'
         bad += bool(msgs)
         print('%-12s %-4s rom0 %8X rom3 %8X rom1 %4X  %s' % (setname, status, len(streams.get(0, b'')),
                                                              len(streams.get(3, b'')), len(streams.get(1, b'')),
-                                                             '; '.join(msgs + (['Plus: own Move List and View Secrets, no Finishing Moves or Hidden Items'] if hides else []))))
+                                                             '; '.join(msgs + (['Plus: own Move List and View Secrets, no hidden items'] if hides else []) +
+                                                                     (['rev 4.0: own Move List'] if rev4 else []) +
+                                                                     (['MK Plus: own Move List'] if nolist else []))))
     for (g, c), masks in sorted(classes.items()):
         if len(masks) > 1:
             print('FAIL OSD class %d of game %d holds sets that lack different moves' % (c, g))
