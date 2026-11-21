@@ -7,7 +7,7 @@
 //            [--wav out.wav] [--ddr-lat 24] [--ramclear] [--nosound]
 //            [--wrlog writes.txt:A:B] [--rdlog] [--debt] [--lag lag.txt]
 //            [--info mk_rom1.bin] [--osd "500:0:1;..."]
-//            [--vtiming 0|1] [--lines lines.txt] [--level ADDR:N] [--lvlwatch ADDR]
+//            [--vtiming 0|1] [--sndspeed 0-3] [--lines lines.txt] [--level ADDR:N] [--lvlwatch ADDR]
 //             [--lvldemo PC]
 //            [--dcslog samples.bin] [--dcstrace dsp.txt:A:B]
 //            [--dcsstate regs.bin:A:B]
@@ -64,6 +64,9 @@
 //  --level     Fixed AI Difficulty on: ADDR is the AI level word's bit
 //              address (hex, e.g. 010519C0 in MK, 01061AD0 in MK2), N the
 //              level 0-9
+//  --ai        WA:VAL,...  (up to four, hex): Fixed AI Difficulty in NBA Jam / TE:
+//              the program ROM word at word address WA (bit address >> 4) reads
+//              as VAL when the CPU fetches it as code
 //  --lvlwatch  log the CPU's reads and writes of the word at bit address ADDR
 //              (hex; with --level, its address): frame, R or W, value read
 //              or written, and for a write the CPU's PC (just after the
@@ -79,6 +82,10 @@
 //              frame (default 0), at most this many lines (default 400)
 //  CK_GAP      (environment): clocks to wait after a --cheat send before the next
 //              one may start (default 0)
+//  --sndspeed  the OSD's ADPCM Sound CPU Speed: 0 100 %, 1 102 %, 2 104 %,
+//              3 106 %
+//  SND_RATE    (environment): at the end, print the ADPCM sound CPU's E edges
+//              and their rate in MHz over the whole run
 //  --vtiming   the OSD's Video Timing: 0 native 289-line frames (54.7 Hz),
 //              1 277 lines (57 Hz)
 //  --lines     write a line per frame: frame, lines from one VSync to the
@@ -273,10 +280,11 @@ int main(int argc, char **argv) {
 	Verilated::commandArgs(argc, argv);
 	std::string game = "mk", rom0, rom3, out = "frames", snap = "", presses = "", wav = "", trace = "", wrlog = "", lagpath = "";
 	std::string info, osds, dcslog, linespath, dcstrace, dcsstate, cheats;
-	int frames = 100, dsw = -1, vtiming = 0;
+	int frames = 100, dsw = -1, vtiming = 0, sndspeed = 0;
 	bool lvl_on = false, lvl_watch = false; uint32_t lvl_addr = 0, lvl_dpc = 0; int lvl_val = 0;
 	long lvl_r = 0, lvl_w = 0, lvl_hist[16] = {0}, lvl_lines = 0;
 	bool lvl_demo_d = false;
+	uint32_t ai_en = 0, ai_pc[4] = {0}, ai_val[4] = {0};
 	bool ramclear = false, nosound = false, rdlog = false, debtlog = false;
 	// LOG_FROM / LOG_MAX (environment): --lvlwatch and --ramwatch log from this frame, at most this many lines (default 0, 400)
 	int log_from = getenv("LOG_FROM") ? atoi(getenv("LOG_FROM")) : 0;
@@ -312,6 +320,17 @@ int main(int argc, char **argv) {
 		else if (a == "--dcstrace") dcstrace = next();
 		else if (a == "--dcsstate") dcsstate = next();
 		else if (a == "--vtiming") vtiming = atoi(next().c_str());
+		else if (a == "--sndspeed") sndspeed = atoi(next().c_str());
+		else if (a == "--ai") {
+			std::string v = next(); size_t p0 = 0; int n = 0;
+			while (p0 < v.size() && n < 4) {
+				size_t e = v.find(',', p0); if (e == std::string::npos) e = v.size();
+				std::string t = v.substr(p0, e - p0); size_t c = t.find(':');
+				ai_pc[n] = strtoul(t.substr(0, c).c_str(), nullptr, 16);
+				ai_val[n] = strtoul(t.substr(c + 1).c_str(), nullptr, 16) & 0xFFFF;
+				ai_en |= 1u << n; n++; p0 = e + 1;
+			}
+		}
 		else if (a == "--lvldemo") lvl_dpc = strtoul(next().c_str(), nullptr, 16) >> 4;
 		else if (a == "--lvlwatch") { lvl_watch = true; lvl_addr = strtoul(next().c_str(), nullptr, 16) >> 4; }
 		else if (a == "--level") {
@@ -447,7 +466,21 @@ int main(int argc, char **argv) {
 	top->ck_start = 0; top->ck_wr = 0; top->ck_waddr = 0; top->ck_wdata = 0;
 	top->pause = 0;
 	top->vtiming = vtiming & 1;
+	top->sndspeed = sndspeed & 3;
 	top->lvl_on = lvl_on; top->lvl_addr = lvl_addr; top->lvl_dpc = lvl_dpc; top->lvl_val = lvl_val & 15;
+	top->ai_en = ai_en;
+	{
+		// ai_pc: 4 x 28 bits (Verilator's wide words), ai_val: 4 x 16 bits (one 64-bit word)
+		uint64_t av = 0;
+		for (int k = 0; k < 4; k++) {
+			for (int b = 0; b < 28; b++) {
+				int bit = 28 * k + b;
+				if ((ai_pc[k] >> b) & 1) top->ai_pc[bit / 32] |= 1u << (bit % 32); else top->ai_pc[bit / 32] &= ~(1u << (bit % 32));
+			}
+			av |= (uint64_t)ai_val[k] << (16 * k);
+		}
+		top->ai_val = av;
+	}
 	top->ram_clr_req = 0;
 	top->snd_off = nosound;
 	top->reset = 1;
@@ -692,6 +725,9 @@ int main(int argc, char **argv) {
 		for (size_t i = 0; i < v.size() && i < 20; i++)
 			fprintf(stderr, "rdhist %08X (bit %08X)  IE0 %ld  IE1 %ld\n", v[i].first, v[i].first << 4, v[i].second.first, v[i].second.second);
 	}
+	if (getenv("SND_RATE") && cyc > 0)
+		fprintf(stderr, "ADPCM sound CPU: %u E edges in %llu clocks = %.4f MHz\n", top->dbg_snd_e,
+		        (unsigned long long)cyc, (double)top->dbg_snd_e * 96.0 / (double)cyc);
 	w.close();
 	if (dcsf) fclose(dcsf);
 	if (dcstf) fclose(dcstf);
