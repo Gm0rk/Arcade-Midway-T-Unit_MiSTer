@@ -27,7 +27,9 @@
 //    flags of all four players (big heads, interceptions, quick hands, max
 //    power, baby size, shot percentage, no computer assistance) and the
 //    counter checks of power-up defense, goaltending and huge heads. MK:
-//    Reptile's fight, the moon silhouettes and his hints. The board compares
+//    Reptile's fight, the moon silhouettes and his hints. Every game but
+//    Judge Dredd: the branch that stops the attract mode's sound (option
+//    slot 11, table option 13, the OSD's Attract Sound). The board compares
 //    every CPU read with the table (midway_tunit.sv, "Read patches"); a
 //    program ROM word (an instruction or its parameter, pt_fetch) only when
 //    the CPU fetches it as code, a main RAM variable only while the CPU has
@@ -36,8 +38,8 @@
 //  Table (16-bit words, little endian in the MRA; ROM index 1):
 //    0x000        game id (low byte; the top level keeps its own copy); bit 8:
 //                 the set is Mortal Kombat II Plus: the OSD shows its own Move
-//                 List and View Secrets, and no Finishing Moves or Hidden
-//                 Items (the top level keeps it too: menu_plus)
+//                 List and View Secrets, and no hidden items (the top level
+//                 keeps it too: menu_plus)
 //    0x001        format, 1
 //    0x002-0x019  read patches, 8 x 3 words:
 //                   address[15:0], {option[3:0], address[27:16]}, value
