@@ -27,19 +27,20 @@ Test (service mode) and Pause.
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Three extras across the five versions: one hidden menu, a Cheats menu (26 cheats on 3.01, 20 on 2.00, 4 to 5 on the others) and a Secret Player List window with 13 secret players and the cheat codes. Revision limits are noted per row.
+Four extras across the five versions: one hidden menu, Fixed AI Difficulty (3.01 only), a Cheats menu (26 cheats on 3.01, 20 on 2.00, 4 to 5 on the others) and a Secret Player List window with 13 secret players and the cheat codes. Revision limits are noted per row.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
-| Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on 1.00, 2.00 and the prototypes). Attract mode only | Cheat Codes & Hidden Items |
-| Cheats menu | The power-ups for each of the four players (big head, power-up defense and interceptions; Big Head on every version), Shot Percentage, Computer Assistance Turned Off, the hidden 3D tank game (1.00, 2.00 and 3.01) and the cheats of MAME's cheat file: infinite turbo for each player, infinite quarter and shot time, never miss a shot, dunks from anywhere and more. The list is on the NBA Jam page | Cheats |
-| Secret Player List window | Page 1 lists the 13 secret players with name, initials, birthday and versions; Page 2 lists every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | View Secret Players (main menu) |
+| Midway Menu | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on 1.00, 2.00 and the prototypes). Attract mode only | Extras |
+| Fixed AI Difficulty | Pins the computer opponents' skill: Off, or 0 (easiest) to 9. From the start of the game every computer opponent plays at the skill you pick, whatever its players' ratings and your record, and the computer players' catch-up (the help the side that is behind gets) is off; levels 6 to 9 also turn on the game's hard play routines. Your own players are left as the game has them. Applies from the next game. Rev 3.01 only. Not applied while the test menu is selected | Extras |
+| Cheats menu | The power-ups for each of the four players (big head, power-up defense and interceptions; Big Head on every version), Shot Percentage, Computer Assistance Turned Off, the hidden 3D tank game (1.00, 2.00 and 3.01) and the cheats of MAME's cheat file: infinite turbo for each player, infinite quarter and shot time, never miss a shot, dunks from anywhere and more. The list is on the NBA Jam page | Extras (Cheats) |
+| Secret Player List window | Page 1 lists the 13 secret players with name, initials, birthday and versions; Page 2 lists every cheat code as the players enter it. Set it On in the OSD, close the OSD and turn the pages with Left and Right; open the OSD to set it Off. The game waits while it is shown | Extras |
 
 <!-- extra-content:end -->
 
 ## Secrets
 
-View Secret Players (OSD main menu: Off, On) shows a window over the game,
+View Secret Players (on the Extras page: Off, On) shows a window over the game,
 on the title screen, with the hidden players (below): their names,
 initials, birthdays and the versions that have them, and the cheat codes as
 the players enter them (below). Page 1 has the players, Page 2 the codes.
@@ -47,11 +48,11 @@ Set it On, close the OSD, and turn the pages with Left and Right on either
 controller (Right on page 2 goes round to page 1); open the OSD and set it
 Off to play on. The game waits while the window is on.
 
-On the OSD's Cheat Codes & Hidden Items page:
+On the OSD's Extras page:
 
 | OSD item | What it does |
 |---|---|
-| Open Secret Menu (Attract) | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on revisions 1.00 and 2.00 and the prototypes). In the attract mode only |
+| Midway Menu | The design team screen, then the secret Midway menu with the Jam Info statistics (hidden audit pages on revisions 1.00 and 2.00 and the prototypes). In the attract mode only |
 
 The power-ups, Shot Percentage, No CPU Assistance and the Tank Game are in the
 [Cheats](#cheats) menu. When the OSD closes, a message says whether the game
@@ -98,9 +99,32 @@ shows.
 | Willie Morris Jr. | Air Morris | WIL | Jan 1 | 1.00, 2.00, 3.01 |
 | Tony Scott | Scott | TON | Jul 3 | 1.00, 2.00, 3.01 |
 
+## Fixed AI Difficulty
+
+The OSD's Fixed AI Difficulty option (Off, then 0 to 9; Off by default, on the Extras page) gives every computer opponent the same skill for the whole game.
+The game keeps a skill number for each computer player: it starts from the
+player's ratings and your record, and the catch-up moves it all game long,
+up when the computer is behind and down when it leads. The computer's
+reaction times follow that number. With the option on, the computer opponents
+of a human player start the game at skill 2 x level - 10 (-10 at level 0, 8 at
+level 9), whatever their ratings or your record, and the computer players'
+catch-up is off, so the skill stays there. From level 6 the game's hard play
+routines are on as well (the game turns them on itself for a long winning
+streak or a high Drone Difficulty).
+
+Your own players and the skill of your teammate are left as the game has them,
+and so are the game's progress counter and the changes it makes late in a
+game. The demo games between matches keep the game's own skills, except that
+levels 6 to 9 turn the hard routines on there too. The skill is set when a
+game starts, so a change applies from the next game; the catch-up and the
+hard routines follow at once. Set it to Off and the game's own values are
+back. It does nothing in a game with no computer opponent, and it is off while
+the test menu is selected (Service Menu, the Test button or the Test Switch
+DIP). It is on rev 3.01 only: the other versions' programs lack the routines it uses.
+
 ## Cheats
 
-The OSD's Cheats menu (on the main menu, below Cheat Codes & Hidden Items)
+The OSD's Cheats menu (on the Extras page)
 lists the cheats of the loaded version: 26 on rev 3.01, 20 on rev 2.00, 5 on
 rev 1.00 and 4 on each prototype. Select one to switch it on or off; a mark
 shows the ones that are on. All are off each time a game loads: the OSD does
