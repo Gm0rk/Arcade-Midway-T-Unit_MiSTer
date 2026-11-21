@@ -4,12 +4,14 @@
 //
 // Copyright (C) 2026 Gm0rk - GPL-3.0-or-later
 
-localparam [5:0] WIN_NBAJAM = 6'd0;                 // 2 pages
-localparam [5:0] WIN_NBAJAMTE = 6'd2;               // 7 pages
-localparam [5:0] WIN_MK = 6'd9;                     // 2 pages
-localparam [5:0] WIN_MK2 = 6'd11;                   // 12 pages
-localparam [5:0] WIN_MK2PLUS = 6'd23;               // 17 pages
-localparam [5:0] WIN_MK2PLUS_SECRETS = 6'd40;       // 5 pages
+localparam [6:0] WIN_NBAJAM = 7'd0;                 // 2 pages
+localparam [6:0] WIN_NBAJAMTE = 7'd2;               // 7 pages
+localparam [6:0] WIN_MK = 7'd9;                     // 2 pages
+localparam [6:0] WIN_MK2 = 7'd11;                   // 12 pages
+localparam [6:0] WIN_MK2PLUS = 7'd23;               // 17 pages
+localparam [6:0] WIN_MK2PLUS_SECRETS = 7'd40;       // 5 pages
+localparam [6:0] WIN_MK2R4 = 7'd45;                 // 19 pages
+localparam [6:0] WIN_MKPLUS = 7'd64;                // 5 pages
 
 // pages of each list (Left / Right turn them while the OSD option is On)
 localparam [4:0] WIN_NBAJAM_N = 5'd2;
@@ -18,3 +20,5 @@ localparam [4:0] WIN_MK_N = 5'd2;
 localparam [4:0] WIN_MK2_N = 5'd12;
 localparam [4:0] WIN_MK2PLUS_N = 5'd17;
 localparam [4:0] WIN_MK2PLUS_SECRETS_N = 5'd5;
+localparam [4:0] WIN_MK2R4_N = 5'd19;
+localparam [4:0] WIN_MKPLUS_N = 5'd5;
