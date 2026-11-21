@@ -23,19 +23,19 @@ Up to three players: Kick, Jump, Punch, Crouch, plus Start, Coin, Test
 <!-- extra-content:start (from ExtraContent.md by tools/extra_content.py) -->
 ## Extra content
 
-Judge Dredd (location test) has three extras: two on the Secret Menus page and a Cheats menu.
+Judge Dredd (location test) has three extras on the Extras page: two hidden audit menus and a Cheats menu.
 
 | Feature | What it adds | OSD page |
 | --- | --- | --- |
-| Secret Audit Menu | Six hidden audit pages; any button turns the page | Secret Menus |
-| Secret Audit Menu + Credits | Turns through the audits and holds both Start buttons at the end, which shows the staff credits | Secret Menus |
-| Cheats menu | Infinite lives, infinite energy and invincibility for each of the three players (9 cheats; at most 8 can be on at once) | Cheats |
+| Secret Audit Menu | Six hidden audit pages; any button turns the page | Extras |
+| Secret Audit Menu + Credits | Turns through the audits and holds both Start buttons at the end, which shows the staff credits | Extras |
+| Cheats menu | Infinite lives, infinite energy and invincibility for each of the three players (9 cheats; at most 8 can be on at once) | Extras (Cheats) |
 
 <!-- extra-content:end -->
 
 ## Secrets
 
-On the OSD's Secret Menus page:
+On the OSD's Extras page:
 
 | OSD item | What it does |
 |---|---|
@@ -44,7 +44,7 @@ On the OSD's Secret Menus page:
 
 ## Cheats
 
-The OSD's Cheats menu (on the main menu, below Secret Menus) lists 9 cheats:
+The OSD's Cheats menu (on the Extras page) lists 9 cheats:
 infinite lives, infinite energy and invincibility for each of the three
 players. Select one to switch it on or off; a mark shows the ones that are on.
 All are off each time a game loads: the OSD does not keep them across loads.
